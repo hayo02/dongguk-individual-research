@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dongguk-notice-analyzer"
+version = "0.1.0"
+description = "동국대학교 컴퓨터·AI학부 개별연구 신청 데이터 수집 크롤러"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "lxml>=5.0",
+]
+
+[project.scripts]
+dongguk-notice = "dongguk_notice.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
