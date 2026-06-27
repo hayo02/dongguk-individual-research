@@ -1,54 +1,225 @@
-# 동국대학교 컴퓨터·AI학부 개별연구 신청 데이터 수집 크롤러
+# Dongguk Individual Research
 
-동국대학교 컴퓨터·AI학부의 최신 개별연구 공지와 첨부파일을 자동으로 수집하고,
-신청 일정, 제출 방법, 교수 및 연구 주제, 신청원 입력 항목을 구조화해 저장하는
-Python 크롤러입니다.
+동국대학교 컴퓨터·AI학부 개별연구 신청 프로세스 개선 프로젝트
 
-이 프로젝트는 UI나 신청서 제출 기능을 구현하지 않습니다. 이후 자동채움,
-체크리스트, 진행 상태 관리, 변경 알림 기능에서 사용할 기초 데이터를 만드는
-것이 목적입니다.
+공지, Excel, HWP에 분산된 신청 정보를 자동 수집·분석하고
+연구 탐색부터 신청 절차 확인까지 한곳에서 관리하는 시스템
 
-## 실행
+---
 
-```powershell
+## Tech Stack
+
+### Backend
+
+* Python 3.12
+* HTML Parsing
+* XML Parsing
+* Regular Expression
+* JSON
+
+### Document Parser
+
+* Excel `.xlsx`
+* HWP `.hwp`
+
+### Test
+
+* unittest
+* unittest.mock
+
+---
+
+## 주요 기능
+
+* 최신 개별연구 공지 자동 탐색
+* 공지 목록 페이지네이션
+* 공지 본문 및 첨부파일 추출
+* Excel 연구 목록 분석
+* HWP 신청원 구조 분석
+* 신청 일정 및 제출 방식 추출
+* 교수별 연구 조건 분석
+* 연락·면담·전화 상담 방식 구분
+* 필수 기술 및 프로그래밍 언어 추출
+* 교수 서명 또는 승인 이메일 조건 처리
+* 공지 및 첨부파일 변경 감지
+* JSON 결과 저장
+
+---
+
+## 지원 대상
+
+### Website
+
+```text
+https://cs.dongguk.edu/
+```
+
+### Keywords
+
+```text
+개별연구
+개별 연구
+```
+
+### Files
+
+```text
+.xlsx
+.hwp
+```
+
+---
+
+## System Flow
+
+```text
+공지 목록 조회
+    ↓
+개별연구 공지 필터링
+    ↓
+최신 공지 선택
+    ↓
+공지 본문 분석
+    ↓
+첨부파일 다운로드
+    ↓
+Excel / HWP 분석
+    ↓
+신청 조건 구조화
+    ↓
+이전 결과와 변경 비교
+    ↓
+JSON 저장
+```
+
+---
+
+## Project Structure
+
+```text
+dongguk-individual-research/
+├── src/
+│   └── dongguk_notice/
+│       ├── cli.py
+│       ├── config.py
+│       ├── crawler.py
+│       ├── downloads.py
+│       ├── errors.py
+│       ├── excel.py
+│       ├── hwp.py
+│       ├── snapshot.py
+│       ├── structure.py
+│       └── website.py
+│
+├── tests/
+│   ├── test_crawler.py
+│   ├── test_samples.py
+│   └── test_website_parser.py
+│
+├── samples/
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+## Module
+
+| File           | Role         |
+| -------------- | ------------ |
+| `crawler.py`   | 전체 크롤링 흐름    |
+| `website.py`   | 공지 목록·상세 분석  |
+| `downloads.py` | 첨부파일 다운로드    |
+| `excel.py`     | 연구 목록 분석     |
+| `hwp.py`       | 신청원 구조 분석    |
+| `structure.py` | 일정·제출 규칙 구조화 |
+| `snapshot.py`  | 변경사항 비교      |
+| `cli.py`       | 실행 명령        |
+
+---
+
+## Output
+
+```text
+data/
+├── attachments/
+│   └── {notice_id}/
+│
+└── snapshots/
+    └── individual-research/
+        ├── latest.json
+        └── {timestamp}.json
+```
+
+### JSON Data
+
+* 공지 정보
+* 신청 일정
+* 제출 장소 및 방법
+* 필수 제출서류
+* 교수 승인 조건
+* 교수별 연구 목록
+* 연구내용 및 자격조건
+* 연락·상담 방식
+* 필요 기술
+* HWP 입력 필드
+* 신청 체크리스트
+* 변경사항
+* 데이터 경고
+
+---
+
+## Install
+
+```bash
+git clone https://github.com/hayo02/dongguk-individual-research.git
+cd dongguk-individual-research
+
 python -m pip install -e .
+```
+
+---
+
+## Run
+
+```bash
 python -m dongguk_notice crawl
 ```
 
-`crawl`은 공지 목록 첫 페이지에서 `개별연구`, `개별 연구` 제목을 찾고, 없으면
-사이트 제목 검색 첫 페이지를 추가로 확인합니다. 후보가 여러 개면 작성일이
-가장 최근인 공지를 선택하고, 작성일이 같으면 공지 번호가 큰 글을 선택합니다.
-공지 번호는 코드에 고정하지 않습니다.
+---
 
-## 수집 결과
+## Test
 
-- 최신 JSON: `data/snapshots/individual-research/latest.json`
-- 실행별 JSON: `data/snapshots/individual-research/{timestamp}.json`
-- 첨부파일: `data/attachments/{notice_id}/`
-
-JSON에는 다음 정보가 포함됩니다.
-
-- 공지 번호, 제목, 작성자, 작성일, 수정일, 조회수, 상세 URL
-- 공지 본문 텍스트와 원본 HTML
-- 신청 마감, 면담/인터뷰, 제출, 수강신청, 연구 진행 일정
-- 제출 장소, 제출 방법, 필요 서류, 교수 승인/서명 조건
-- Excel 개별연구 개설 목록과 연구 항목별 기술/자격 요구
-- HWP 개별연구 수강신청원 필드, 표 구조, 필수 서명란
-- 자동채움 후보 필드와 사용자 프로필 입력 필드 정의
-- 체크리스트 템플릿과 이전 실행 대비 실제 변경사항
-- 첨부 다운로드/파싱 성공 여부와 SHA-256
-
-## 범위
-
-현재 크롤러는 개별연구 신청 프로세스만 처리합니다. 다른 학사 공지나 이미지형
-본문 분석은 처리하지 않습니다.
-
-## 테스트
-
-```powershell
-python -m unittest discover
+```bash
+python -m unittest discover -s tests -v
 ```
 
-테스트는 최신 개별연구 공지 선택, 비개별연구 공지 제외, 본문 근거 기반 일정
-구조화, Excel 동적 헤더 처리, 연구 항목 추출, 기술명 분리, HWP 필드/서명 추출,
-스냅샷 변경감지를 확인합니다.
+```text
+Ran 40 tests
+OK
+```
+
+---
+
+## Version
+
+| Item   | Version |
+| ------ | ------- |
+| Python | 3.12    |
+| Schema | 1.0.0   |
+| Parser | 0.2.1   |
+
+---
+
+## Roadmap
+
+* 연구 주제 검색 및 필터링
+* 학생별 연구 선택
+* 교수별 신청 조건 표시
+* 신청 체크리스트
+* 신청서 자동채움
+* 신청 진행 상태 관리
+* 공지 변경 알림
+* Frontend
+* Backend API
+* Database
