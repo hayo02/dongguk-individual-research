@@ -50,7 +50,7 @@ td button { display: block; width: 100%; }
 .mini-row { display: flex; gap: 100px; align-items: flex-start; }
 .mini-screen { position: relative; display: block; flex: 0 0 200px; height: 170px; padding: 12px; border: 2px solid #222; border-radius: 8px; background: #fff; color: #111; text-decoration: none; box-shadow: 6px 6px 0 #ddd; overflow: hidden; }
 .mini-screen strong { display: block; min-height: 36px; font-size: 15px; line-height: 1.2; }
-.mini-screen span { position: absolute; left: 12px; right: 12px; bottom: 10px; display: block; min-height: 30px; border: 1px solid var(--line-dark); border-radius: 8px; background: #eee; padding: 5px 6px; font-size: 11px; font-weight: 800; line-height: 1.15; text-align: center; }
+.mini-screen span { position: absolute; left: 12px; right: 12px; bottom: 8px; display: block; min-height: 28px; border: 1px solid var(--line-dark); border-radius: 8px; background: #eee; padding: 5px 6px; font-size: 11px; font-weight: 800; line-height: 1.15; text-align: center; }
 .mini-screen i, .mini-screen b, .mini-screen em { position: absolute; display: block; border: 1px solid var(--line); border-radius: 8px; background: #f3f3f3; font-style: normal; }
 .mini-screen i { left: 12px; top: 56px; width: 58px; height: 38px; }
 .mini-screen b { left: 78px; top: 56px; width: 110px; height: 14px; }
@@ -64,9 +64,9 @@ td button { display: block; width: 100%; }
 .form-mini i { left: 12px; top: 54px; width: 82px; height: 20px; }
 .form-mini b { left: 106px; top: 54px; width: 82px; height: 20px; }
 .form-mini em { left: 12px; top: 84px; width: 176px; height: 36px; }
-.preview-mini i { width: 86px; height: 78px; }
-.preview-mini b { left: 108px; top: 58px; width: 80px; height: 18px; }
-.preview-mini em { left: 108px; top: 86px; width: 80px; height: 34px; }
+.preview-mini i { width: 78px; height: 66px; }
+.preview-mini b { left: 102px; top: 58px; width: 86px; height: 16px; }
+.preview-mini em { left: 102px; top: 84px; width: 86px; height: 24px; }
 .upload-mini i { left: 12px; top: 54px; width: 176px; height: 30px; border-style: dashed; }
 .upload-mini b { left: 12px; top: 94px; width: 176px; height: 16px; }
 .upload-mini em { left: 12px; top: 116px; width: 176px; height: 10px; }
