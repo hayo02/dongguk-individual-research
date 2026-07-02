@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>개별연구 신청 시스템 웹 와이어프레임</title>
+  <link rel="stylesheet" href="styles/wireframes.css">
+</head>
+<body>
+  <header class="wf-top">
+    <div class="wf-logo">LOGO</div>
+    <div>
+      <strong>개별연구 신청 시스템 와이어프레임</strong>
+      <span>PDF 페이지 이동 구조 기반 / 기능 검증용</span>
+    </div>
+    <nav aria-label="와이어프레임 페이지">
+      <a href="#flow">User Flow</a>
+      <a href="#student">Student</a>
+      <a href="#staff">Staff</a>
+      <a href="#states">States</a>
+      <a href="#components">Components</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="flow" class="board">
+      <div class="board-title"><p>Page 1</p><h1>User Flow</h1></div>
+      <div class="flow-canvas" aria-label="핵심 와이어프레임 축소 복제와 페이지 이동 연결">
+        <svg class="flow-arrows" viewBox="0 0 2350 920" aria-hidden="true">
+          <defs><marker id="arrow-head" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z"></path></marker></defs>
+          <path d="M262 232 L342 232"></path><path d="M562 232 L642 232"></path><path d="M862 232 L942 232"></path><path d="M1162 232 L1242 232"></path><path d="M1462 232 L1542 232"></path><path d="M1762 232 L1842 232"></path><path d="M2062 232 L2142 232"></path>
+          <path d="M262 522 L342 522"></path><path d="M562 522 L642 522"></path><path d="M862 522 L942 522"></path><path d="M1162 522 L1242 522"></path>
+          <path d="M262 794 L342 794"></path><path d="M562 794 L642 794"></path><path d="M862 794 L942 794"></path><path d="M1162 794 L1242 794"></path>
+        </svg>
+
+        <section class="mini-lane normal">
+          <h2>학생 정상 신청 및 승인 흐름</h2>
+          <div class="mini-row">
+            <a class="mini-screen" href="#L1"><strong>L1 로그인</strong><span>로그인 버튼</span><i></i><b></b><em></em></a>
+            <a class="mini-screen dashboard-mini" href="#S1"><strong>S1 학생 대시보드</strong><span>개별연구 신청하기</span><i></i><b></b><em></em></a>
+            <a class="mini-screen" href="#S2"><strong>S2 신청 안내</strong><span>개설 과목 확인하기</span><i></i><b></b><em></em></a>
+            <a class="mini-screen table-mini" href="#S3"><strong>S3 개설 과목 목록</strong><span>이 과목 신청하기</span><i></i><b></b><em></em></a>
+            <a class="mini-screen form-mini" href="#S4"><strong>S4 신청서 작성</strong><span>저장하고 신청서 확인</span><i></i><b></b><em></em></a>
+            <a class="mini-screen preview-mini" href="#S5"><strong>S5 신청서 확인</strong><span>서명 완료 후 다음 단계</span><i></i><b></b><em></em></a>
+            <a class="mini-screen upload-mini" href="#S6"><strong>S6 파일 업로드</strong><span>제출 내용 확인</span><i></i><b></b><em></em></a>
+            <a class="mini-screen done-mini" href="#S8"><strong>S8 제출 완료</strong><span>내 신청 현황 확인</span><i></i><b></b><em></em></a>
+          </div>
+        </section>
+
+        <section class="mini-lane revision">
+          <h2>학생 보완 요청 및 재제출 흐름</h2>
+          <div class="mini-row">
+            <a class="mini-screen status-mini" href="#S9"><strong>S9 내 신청 현황</strong><span>보완 내용 수정하기</span><i></i><b></b><em></em></a>
+            <a class="mini-screen form-mini" href="#S10"><strong>S10 보완 요청 수정</strong><span>다시 제출</span><i></i><b></b><em></em></a>
+            <a class="mini-screen preview-mini" href="#S7"><strong>S7 최종 확인</strong><span>최종 제출</span><i></i><b></b><em></em></a>
+            <a class="mini-screen done-mini" href="#S8"><strong>S8 제출 완료</strong><span>내 신청 현황 확인</span><i></i><b></b><em></em></a>
+            <a class="mini-screen status-mini" href="#S9"><strong>S9 내 신청 현황</strong><span>상태 변경 기록 확인</span><i></i><b></b><em></em></a>
+          </div>
+        </section>
+
+        <section class="mini-lane staff-flow">
+          <h2>교직원 검토 및 처리 흐름</h2>
+          <div class="mini-row">
+            <a class="mini-screen" href="#L1"><strong>L1 로그인</strong><span>교직원 계정 로그인</span><i></i><b></b><em></em></a>
+            <a class="mini-screen dashboard-mini" href="#A1"><strong>A1 교직원 대시보드</strong><span>전체 신청 보기</span><i></i><b></b><em></em></a>
+            <a class="mini-screen table-mini" href="#A2"><strong>A2 신청 목록</strong><span>상세보기</span><i></i><b></b><em></em></a>
+            <a class="mini-screen review-mini" href="#A3"><strong>A3 신청 상세 및 검토</strong><span>승인 / 보완 요청 / 반려</span><i></i><b></b><em></em></a>
+            <a class="mini-screen modal-mini" href="#approve-modal"><strong>처리 모달</strong><span>최종 승인 또는 요청 전송</span><i></i><b></b><em></em></a>
+          </div>
+        </section>
+      </div>
+      <p class="note">각 축소 프레임은 실제 화면 프레임으로 이동한다. 화살표 라벨은 주요 버튼 또는 처리 동작을 의미한다.</p>
+    </section>
+
+    <section id="student" class="board">
+      <div class="board-title"><p>Page 2</p><h1>Student Wireframes</h1></div>
+      <div class="frame-grid">
+        <article id="L1" class="frame compact">
+          <h2>L1 로그인</h2>
+          <div class="login-panel">
+            <div class="logo-box">LOGO</div><h3>개별연구 신청 시스템</h3>
+            <label>학번 또는 교직원 아이디<input placeholder="2026000000"></label>
+            <label>비밀번호<input type="password" placeholder="웹서비스 전용 비밀번호"></label>
+            <button class="primary" data-route="#S1">로그인</button>
+            <p class="alert">로그인 실패 메시지 영역</p>
+            <p class="helper">본 시스템은 동국대학교 포털과 연동되지 않습니다. 포털 비밀번호가 아닌 웹서비스 전용 비밀번호를 입력해 주세요.</p>
+          </div>
+        </article>
+
+        <article id="S1" class="frame">
+          <header class="app-header student"><div><span class="logo-box small">LOGO</span><strong>개별연구 신청 시스템</strong></div><nav><a>대시보드</a><a>신청 안내</a><a>개설 과목</a><a>내 신청 현황</a></nav><span>김동국 학생 · 로그아웃</span></header>
+          <h2>S1 학생 대시보드</h2>
+          <div class="split">
+            <section class="card"><h3>현재 신청 상태</h3><dl class="info"><dt>학생</dt><dd>김동국 / 2026111111 / 컴퓨터공학전공</dd><dt>신청 학기</dt><dd>2026학년도 여름학기</dd><dt>신청 가능 여부</dt><dd><span class="badge">신청 가능</span></dd><dt>기간</dt><dd>2026.07.03 - 2026.07.15 / 13일 남음</dd></dl><button class="primary" data-route="#S2">개별연구 신청하기</button><p class="note">상태별 버튼: 작성 중인 신청서 계속하기 / 제출 내역 확인 / 보완 내용 확인 및 수정 / 승인 결과 확인 / 반려 결과 확인</p></section>
+            <section class="card"><h3>최근 공지와 절차 요약</h3><ul><li>2026-여름학기 개별연구 신청 안내</li><li>추가 공지: 증빙자료 업로드 양식 변경</li><li>안내 확인 - 과목 선택 - 신청서 작성 - 서명본 업로드 - 제출</li></ul></section>
+          </div>
+        </article>
+
+        <article id="S2" class="frame">
+          <header class="app-header student"><div><span class="logo-box small">LOGO</span><strong>개별연구 신청 시스템</strong></div><nav><a>대시보드</a><a>신청 안내</a><a>개설 과목</a><a>내 신청 현황</a></nav><span>김동국 학생</span></header>
+          <h2>S2 개별연구 신청 안내</h2>
+          <div class="two-col"><section class="card"><h3>신청 기본 정보</h3><dl class="info"><dt>학기</dt><dd>2026학년도 여름학기</dd><dt>대상</dt><dd>컴퓨터·AI학부 재학생</dd><dt>기간</dt><dd>2026.07.03 - 2026.07.15</dd><dt>필수 서류</dt><dd>서명된 신청서, 증빙자료</dd></dl></section><section class="card"><h3>주의사항</h3><ul><li>담당 교수 면담 후 서명을 받아야 한다.</li><li>마감 이후 제출은 불가하다.</li><li>관련 공지, 첨부파일, 원본 공지 링크를 확인한다.</li></ul></section></div>
+          <div class="actions"><button data-route="#S1">대시보드로 돌아가기</button><button class="primary" data-route="#S3">개설 과목 확인하기</button></div>
+        </article>
+
+        <article id="S3" class="frame">
+          <header class="app-header student"><div><span class="logo-box small">LOGO</span><strong>개별연구 신청 시스템</strong></div><nav><a>대시보드</a><a>신청 안내</a><a>개설 과목</a><a>내 신청 현황</a></nav><span>김동국 학생</span></header>
+          <h2>S3 개설 과목 목록</h2>
+          <div class="filters"><input placeholder="과목명 검색"><input placeholder="담당 교수 검색"><button>검색</button></div>
+          <table><thead><tr><th>과목명</th><th>담당 교수</th><th>학수강좌번호</th><th>연구 내용 요약</th><th>정원</th><th>인터뷰</th><th>주당 시간</th><th>자격</th><th>동작</th></tr></thead><tbody><tr><td>AI 모델 해석</td><td>이교수</td><td>CAI401-01</td><td>설명 가능한 AI 실험</td><td>3명</td><td>7/8</td><td>6시간</td><td>Python</td><td><button data-route="#S3-modal">상세보기</button><button class="primary" data-route="#S4">이 과목 신청하기</button></td></tr><tr><td>웹 데이터 수집</td><td>박교수</td><td>CAI402-01</td><td>공지 크롤링 자동화</td><td>2명</td><td>7/9</td><td>5시간</td><td>웹 기초</td><td><button>상세보기</button><button>이 과목 신청하기</button></td></tr><tr><td>컴퓨터비전 실험</td><td>최교수</td><td>CAI403-01</td><td>이미지 분류 모델</td><td>4명</td><td>7/10</td><td>6시간</td><td>딥러닝</td><td><button>상세보기</button><button>이 과목 신청하기</button></td></tr><tr><td>보안 로그 분석</td><td>정교수</td><td>CAI404-01</td><td>이상징후 탐지</td><td>2명</td><td>7/11</td><td>4시간</td><td>자료구조</td><td><button>상세보기</button><button>이 과목 신청하기</button></td></tr></tbody></table>
+        </article>
+
+        <article id="S3-modal" class="frame compact"><h2>S3 내부 과목 상세 모달</h2><div class="modal-box"><h3>AI 모델 해석</h3><dl class="info"><dt>담당 교수</dt><dd>이교수</dd><dt>학수강좌번호</dt><dd>CAI401-01</dd><dt>연구 내용</dt><dd>설명 가능한 AI 실험과 결과 분석</dd><dt>수강 정원</dt><dd>3명</dd><dt>인터뷰 일정</dt><dd>2026.07.08 14:00</dd><dt>주당 연구 시간</dt><dd>6시간</dd><dt>수강 자격</dt><dd>Python 사용 가능</dd></dl><div class="actions"><button data-route="#S3">닫기</button><button class="primary" data-route="#S4">신청 과목으로 선택</button></div></div></article>
+
+        <article id="S4" class="frame">
+          <h2>S4 온라인 신청서 작성</h2><div class="stepper"><span>신청 안내</span><span>과목 선택</span><strong>신청서 작성</strong><span>신청서 다운로드</span><span>서류 업로드</span><span>최종 확인</span><span>제출 완료</span></div>
+          <div class="three-col"><section class="card"><h3>학생 정보</h3><label>이름 <input value="김동국" readonly></label><p class="tag">자동채움 · 수정 불가</p><label>이메일 <input value="student@dgu.ac.kr"></label><label>연락처 <input value="010-0000-0000"></label></section><section class="card"><h3>개별연구 과목 정보</h3><label>과목명 <input value="AI 모델 해석" readonly></label><p class="tag">자동채움 · 수정 불가</p><label>담당 교수 <input value="이교수" readonly></label><label>주당 연구 시간 <input value="6시간" readonly></label></section><section class="card"><h3>학생 직접 작성 정보</h3><label>신청 사유 <textarea></textarea></label><label>연구 참여 목적 <textarea></textarea></label><label>추가 요청사항 <textarea></textarea></label><label class="check"><input type="checkbox"> 개인정보 및 제출 내용 확인</label></section></div>
+          <div class="actions"><button data-route="#S3">이전</button><button>임시 저장</button><button class="primary" data-route="#S5">저장하고 신청서 확인</button></div>
+        </article>
+
+        <article id="S5" class="frame">
+          <h2>S5 신청서 확인 및 다운로드</h2><div class="stepper"><span>신청 안내</span><span>과목 선택</span><span>신청서 작성</span><strong>신청서 다운로드</strong><span>서류 업로드</span><span>최종 확인</span><span>제출 완료</span></div>
+          <div class="split"><div class="doc-placeholder">신청서 미리보기</div><section class="card"><h3>요약</h3><p>학생 정보, 과목 정보, 신청 사유</p><p class="alert">신청서를 내려받아 출력한 후 담당 교수와 면담하고 서명을 받아 주세요. 서명된 신청서는 다음 단계에서 업로드해야 합니다.</p><div class="actions"><button data-route="#S4">신청서 수정</button><button>신청서 PDF 다운로드</button><button class="primary" data-route="#S6">서명 완료 후 다음 단계</button></div></section></div>
+        </article>
+
+        <article id="S6" class="frame">
+          <h2>S6 서명본 및 증빙자료 업로드</h2><div class="stepper"><span>신청 안내</span><span>과목 선택</span><span>신청서 작성</span><span>신청서 다운로드</span><strong>서류 업로드</strong><span>최종 확인</span><span>제출 완료</span></div>
+          <div class="three-col"><div class="upload required">교수 서명 신청서 업로드<br><strong>필수</strong></div><div class="upload">증빙자료 업로드</div><div class="upload">기타 자료 업로드</div></div>
+          <table><thead><tr><th>파일명</th><th>형식</th><th>크기</th><th>상태</th><th>동작</th></tr></thead><tbody><tr><td>signed_application.pdf</td><td>PDF</td><td>1.2MB</td><td><span class="badge">업로드 완료</span></td><td><button>미리보기</button><button>교체</button><button class="danger">삭제</button></td></tr><tr><td>evidence.png</td><td>PNG</td><td>900KB</td><td><span class="badge muted">업로드 실패</span></td><td><button>교체</button></td></tr></tbody></table>
+          <div class="actions"><button data-route="#S5">이전</button><button>임시 저장</button><button class="primary" data-route="#S7">제출 내용 확인</button></div>
+        </article>
+
+        <article id="S7" class="frame">
+          <h2>S7 제출 전 최종 확인</h2><div class="stepper"><span>신청 안내</span><span>과목 선택</span><span>신청서 작성</span><span>신청서 다운로드</span><span>서류 업로드</span><strong>최종 확인</strong><span>제출 완료</span></div>
+          <div class="two-col"><section class="card"><h3>제출 내용</h3><p>학생 정보, 선택 과목, 담당 교수, 신청서 입력 내용</p><p>자동채움 정보와 직접 입력 정보를 분리 표시</p><p>업로드한 파일 목록 및 필수 항목 확인</p></section><section class="card"><h3>확인</h3><label class="check"><input type="checkbox"> 교수 서명을 확인했습니다.</label><p class="alert">제출 후에는 교직원 검토 전까지 수정이 제한됩니다.</p></section></div>
+          <div class="actions"><button data-route="#S6">이전 단계로 돌아가기</button><button class="primary" data-route="#submit-modal">최종 제출</button></div>
+        </article>
+
+        <article id="S8" class="frame compact"><h2>S8 제출 완료</h2><section class="done card"><h3>제출이 완료되었습니다.</h3><dl class="info"><dt>신청 번호</dt><dd>IR-2026-0001</dd><dt>신청 과목</dt><dd>AI 모델 해석</dd><dt>담당 교수</dt><dd>이교수</dd><dt>제출 일시</dt><dd>2026.07.02 21:00</dd><dt>상태</dt><dd><span class="badge">제출 완료</span></dd></dl><div class="actions"><button data-route="#S9">내 신청 현황 확인</button><button data-route="#S1">대시보드로 이동</button></div></section></article>
+
+        <article id="S9" class="frame"><h2>S9 내 신청 현황</h2><div class="two-col"><section class="card"><h3>현재 상태</h3><dl class="info"><dt>상태</dt><dd><span class="badge">제출 완료</span></dd><dt>신청 번호</dt><dd>IR-2026-0001</dd><dt>학기</dt><dd>2026 여름학기</dd><dt>신청 과목</dt><dd>AI 모델 해석</dd><dt>담당 교수</dt><dd>이교수</dd><dt>최초/최근 제출</dt><dd>2026.07.02 21:00</dd></dl><button data-route="#S10">보완 내용 수정하기</button></section><section class="card"><h3>검토 의견 및 변경 기록</h3><ul><li>제출 완료: 학생 제출</li><li>보완 요청: 서명본 식별 불가</li><li>승인/반려 상태에서는 모든 내용 읽기 전용</li></ul><p class="note">상태 변형: 작성 중 / 제출 완료 / 보완 요청 / 승인 / 반려</p></section></div></article>
+
+        <article id="S10" class="frame"><h2>S10 보완 요청 수정</h2><div class="two-col"><section class="card"><h3>보완 요청</h3><dl class="info"><dt>사유</dt><dd>교수 서명본이 흐릿하여 식별이 어렵습니다.</dd><dt>수정 요청 항목</dt><dd>서명본 재업로드, 신청 사유 보완</dd><dt>요청 일시</dt><dd>2026.07.04 10:00</dd></dl><p class="tag">자동채움 정보는 읽기 전용</p></section><section class="card"><h3>수정 가능한 항목</h3><label>신청 사유<textarea></textarea></label><div class="upload">파일 교체 또는 추가</div></section></div><div class="actions"><button>임시 저장</button><button data-route="#S7">수정 내용 확인</button><button class="primary" data-route="#S7">다시 제출</button></div></article>
+      </div>
+    </section>
+
+    <section id="staff" class="board">
+      <div class="board-title"><p>Page 3</p><h1>Staff Wireframes</h1></div>
+      <div class="frame-grid">
+        <article id="A1" class="frame"><header class="app-header staff"><div><span class="logo-box small">LOGO</span><strong>개별연구 관리 시스템</strong></div><nav><a>대시보드</a><a>신청 목록</a><a>크롤링 결과</a></nav><span>교직원 이름 · 로그아웃</span></header><h2>A1 교직원 대시보드</h2><div class="stat-row"><div>제출 완료<br><strong>12</strong></div><div>보완 요청<br><strong>3</strong></div><div>승인<br><strong>8</strong></div><div>반려<br><strong>1</strong></div><div>전체 신청<br><strong>24</strong></div></div><div class="three-col"><section class="card"><h3>처리가 필요한 신청</h3><p>작성 중 신청은 노출하지 않음</p><button data-route="#A3">신청 상세보기</button></section><section class="card"><h3>최근 제출된 신청</h3><p>IR-2026-0001 김동국</p><button data-route="#A2">전체 신청 보기</button></section><section class="card"><h3>크롤링 분석</h3><p>검토 필요 2건 / 마감일 2026.07.15</p><button data-route="#A4">크롤링 결과 확인</button></section></div></article>
+        <article id="A2" class="frame"><h2>A2 신청 목록</h2><div class="filters"><select><option>상태 필터</option></select><input placeholder="학생 이름"><input placeholder="학번"><input placeholder="신청 과목"><input placeholder="담당 교수"><button>제출 일시 정렬</button></div><table><thead><tr><th>신청 번호</th><th>학생 이름</th><th>학번</th><th>신청 과목</th><th>담당 교수</th><th>최근 제출 일시</th><th>현재 상태</th><th>동작</th></tr></thead><tbody><tr><td>IR-2026-0001</td><td>김동국</td><td>2026111111</td><td>AI 모델 해석</td><td>이교수</td><td>2026.07.02 21:00</td><td><span class="badge">제출 완료</span></td><td><button data-route="#A3">상세보기</button></td></tr></tbody></table></article>
+        <article id="A3" class="frame"><h2>A3 신청 상세 및 검토</h2><div class="three-col"><section class="card"><h3>학생 정보</h3><p>이름, 학번, 소속, 이메일, 연락처</p></section><section class="card"><h3>신청 정보</h3><p>신청 번호, 학기, 과목, 담당 교수, 학수강좌번호, 사유, 목적, 제출 일시, 현재 상태</p></section><section class="card"><h3>제출 파일</h3><p>교수 서명 신청서, 증빙자료, 기타 파일</p><div class="doc-placeholder small-doc">파일 미리보기</div><button>파일 다운로드</button></section></div><section class="card"><h3>처리 기록</h3><table><thead><tr><th>이전 상태</th><th>변경 상태</th><th>검토 의견</th><th>처리자</th><th>처리 일시</th></tr></thead><tbody><tr><td>제출 완료</td><td>보완 요청</td><td>서명본 식별 불가</td><td>교직원</td><td>2026.07.04</td></tr></tbody></table></section><div class="actions"><button class="primary" data-route="#approve-modal">승인</button><button data-route="#revise-modal">보완 요청</button><button class="danger" data-route="#reject-modal">반려</button></div></article>
+        <article id="A4" class="frame"><h2>A4 크롤링 결과 확인</h2><div class="two-col"><section class="card"><h3>수집된 공지 목록</h3><table><thead><tr><th>공지 작성일</th><th>신청 학기</th><th>신청 기간</th><th>NEEDS_REVIEW</th></tr></thead><tbody><tr><td>2026.07.02</td><td>2026 여름학기</td><td>07.03 - 07.15</td><td><span class="badge muted">NEEDS_REVIEW</span></td></tr></tbody></table></section><section class="card"><h3>공지 상세</h3><p>필수 서류, 주요 일정, 첨부파일, 개설 과목 분석 결과, 원본 공지 링크</p><p class="note">MVP 조회 기능만 지원: 수정, 승인, 게시 버튼 없음</p></section></div></article>
+      </div>
+    </section>
+
+    <section id="states" class="board">
+      <div class="board-title"><p>Page 4</p><h1>States and Modals</h1></div>
+      <div class="state-grid">
+        <div class="state-card">로그인 실패<br><span>아이디 또는 비밀번호를 확인해 주세요.</span></div><div id="submit-modal" class="state-card modal-state">최종 제출 확인<br><button data-route="#S8">제출</button><button data-route="#S7">취소</button></div><div class="state-card">과목 선택 확인<br><span>AI 모델 해석을 신청 과목으로 선택합니다.</span></div><div class="state-card">필수 입력 항목 누락<br><span>신청 사유를 입력해 주세요.</span></div><div class="state-card">필수 파일 누락<br><span>교수 서명 신청서를 업로드해 주세요.</span></div><div id="approve-modal" class="state-card modal-state">승인 확인<br><button data-route="#A3">취소</button><button class="primary">최종 승인</button></div><div id="revise-modal" class="state-card modal-state">보완 요청 입력<br><label><input type="checkbox"> 서명본 재업로드</label><textarea placeholder="보완 요청 사유"></textarea><button>요청 전송</button></div><div id="reject-modal" class="state-card modal-state">반려 사유 입력 및 확인<br><textarea placeholder="반려 사유"></textarea><button class="danger">반려 처리</button></div><div class="state-card">업로드 성공<br><span>파일 업로드가 완료되었습니다.</span></div><div class="state-card">업로드 실패<br><span>지원하지 않는 파일 형식입니다.</span></div><div class="state-card">접근 권한 없음<br><span>이 화면을 볼 수 있는 권한이 없습니다.</span></div><div class="state-card empty">데이터가 없는 상태<br><span>표시할 신청 내역이 없습니다.</span></div><div class="state-card loading">로딩 상태<br><span></span></div><div class="state-card">크롤링 결과 표시<br><span class="badge muted">NEEDS_REVIEW</span></div>
+      </div>
+    </section>
+
+    <section id="components" class="board">
+      <div class="board-title"><p>Page 5</p><h1>Components</h1></div>
+      <div class="component-grid">
+        <div class="component"><h3>상단 헤더</h3><header class="app-header"><div><span class="logo-box small">LOGO</span><strong>시스템명</strong></div><nav><a>메뉴</a><a>메뉴</a></nav><span>사용자 · 로그아웃</span></header></div><div class="component"><h3>학생/교직원 내비게이션</h3><nav class="nav-demo"><a>대시보드</a><a>신청 안내</a><a>신청 목록</a><a>크롤링 결과</a></nav></div><div class="component"><h3>신청 단계 표시기</h3><div class="stepper"><span>신청 안내</span><strong>과목 선택</strong><span>신청서 작성</span></div></div><div class="component"><h3>버튼</h3><button class="primary">기본 버튼</button><button>보조 버튼</button><button class="danger">위험 동작 버튼</button><button disabled>비활성 버튼</button></div><div class="component"><h3>입력 요소</h3><input placeholder="입력창"><textarea placeholder="텍스트 영역"></textarea><select><option>드롭다운</option></select><label class="check"><input type="checkbox"> 체크박스</label></div><div class="component"><h3>검색창</h3><div class="filters"><input placeholder="검색어"><button>검색</button></div></div><div class="component"><h3>파일 업로드 영역</h3><div class="upload">파일 업로드</div></div><div class="component"><h3>테이블</h3><table><thead><tr><th>항목</th><th>상태</th></tr></thead><tbody><tr><td>신청서</td><td><span class="badge">완료</span></td></tr></tbody></table></div><div class="component"><h3>카드와 상태 배지</h3><div class="card">카드 내용 <span class="badge">제출 완료</span></div></div><div class="component"><h3>알림 메시지</h3><p class="alert">필수 항목을 확인해 주세요.</p></div><div class="component"><h3>모달</h3><div class="modal-box mini"><h4>확인 모달</h4><button>닫기</button><button class="primary">확인</button></div></div><div class="component"><h3>빈 상태 / 파일 목록 항목</h3><div class="state-card empty">데이터가 없습니다.</div><p class="file-row">signed_application.pdf · PDF · 1.2MB · 업로드 완료</p></div>
+      </div>
+    </section>
+  </main>
+  <script src="scripts/wireframes.js"></script>
+</body>
+</html>
