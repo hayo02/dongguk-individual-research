@@ -39,7 +39,7 @@ class ApiApplication:
             return self._json(
                 start_response,
                 400,
-                {"success": False, "message": "loginId와 password를 입력해 주세요."},
+                {"success": False, "message": "아이디와 비밀번호를 입력해 주세요."},
             )
 
         with prepare_database(self.db_path) as connection:
