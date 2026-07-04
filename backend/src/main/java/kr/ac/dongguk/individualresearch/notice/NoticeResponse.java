@@ -16,6 +16,7 @@ public record NoticeResponse(
         Map<String, String> scheduleInfo,
         Map<String, String> submissionInfo,
         String noticeNotes,
+        String bodyText,
         LocalDate publishedAt
 ) {
 }

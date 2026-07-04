@@ -21,6 +21,11 @@ public class NoticeService {
                 .orElseThrow(() -> new IllegalArgumentException("신청 안내 공지가 없습니다."));
     }
 
+    public Notice notice(long noticeId) {
+        return noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new IllegalArgumentException("공지 정보를 찾을 수 없습니다."));
+    }
+
     public NoticeResponse toResponse(Notice notice) {
         return new NoticeResponse(
                 notice.id(),
@@ -34,6 +39,7 @@ public class NoticeService {
                 readMap(notice.scheduleInfoJson()),
                 readMap(notice.submissionInfoJson()),
                 notice.noticeNotes(),
+                notice.bodyText(),
                 notice.publishedAt()
         );
     }

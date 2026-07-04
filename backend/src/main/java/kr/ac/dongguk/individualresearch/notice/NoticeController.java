@@ -3,6 +3,7 @@ package kr.ac.dongguk.individualresearch.notice;
 import kr.ac.dongguk.individualresearch.auth.AuthFacade;
 import kr.ac.dongguk.individualresearch.common.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,5 +23,15 @@ public class NoticeController {
     public ApiResponse<NoticeResponse> current(@RequestHeader(value = "Authorization", required = false) String authorization) {
         authFacade.currentUser(authorization);
         return ApiResponse.ok(noticeService.toResponse(noticeService.currentNotice()));
+    }
+
+    @GetMapping("/{noticeId}/source")
+    public ApiResponse<NoticeSourceResponse> source(
+            @PathVariable long noticeId,
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        authFacade.currentUser(authorization);
+        Notice notice = noticeService.notice(noticeId);
+        return ApiResponse.ok(new NoticeSourceResponse(notice.id(), notice.title(), notice.originalUrl()));
     }
 }

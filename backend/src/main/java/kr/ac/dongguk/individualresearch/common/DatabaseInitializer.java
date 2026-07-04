@@ -77,12 +77,14 @@ public class DatabaseInitializer implements ApplicationRunner {
                     schedule_info TEXT,
                     submission_info TEXT,
                     notice_notes TEXT,
+                    body_text MEDIUMTEXT,
                     published_at DATE,
                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
                 """
         );
+        ensureNoticeBodyTextColumn();
         jdbcTemplate.execute(
                 """
                 CREATE TABLE IF NOT EXISTS applications (
@@ -109,6 +111,22 @@ public class DatabaseInitializer implements ApplicationRunner {
                 )
                 """
         );
+    }
+
+    private void ensureNoticeBodyTextColumn() {
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*)
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'notices'
+                  AND COLUMN_NAME = 'body_text'
+                """,
+                Integer.class
+        );
+        if (count == null || count == 0) {
+            jdbcTemplate.execute("ALTER TABLE notices ADD COLUMN body_text MEDIUMTEXT");
+        }
     }
 
     private void seedUsers() {
@@ -159,6 +177,7 @@ public class DatabaseInitializer implements ApplicationRunner {
             LocalDate startDate = date(text(schedule.path("application_start").path("value"), null), publishedAt);
             LocalDate endDate = date(text(schedule.path("application_deadline").path("value"), null), startDate);
             String originalUrl = text(notice.path("url"), "https://cs.dongguk.edu/");
+            String bodyText = text(notice.path("body_text"), "");
             boolean needsReview = snapshot.path("warnings").size() > 0 || snapshot.path("errors").size() > 0;
 
             deleteLegacyFallbackNotice();
@@ -173,6 +192,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                     objectMapper.writeValueAsString(scheduleInfo(schedule)),
                     objectMapper.writeValueAsString(submissionInfo(submission)),
                     noticeNotes(submission),
+                    bodyText,
                     publishedAt
             );
         } catch (Exception exception) {
@@ -203,6 +223,7 @@ public class DatabaseInitializer implements ApplicationRunner {
             String scheduleInfo,
             String submissionInfo,
             String noticeNotes,
+            String bodyText,
             LocalDate publishedAt
     ) {
         Integer count = jdbcTemplate.queryForObject(
@@ -216,7 +237,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                     UPDATE notices
                     SET title = ?, semester = ?, start_date = ?, end_date = ?, needs_review = ?,
                         required_documents = ?, schedule_info = ?, submission_info = ?,
-                        notice_notes = ?, published_at = ?, updated_at = CURRENT_TIMESTAMP
+                        notice_notes = ?, body_text = ?, published_at = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE original_url = ?
                     """,
                     title,
@@ -228,6 +249,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                     scheduleInfo,
                     submissionInfo,
                     noticeNotes,
+                    bodyText,
                     publishedAt,
                     originalUrl
             );
@@ -238,9 +260,9 @@ public class DatabaseInitializer implements ApplicationRunner {
                 """
                 INSERT INTO notices (
                     title, semester, start_date, end_date, original_url, needs_review,
-                    required_documents, schedule_info, submission_info, notice_notes, published_at
+                    required_documents, schedule_info, submission_info, notice_notes, body_text, published_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 title,
                 semester,
@@ -252,6 +274,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                 scheduleInfo,
                 submissionInfo,
                 noticeNotes,
+                bodyText,
                 publishedAt
         );
     }
@@ -261,14 +284,21 @@ public class DatabaseInitializer implements ApplicationRunner {
         if (!documents.isArray() || documents.isEmpty()) {
             return List.of("개별연구 수강신청원", "담당교수 서명이 포함된 수강신청원 또는 서명 불가 시 수강 허가 이메일 등 증빙자료");
         }
-        return documents.findValuesAsText("name").stream()
-                .map(String::trim)
-                .filter(value -> !value.isBlank())
-                .map(value -> value.equals("담당교수 승인 증빙")
-                        ? approvalEvidenceLabel(documents)
-                        : value)
-                .distinct()
-                .toList();
+        return toRequiredDocumentLabels(documents);
+    }
+
+    private List<String> toRequiredDocumentLabels(JsonNode documents) {
+        java.util.ArrayList<String> labels = new java.util.ArrayList<>();
+        for (JsonNode document : documents) {
+            String name = text(document.path("name"), "").trim();
+            if (name.isBlank()) {
+                continue;
+            }
+            labels.add(name.equals("담당교수 승인 증빙")
+                    ? approvalEvidenceLabel(documents)
+                    : name);
+        }
+        return labels.stream().distinct().toList();
     }
 
     private String approvalEvidenceLabel(JsonNode documents) {
@@ -380,6 +410,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                 "{\"신청기간\":\"2026-07-20 ~ 2026-07-30\"}",
                 "{\"제출방식\":\"온라인 신청 후 서명본 업로드\"}",
                 "담당 교수 면담 후 서명을 받아 업로드해 주세요.",
+                "2026학년도 여름학기 개별연구 신청 안내",
                 LocalDate.parse("2026-07-03")
         );
     }

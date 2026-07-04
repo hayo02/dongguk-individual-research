@@ -14,6 +14,7 @@ public record Notice(
         String scheduleInfoJson,
         String submissionInfoJson,
         String noticeNotes,
+        String bodyText,
         LocalDate publishedAt
 ) {
 }
