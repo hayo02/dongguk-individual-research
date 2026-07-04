@@ -205,6 +205,28 @@ input {
   background: #fafafa;
 }
 
+.notice-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.notice-overview h1 {
+  max-width: 720px;
+}
+
+.status-badge {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border: 1px solid #2f6f55;
+  border-radius: 999px;
+  background: #edf7f2;
+  color: #245f48;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .status-panel dl {
   display: grid;
   grid-template-columns: 110px 1fr;
@@ -231,6 +253,69 @@ input {
   word-break: break-all;
 }
 
+.muted,
+.notice-note {
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.notice-note {
+  margin: -4px 0 18px;
+  padding: 12px;
+  border: 1px solid #d5d9df;
+  border-radius: 6px;
+  background: #f8f9fb;
+}
+
+.notice-detail {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.notice-detail h2,
+.notice-detail h3 {
+  margin: 0;
+}
+
+.notice-detail section {
+  display: grid;
+  gap: 8px;
+}
+
+.notice-detail ul,
+.notice-detail ol {
+  margin: 0;
+  padding-left: 22px;
+  color: #374151;
+  line-height: 1.7;
+}
+
+.recent-notice {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #d5d9df;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.recent-notice span {
+  font-weight: 800;
+}
+
+.recent-notice time {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.text-link {
+  color: #1f4f7a;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 @media (max-width: 860px) {
   .app-header,
   .brand-row {
@@ -244,5 +329,9 @@ input {
 
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+
+  .notice-heading {
+    flex-direction: column;
   }
 }

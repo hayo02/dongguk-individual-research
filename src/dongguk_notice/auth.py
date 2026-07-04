@@ -66,6 +66,34 @@ def issue_access_token(user: dict, secret: str, now: int | None = None) -> str:
     )
 
 
+def verify_access_token(token: str, secret: str, now: int | None = None) -> dict:
+    try:
+        payload_value, signature_value = token.split(".", 1)
+        payload_bytes = _urlsafe_decode(payload_value)
+        signature = _urlsafe_decode(signature_value)
+    except ValueError as exc:
+        raise PermissionError("인증 정보가 올바르지 않습니다.") from exc
+
+    expected = hmac.new(secret.encode("utf-8"), payload_bytes, hashlib.sha256).digest()
+    if not hmac.compare_digest(signature, expected):
+        raise PermissionError("인증 정보가 올바르지 않습니다.")
+
+    payload = json.loads(payload_bytes.decode("utf-8"))
+    expires_at = int(payload.get("exp", 0))
+    if expires_at < (now or int(time.time())):
+        raise PermissionError("인증 정보가 만료되었습니다.")
+    return payload
+
+
+def token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _urlsafe_decode(value: str) -> bytes:
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode((value + padding).encode("ascii"))
+
+
 def public_user(row) -> dict:
     return {
         "id": row["id"],
