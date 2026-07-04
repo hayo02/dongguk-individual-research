@@ -1,8 +1,8 @@
 package kr.ac.dongguk.individualresearch.auth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -99,7 +99,7 @@ public class AuthService {
                     payload.path("iat").asLong(),
                     expiresAt
             );
-        } catch (JsonProcessingException | IllegalArgumentException exception) {
+        } catch (IOException | IllegalArgumentException exception) {
             throw new AuthException("인증 정보가 올바르지 않습니다.");
         }
     }

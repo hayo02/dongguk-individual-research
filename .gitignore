@@ -5,6 +5,7 @@ __pycache__/
 
 .agents/
 .idea/
+.run/
 data/
 *.egg-info/
 .pytest_cache/
