@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 .agents/
+.idea/
 data/
 *.egg-info/
 .pytest_cache/
@@ -11,3 +12,5 @@ node_modules/
 frontend/dist/
 .pnpm-store/
 outputs/
+backend/build/
+backend/.gradle/

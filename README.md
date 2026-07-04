@@ -2,7 +2,7 @@
 
 동국대학교 컴퓨터·AI학부 개별연구 신청 프로세스 개선 프로젝트입니다.
 
-현재 저장소는 **개별연구 공지·첨부파일 수집기**, **Excel/HWP 문서 분석기**, **신청 시스템 웹 와이어프레임**까지 포함합니다. 실제 학생 신청 서비스의 백엔드 API, 데이터베이스, 로그인, 제출 기능은 아직 구현 전이며, 지금 단계의 핵심은 신청 정보 구조화와 화면 흐름 검증입니다.
+현재 저장소는 **개별연구 공지·첨부파일 수집기**, **Excel/HWP 문서 분석기**, **신청 시스템 웹 와이어프레임**, **React 구현용 UI**, **Spring Boot 백엔드 API**를 포함합니다. 백엔드는 로그인, 로그인 정보 조회, 로그아웃 토큰 무효화, 학생 홈 공지 조회까지 Spring Boot 기준으로 전환되었습니다.
 
 ---
 
@@ -26,6 +26,31 @@
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JAVASCRIPT-F7DF1E?style=for-the-badge&logo=javascript&logoColor=111111)
+
+### Frontend
+
+![React](https://img.shields.io/badge/REACT-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![JavaScript](https://img.shields.io/badge/JAVASCRIPT-F7DF1E?style=for-the-badge&logo=javascript&logoColor=111111)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![Vite](https://img.shields.io/badge/VITE-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![VS Code](https://img.shields.io/badge/VS%20CODE-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white)
+
+### Backend
+
+![Java](https://img.shields.io/badge/JAVA-007396?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/SPRING%20BOOT-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![Gradle](https://img.shields.io/badge/GRADLE%20GROOVY-02303A?style=for-the-badge&logo=gradle&logoColor=white)
+![IntelliJ IDEA](https://img.shields.io/badge/INTELLIJ%20IDEA-000000?style=for-the-badge&logo=intellijidea&logoColor=white)
+
+### Crawler
+
+![Python](https://img.shields.io/badge/PYTHON-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![VS Code](https://img.shields.io/badge/VS%20CODE-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white)
+
+### Database
+
+![MySQL](https://img.shields.io/badge/MYSQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 
 ### Test / Dev
 
@@ -51,20 +76,25 @@
 - JSON 스냅샷 저장
 - 개별연구 신청 시스템 웹 와이어프레임 제작
 - 학생 정상 신청, 보완 요청 재제출, 교직원 검토 흐름 보드 정리
+- React/Vite 기반 구현용 로그인 화면
+- Spring Boot / Gradle Groovy 백엔드 프로젝트 구성
+- MySQL 연결 설정
+- 공통 인증 로그인 API
+- 로그인 정보 조회 API
+- 로그아웃 API 및 서버 토큰 무효화 테이블
+- 학생 홈 현재 공지 조회 API
+- 프론트 로그인 상태 복구 및 로그아웃 API 연결
 
 ### 검증 상태
 
 ```text
-Ran 40 tests
-OK
+Python crawler/parser tests: OK
+Frontend Vite build: OK
+Spring Boot tests: Gradle 설치 또는 IntelliJ Gradle import 후 backend에서 실행
 ```
 
 ### 아직 구현 전
 
-- 실제 웹 프론트엔드 앱
-- 백엔드 API 서버
-- 데이터베이스
-- 로그인/권한 관리
 - 학생 신청서 제출 기능
 - 교직원 승인·보완 요청·반려 처리 기능
 - 알림 및 배포 자동화
@@ -156,6 +186,24 @@ dongguk-individual-research/
 │       ├── structure.py
 │       └── website.py
 │
+├── backend/
+│   ├── build.gradle
+│   ├── settings.gradle
+│   └── src/
+│       ├── main/java/kr/ac/dongguk/individualresearch/
+│       │   ├── auth/
+│       │   ├── common/
+│       │   ├── notice/
+│       │   └── student/
+│       └── test/java/kr/ac/dongguk/individualresearch/
+│
+├── frontend/
+│   ├── src/
+│   │   ├── main.jsx
+│   │   └── styles.css
+│   ├── package.json
+│   └── vite.config.js
+│
 ├── tests/
 │   ├── test_crawler.py
 │   ├── test_samples.py
@@ -245,6 +293,16 @@ data/
 
 ## Install
 
+### Requirements
+
+- Java 17
+- Gradle 8+
+- MySQL 8+
+- Node.js / npm
+- Python 3.10+
+
+### Python Crawler
+
 ```bash
 git clone https://github.com/hayo02/dongguk-individual-research.git
 cd dongguk-individual-research
@@ -256,6 +314,8 @@ python -m pip install -e .
 
 ## Run
 
+### Crawler
+
 ```bash
 python -m dongguk_notice crawl
 ```
@@ -266,6 +326,37 @@ python -m dongguk_notice crawl
 dongguk-notice crawl
 ```
 
+### Backend
+
+```bash
+cd backend
+gradle bootRun
+```
+
+Spring Boot 백엔드는 `http://127.0.0.1:8000`에서 실행됩니다.
+
+기본 DB 연결값은 다음과 같습니다. 로컬 MySQL에 데이터베이스를 먼저 만들어 주세요.
+
+```sql
+CREATE DATABASE individual_research CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+```text
+DB_URL=jdbc:mysql://127.0.0.1:3306/individual_research?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+프론트엔드는 `http://127.0.0.1:5173`에서 실행됩니다.
+
 ---
 
 ## Test
@@ -274,14 +365,17 @@ dongguk-notice crawl
 python -m unittest discover -s tests -v
 ```
 
+```bash
+cd backend
+gradle test
+```
+
 ---
 
 ## Roadmap
 
-- 실제 React 기반 프론트엔드 구현
 - 신청서 자동채움 화면과 문서 생성 연결
 - 학생 신청 진행 상태 관리
 - 교직원 검토 API
-- 신청 데이터 저장용 데이터베이스
 - 공지 변경 알림
 - 배포 및 자동 실행 환경 구성
