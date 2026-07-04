@@ -186,6 +186,7 @@ function LoginPage({ onLogin }) {
 
 function Dashboard({ user, accessToken, onLogout }) {
   const isStudent = user.role === "STUDENT";
+  const [activePage, setActivePage] = useState("dashboard");
   const [dashboard, setDashboard] = useState(null);
   const [dashboardError, setDashboardError] = useState("");
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
@@ -252,16 +253,31 @@ function Dashboard({ user, accessToken, onLogout }) {
         <nav>
           {isStudent ? (
             <>
-              <a>대시보드</a>
-              <a>신청 안내</a>
-              <a>개설 과목</a>
-              <a>내 신청 현황</a>
+              <button
+                className={activePage === "dashboard" ? "active" : ""}
+                onClick={() => setActivePage("dashboard")}
+              >
+                대시보드
+              </button>
+              <button
+                className={activePage === "notice" ? "active" : ""}
+                onClick={() => setActivePage("notice")}
+              >
+                신청 안내
+              </button>
+              <button>개설 과목</button>
+              <button>내 신청 현황</button>
             </>
           ) : (
             <>
-              <a>대시보드</a>
-              <a>신청 목록</a>
-              <a>크롤링 결과</a>
+              <button
+                className={activePage === "dashboard" ? "active" : ""}
+                onClick={() => setActivePage("dashboard")}
+              >
+                대시보드
+              </button>
+              <button>신청 목록</button>
+              <button>크롤링 결과</button>
             </>
           )}
         </nav>
@@ -271,6 +287,9 @@ function Dashboard({ user, accessToken, onLogout }) {
         </div>
       </header>
 
+      {activePage === "notice" && isStudent ? (
+        <NoticeGuide accessToken={accessToken} onBack={() => setActivePage("dashboard")} />
+      ) : (
       <section className="dashboard-page">
         <div className="screen-title">
           <span>{dashboard?.pageCode ?? (isStudent ? "S1" : "A1")}</span>
@@ -295,7 +314,7 @@ function Dashboard({ user, accessToken, onLogout }) {
                 <article className={`metric-card ${metric.tone ?? "neutral"}`} key={metric.label}>
                   <span>{metric.label}</span>
                   <strong>{metric.value}</strong>
-                  <p>{metric.description}</p>
+                  {metric.description ? <p>{metric.description}</p> : null}
                 </article>
               ))}
             </section>
@@ -337,16 +356,220 @@ function Dashboard({ user, accessToken, onLogout }) {
           </>
         )}
       </section>
+      )}
     </main>
   );
 }
 
-function StudentDashboardMain({ dashboard, currentNotice }) {
-  const noticeLines = (currentNotice?.noticeNotes ?? "신청 안내와 개설 과목을 확인한 뒤 신청서를 작성해 주세요.")
+function NoticeGuide({ accessToken, onBack }) {
+  const [notice, setNotice] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  async function handleOpenSourceNotice() {
+    if (!notice) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/notices/${notice.id}/source`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+
+      if (!response.ok || !body.success || !body.data?.originalUrl) {
+        throw new Error("원문 공지를 열 수 없습니다.");
+      }
+
+      window.open(body.data.originalUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      setErrorMessage("원문 공지를 열 수 없습니다.");
+    }
+  }
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadNotice() {
+      setErrorMessage("");
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/notices/current`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const body = await response.json();
+
+        if (!response.ok || !body.success || !body.data) {
+          throw new Error(body.message ?? "신청 안내 공지를 불러오지 못했습니다.");
+        }
+
+        if (isMounted) {
+          setNotice(body.data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "신청 안내 공지를 불러오지 못했습니다.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadNotice();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken]);
+
+  const noticeLines = (notice?.noticeNotes ?? "")
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+  const requiredDocuments = displayRequiredDocuments(notice?.requiredDocuments);
 
+  return (
+    <section className="dashboard-page">
+      <div className="screen-title">
+        <span>S2</span>
+        <div>
+          <p className="eyebrow">학생 신청</p>
+          <h1>개별연구 신청 안내</h1>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <section className="status-panel">
+          <p className="muted">신청 안내 공지를 불러오는 중입니다.</p>
+        </section>
+      ) : errorMessage ? (
+        <section className="status-panel">
+          <p className="error-message">{errorMessage}</p>
+        </section>
+      ) : (
+        <>
+          <section className="notice-guide-stack">
+            <article className="status-panel current-notice-panel">
+              <button className="source-pill" onClick={handleOpenSourceNotice}>
+                원문 공지 확인
+              </button>
+              <p className="eyebrow">현재 공지</p>
+              <h2>{notice.title}</h2>
+              <dl>
+                <dt>학기</dt>
+                <dd>{notice.semester}</dd>
+                <dt>신청 기간</dt>
+                <dd>
+                  {notice.startDate} ~ {notice.endDate}
+                </dd>
+                <dt>게시일</dt>
+                <dd>{notice.publishedAt}</dd>
+              </dl>
+              <div className="actions-row">
+                <button onClick={onBack}>대시보드로 돌아가기</button>
+                <button className="primary-button">개설 과목 확인하기</button>
+              </div>
+            </article>
+
+            <div className="notice-guide-layout">
+              <div className="notice-guide-main">
+                <article className="status-panel notice-detail">
+                  <h2>교과목 개요</h2>
+                  <img
+                    className="course-overview-image"
+                    src="/course-overview.png"
+                    alt="개별연구 교과목 개요 표"
+                  />
+                </article>
+
+                <article className="status-panel notice-detail">
+                  <h2>제출자료</h2>
+                  <ul>
+                    {requiredDocuments.map((document) => (
+                      <li key={document}>{document}</li>
+                    ))}
+                  </ul>
+                </article>
+
+                <article className="status-panel notice-detail">
+                  <h2>주의사항</h2>
+                  {noticeLines.length ? (
+                    <ul className="plain-list">
+                      {noticeLines.map((line) => (
+                        <li key={line}>{line}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="muted">등록된 주의사항이 없습니다.</p>
+                  )}
+                </article>
+              </div>
+
+              <aside className="status-panel notice-detail notice-guide-side">
+                <section className="side-section">
+                  <h2>일정</h2>
+                  <InfoMap values={notice.scheduleInfo} />
+                </section>
+                <section className="side-section">
+                  <h2>제출 방식</h2>
+                  <InfoMap values={notice.submissionInfo} />
+                </section>
+              </aside>
+            </div>
+          </section>
+        </>
+      )}
+    </section>
+  );
+}
+
+function InfoMap({ values }) {
+  const entries = Object.entries(values ?? {});
+
+  if (!entries.length) {
+    return <p className="muted">표시할 정보가 없습니다.</p>;
+  }
+
+  return (
+    <table className="transparent-info-table">
+      <tbody>
+      {entries.map(([label, value]) => (
+        <tr key={label}>
+          <th scope="row">{label}</th>
+          <td>{value}</td>
+        </tr>
+      ))}
+      </tbody>
+    </table>
+  );
+}
+
+function displayRequiredDocuments(documents = []) {
+  const combinedApprovalEvidence =
+    "담당교수 서명이 포함된 수강신청원 또는 서명이 어려운 경우 수강 허가 이메일 등 증빙자료";
+  const hiddenDuplicates = new Set([
+    "담당교수 승인 증빙",
+    "담당교수 서명이 포함된 수강신청원",
+    "수강 허가 이메일 등 증빙자료",
+  ]);
+  const normalized = documents.map((document) =>
+    document === "담당교수 승인 증빙" ? combinedApprovalEvidence : document,
+  );
+  const hasCombinedApprovalEvidence = normalized.includes(combinedApprovalEvidence);
+
+  return normalized
+    .filter((document) => !(hasCombinedApprovalEvidence && hiddenDuplicates.has(document)))
+    .filter((document, index, values) => values.indexOf(document) === index);
+}
+
+function StudentDashboardMain({ dashboard, currentNotice }) {
   return (
     <>
       <dl className="student-info-list">
@@ -361,20 +584,14 @@ function StudentDashboardMain({ dashboard, currentNotice }) {
         <dt>기간</dt>
         <dd>{dashboard?.studentSummary?.applicationPeriod}</dd>
       </dl>
-      <section className="notice-note">
-        <h3>공지사항 안내</h3>
-        <ul>
-          {noticeLines.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      </section>
       <button className="primary-button">{dashboard?.primaryAction}</button>
     </>
   );
 }
 
 function StudentDashboardSide({ dashboard, currentNotice }) {
+  const requiredDocuments = displayRequiredDocuments(currentNotice?.requiredDocuments);
+
   return (
     <>
       <h2>최근 공지와 절차 요약</h2>
@@ -400,7 +617,7 @@ function StudentDashboardSide({ dashboard, currentNotice }) {
           <section>
             <h3>제출자료</h3>
             <ul>
-              {currentNotice.requiredDocuments.map((document) => (
+              {requiredDocuments.map((document) => (
                 <li key={document}>{document}</li>
               ))}
             </ul>
