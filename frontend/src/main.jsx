@@ -186,41 +186,37 @@ function LoginPage({ onLogin }) {
 
 function Dashboard({ user, accessToken, onLogout }) {
   const isStudent = user.role === "STUDENT";
-  const [studentDashboard, setStudentDashboard] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
   const [dashboardError, setDashboardError] = useState("");
-  const [isLoadingDashboard, setIsLoadingDashboard] = useState(isStudent);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
 
   useEffect(() => {
-    if (!isStudent) {
-      setIsLoadingDashboard(false);
-      return;
-    }
-
     let isMounted = true;
 
-    async function loadStudentDashboard() {
+    async function loadDashboard() {
       setDashboardError("");
       setIsLoadingDashboard(true);
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/student/dashboard`, {
+        const path = isStudent ? "/api/student/dashboard" : "/api/staff/dashboard";
+        const response = await fetch(`${API_BASE_URL}${path}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         const body = await response.json();
 
         if (!response.ok || !body.success || !body.data) {
-          throw new Error(body.message ?? "학생 홈 정보를 불러오지 못했습니다.");
+          throw new Error(body.message ?? "대시보드 정보를 불러오지 못했습니다.");
         }
 
         if (isMounted) {
-          setStudentDashboard(body.data);
+          setDashboard(body.data);
         }
       } catch (error) {
         if (isMounted) {
           setDashboardError(
             error instanceof Error
               ? error.message
-              : "학생 홈 정보를 불러오지 못했습니다.",
+              : "대시보드 정보를 불러오지 못했습니다.",
           );
         }
       } finally {
@@ -230,14 +226,16 @@ function Dashboard({ user, accessToken, onLogout }) {
       }
     }
 
-    void loadStudentDashboard();
+    void loadDashboard();
 
     return () => {
       isMounted = false;
     };
   }, [accessToken, isStudent]);
 
-  const currentNotice = studentDashboard?.currentNotice;
+  const currentNotice = dashboard?.currentNotice;
+  const metrics = dashboard?.statusCards ?? dashboard?.metrics ?? [];
+  const displayUser = isStudent ? `${user.name} 학생` : `${user.name} 교직원`;
 
   return (
     <main className="app-shell">
@@ -268,111 +266,204 @@ function Dashboard({ user, accessToken, onLogout }) {
           )}
         </nav>
         <div className="user-actions">
-          <span>{user.name}</span>
+          <span>{displayUser}</span>
           <button onClick={onLogout}>로그아웃</button>
         </div>
       </header>
 
-      <section className="dashboard-grid">
-        <article className="status-panel notice-overview">
-          <p className="eyebrow">{isStudent ? "학생 대시보드" : "교직원 대시보드"}</p>
-          {isStudent ? (
-            <>
-              <div className="notice-heading">
-                <h1>{currentNotice?.title ?? "신청 가능한 개별연구 공지를 확인해 주세요."}</h1>
-                <span className="status-badge">
-                  {currentNotice?.needsReview ? "확인 필요" : "신청 가능"}
-                </span>
-              </div>
+      <section className="dashboard-page">
+        <div className="screen-title">
+          <span>{dashboard?.pageCode ?? (isStudent ? "S1" : "A1")}</span>
+          <div>
+            <p className="eyebrow">{isStudent ? "학생 홈" : "교직원 홈"}</p>
+            <h1>{dashboard?.screenName ?? (isStudent ? "학생 대시보드" : "교직원 대시보드")}</h1>
+          </div>
+        </div>
 
-              {isLoadingDashboard ? (
-                <p className="muted">학생 홈 정보를 불러오는 중입니다.</p>
-              ) : dashboardError ? (
-                <p className="error-message">{dashboardError}</p>
-              ) : currentNotice ? (
-                <>
-                  <dl>
-                    <dt>학기</dt>
-                    <dd>{currentNotice.semester}</dd>
-                    <dt>신청기간</dt>
-                    <dd>
-                      {currentNotice.startDate} ~ {currentNotice.endDate}
-                    </dd>
-                    <dt>내 상태</dt>
-                    <dd>{studentDashboard?.applicationStatus}</dd>
-                  </dl>
-                  <p className="notice-note">{currentNotice.noticeNotes}</p>
-                  <button className="primary-button">{studentDashboard?.primaryAction}</button>
-                </>
-              ) : (
-                <p className="muted">등록된 신청 안내 공지가 없습니다.</p>
-              )}
-            </>
-          ) : (
-            <>
-              <h1>처리가 필요한 신청을 확인해 주세요.</h1>
-              <dl>
-                <dt>로그인 ID</dt>
-                <dd>{user.loginId}</dd>
-                <dt>역할</dt>
-                <dd>{user.role}</dd>
-                <dt>이메일</dt>
-                <dd>{user.email}</dd>
-              </dl>
-              <button className="primary-button">전체 신청 보기</button>
-            </>
-          )}
-        </article>
+        {isLoadingDashboard ? (
+          <section className="status-panel">
+            <p className="muted">대시보드 정보를 불러오는 중입니다.</p>
+          </section>
+        ) : dashboardError ? (
+          <section className="status-panel">
+            <p className="error-message">{dashboardError}</p>
+          </section>
+        ) : (
+          <>
+            <section className="metric-row">
+              {metrics.map((metric) => (
+                <article className={`metric-card ${metric.tone ?? "neutral"}`} key={metric.label}>
+                  <span>{metric.label}</span>
+                  <strong>{metric.value}</strong>
+                  <p>{metric.description}</p>
+                </article>
+              ))}
+            </section>
 
-        <article className="status-panel secondary notice-detail">
-          {isStudent ? (
-            <>
-              <h2>공지 상세</h2>
-              {currentNotice ? (
-                <>
-                  <section>
-                    <h3>제출자료</h3>
-                    <ul>
-                      {currentNotice.requiredDocuments.map((document) => (
-                        <li key={document}>{document}</li>
-                      ))}
-                    </ul>
-                  </section>
-                  <section>
-                    <h3>신청 절차</h3>
-                    <ol>
-                      {studentDashboard?.processSummary.map((step) => (
-                        <li key={step}>{step}</li>
-                      ))}
-                    </ol>
-                  </section>
-                  <section>
-                    <h3>최근 공지</h3>
-                    {studentDashboard?.recentNotices.map((notice) => (
-                      <p className="recent-notice" key={notice.id}>
-                        <span>{notice.title}</span>
-                        <time>{notice.publishedAt}</time>
-                      </p>
-                    ))}
-                  </section>
-                  <a className="text-link" href={currentNotice.originalUrl} target="_blank">
-                    원문 공지 확인
-                  </a>
-                </>
-              ) : (
-                <p className="muted">공지 상세 정보가 아직 없습니다.</p>
-              )}
-            </>
-          ) : (
-            <>
-              <h2>API 연결 확인</h2>
-              <p>로그인 API 응답으로 받은 사용자 정보와 토큰을 프론트 상태에 저장했습니다.</p>
-              <code>{accessToken.slice(0, 44)}...</code>
-            </>
-          )}
-        </article>
+            <section className="dashboard-grid">
+              <article className="status-panel notice-overview">
+                <div className="notice-heading">
+                  <div>
+                    <p className="eyebrow">
+                      {isStudent ? "현재 신청 상태" : "처리가 필요한 신청"}
+                    </p>
+                    <h2>
+                      {isStudent
+                        ? dashboard?.applicationStatusLabel ?? "신청 상태 확인"
+                        : "제출 완료 신청부터 검토합니다"}
+                    </h2>
+                  </div>
+                  <span className="status-badge">
+                    {isStudent ? dashboard?.applicationStatusLabel : "작성 중 제외"}
+                  </span>
+                </div>
+
+                {isStudent ? (
+                  <StudentDashboardMain dashboard={dashboard} currentNotice={currentNotice} />
+                ) : (
+                  <StaffDashboardMain dashboard={dashboard} />
+                )}
+              </article>
+
+              <article className="status-panel secondary notice-detail">
+                {isStudent ? (
+                  <StudentDashboardSide dashboard={dashboard} currentNotice={currentNotice} />
+                ) : (
+                  <StaffDashboardSide dashboard={dashboard} />
+                )}
+              </article>
+            </section>
+
+          </>
+        )}
       </section>
     </main>
+  );
+}
+
+function StudentDashboardMain({ dashboard, currentNotice }) {
+  const noticeLines = (currentNotice?.noticeNotes ?? "신청 안내와 개설 과목을 확인한 뒤 신청서를 작성해 주세요.")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  return (
+    <>
+      <dl className="student-info-list">
+        <dt>이름</dt>
+        <dd>{dashboard?.studentSummary?.name}</dd>
+        <dt>학번</dt>
+        <dd>{dashboard?.studentSummary?.loginId}</dd>
+        <dt>학과</dt>
+        <dd>{dashboard?.studentSummary?.department}</dd>
+        <dt>신청 학기</dt>
+        <dd>{dashboard?.studentSummary?.semester}</dd>
+        <dt>기간</dt>
+        <dd>{dashboard?.studentSummary?.applicationPeriod}</dd>
+      </dl>
+      <section className="notice-note">
+        <h3>공지사항 안내</h3>
+        <ul>
+          {noticeLines.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </section>
+      <button className="primary-button">{dashboard?.primaryAction}</button>
+    </>
+  );
+}
+
+function StudentDashboardSide({ dashboard, currentNotice }) {
+  return (
+    <>
+      <h2>최근 공지와 절차 요약</h2>
+      {currentNotice ? (
+        <>
+          <section>
+            <h3>최근 공지</h3>
+            <p className="recent-notice">
+              <span>{currentNotice.title}</span>
+              <time>{currentNotice.publishedAt}</time>
+            </p>
+          </section>
+          <section>
+            <h3>신청 절차</h3>
+            <ol>
+              {dashboard?.nextSteps?.map((step) => (
+                <li className={step.completed ? "completed" : ""} key={step.label}>
+                  {step.label}
+                </li>
+              ))}
+            </ol>
+          </section>
+          <section>
+            <h3>제출자료</h3>
+            <ul>
+              {currentNotice.requiredDocuments.map((document) => (
+                <li key={document}>{document}</li>
+              ))}
+            </ul>
+          </section>
+        </>
+      ) : (
+        <p className="muted">공지 상세 정보가 아직 없습니다.</p>
+      )}
+    </>
+  );
+}
+
+function StaffDashboardMain({ dashboard }) {
+  const firstPending = dashboard?.pendingApplications?.[0];
+
+  return (
+    <>
+      {firstPending ? (
+        <dl>
+          <dt>신청 번호</dt>
+          <dd>{firstPending.applicationNumber}</dd>
+          <dt>학생</dt>
+          <dd>
+            {firstPending.studentName} / {firstPending.studentLoginId}
+          </dd>
+          <dt>현재 상태</dt>
+          <dd>{firstPending.statusLabel}</dd>
+        </dl>
+      ) : (
+        <p className="muted">현재 검토 대기 중인 신청이 없습니다.</p>
+      )}
+      <button className="primary-button">신청 상세보기</button>
+    </>
+  );
+}
+
+function StaffDashboardSide({ dashboard }) {
+  return (
+    <>
+      <h2>최근 제출 및 크롤링 분석</h2>
+      <section>
+        <h3>최근 제출된 신청</h3>
+        {dashboard?.recentApplications?.length ? (
+          dashboard.recentApplications.map((application) => (
+            <p className="recent-notice" key={application.id}>
+              <span>
+                {application.applicationNumber} {application.studentName}
+              </span>
+              <time>{application.statusLabel}</time>
+            </p>
+          ))
+        ) : (
+          <p className="muted">아직 제출된 신청이 없습니다.</p>
+        )}
+      </section>
+      <section>
+        <h3>크롤링 분석</h3>
+        <p className="notice-note">
+          검토 필요 {dashboard?.crawlerSummary?.needsReviewCount ?? 0}건 / 마감일{" "}
+          {dashboard?.crawlerSummary?.deadline ?? "-"}
+        </p>
+      </section>
+    </>
   );
 }
 
