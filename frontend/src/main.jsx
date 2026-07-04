@@ -1,68 +1,12 @@
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
-
-type UserRole = "STUDENT" | "STAFF";
-
-type LoginUser = {
-  id: number;
-  loginId: string;
-  name: string;
-  role: UserRole;
-  department: string;
-  email: string;
-  phone: string;
-};
-
-type LoginResponse = {
-  success: boolean;
-  message?: string;
-  data?: {
-    user: LoginUser;
-    accessToken: string;
-  };
-};
-
-type Notice = {
-  id: number;
-  title: string;
-  semester: string;
-  startDate: string;
-  endDate: string;
-  originalUrl: string;
-  needsReview: boolean;
-  requiredDocuments: string[];
-  scheduleInfo: Record<string, string>;
-  submissionInfo: Record<string, string>;
-  noticeNotes: string;
-  publishedAt: string;
-};
-
-type StudentDashboardData = {
-  student: LoginUser;
-  currentNotice: Notice;
-  applicationStatus: string;
-  primaryAction: string;
-  recentNotices: Array<{
-    id: number;
-    title: string;
-    publishedAt: string;
-    needsReview: boolean;
-  }>;
-  processSummary: string[];
-};
-
-type ApiResponse<T> = {
-  success: boolean;
-  message?: string;
-  data?: T;
-};
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 const ACCESS_TOKEN_KEY = "individualResearchAccessToken";
 
 function App() {
-  const [user, setUser] = useState<LoginUser | null>(null);
+  const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState("");
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
@@ -80,7 +24,7 @@ function App() {
         const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${savedToken}` },
         });
-        const body = (await response.json()) as ApiResponse<{ user: LoginUser }>;
+        const body = await response.json();
 
         if (!response.ok || !body.success || !body.data) {
           throw new Error(body.message ?? "로그인이 필요합니다.");
@@ -154,17 +98,13 @@ function App() {
   );
 }
 
-function LoginPage({
-  onLogin,
-}: {
-  onLogin: (user: LoginUser, accessToken: string) => void;
-}) {
+function LoginPage({ onLogin }) {
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setErrorMessage("");
     setIsSubmitting(true);
@@ -175,7 +115,7 @@ function LoginPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ loginId, password }),
       });
-      const body = (await response.json()) as LoginResponse;
+      const body = await response.json();
 
       if (!response.ok || !body.success || !body.data) {
         setErrorMessage(body.message ?? "로그인에 실패했습니다.");
@@ -244,17 +184,9 @@ function LoginPage({
   );
 }
 
-function Dashboard({
-  user,
-  accessToken,
-  onLogout,
-}: {
-  user: LoginUser;
-  accessToken: string;
-  onLogout: () => void;
-}) {
+function Dashboard({ user, accessToken, onLogout }) {
   const isStudent = user.role === "STUDENT";
-  const [studentDashboard, setStudentDashboard] = useState<StudentDashboardData | null>(null);
+  const [studentDashboard, setStudentDashboard] = useState(null);
   const [dashboardError, setDashboardError] = useState("");
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(isStudent);
 
@@ -274,7 +206,7 @@ function Dashboard({
         const response = await fetch(`${API_BASE_URL}/api/student/dashboard`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        const body = (await response.json()) as ApiResponse<StudentDashboardData>;
+        const body = await response.json();
 
         if (!response.ok || !body.success || !body.data) {
           throw new Error(body.message ?? "학생 홈 정보를 불러오지 못했습니다.");
@@ -444,4 +376,4 @@ function Dashboard({
   );
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")).render(<App />);
