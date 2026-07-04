@@ -53,7 +53,7 @@ public class StudentDashboardService {
                 primaryAction(status),
                 List.of(
                         new DashboardMetric("학생", "%s / %s".formatted(student.name(), student.loginId()), student.department(), "neutral"),
-                        new DashboardMetric("신청 학기", notice.semester(), period, "neutral"),
+                        new DashboardMetric("신청 학기", notice.semester(), "", "neutral"),
                         new DashboardMetric("신청 가능 여부", availabilityLabel(status), statusDescription(status), statusTone(status))
                 ),
                 List.of(
