@@ -87,6 +87,32 @@ public class DatabaseInitializer implements ApplicationRunner {
         ensureNoticeBodyTextColumn();
         jdbcTemplate.execute(
                 """
+                CREATE TABLE IF NOT EXISTS courses (
+                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    notice_id BIGINT NOT NULL,
+                    display_order INT NOT NULL,
+                    department VARCHAR(100),
+                    professor_name VARCHAR(100) NOT NULL,
+                    course_name VARCHAR(255) NOT NULL,
+                    course_type VARCHAR(30),
+                    course_code VARCHAR(50),
+                    research_description TEXT,
+                    capacity INT,
+                    interview_schedule TEXT,
+                    weekly_hours INT,
+                    qualification TEXT,
+                    professor_emails TEXT,
+                    required_skills TEXT,
+                    mentioned_technologies TEXT,
+                    closed_to_additional_applications BOOLEAN NOT NULL DEFAULT FALSE,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY uk_courses_notice_order (notice_id, display_order)
+                )
+                """
+        );
+        jdbcTemplate.execute(
+                """
                 CREATE TABLE IF NOT EXISTS applications (
                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
                     student_id BIGINT NOT NULL,
@@ -181,7 +207,7 @@ public class DatabaseInitializer implements ApplicationRunner {
             boolean needsReview = snapshot.path("warnings").size() > 0 || snapshot.path("errors").size() > 0;
 
             deleteLegacyFallbackNotice();
-            upsertNotice(
+            long noticeId = upsertNotice(
                     title,
                     semester,
                     startDate,
@@ -195,6 +221,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                     bodyText,
                     publishedAt
             );
+            importCourses(noticeId, snapshot.path("research_items"));
         } catch (Exception exception) {
             seedFallbackNotice();
         }
@@ -212,7 +239,7 @@ public class DatabaseInitializer implements ApplicationRunner {
         return configured;
     }
 
-    private void upsertNotice(
+    private long upsertNotice(
             String title,
             String semester,
             LocalDate startDate,
@@ -253,7 +280,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                     publishedAt,
                     originalUrl
             );
-            return;
+            return noticeIdByOriginalUrl(originalUrl);
         }
 
         jdbcTemplate.update(
@@ -277,6 +304,103 @@ public class DatabaseInitializer implements ApplicationRunner {
                 bodyText,
                 publishedAt
         );
+        return noticeIdByOriginalUrl(originalUrl);
+    }
+
+    private long noticeIdByOriginalUrl(String originalUrl) {
+        Long noticeId = jdbcTemplate.queryForObject(
+                "SELECT id FROM notices WHERE original_url = ? ORDER BY id DESC LIMIT 1",
+                Long.class,
+                originalUrl
+        );
+        if (noticeId == null) {
+            throw new IllegalArgumentException("공지 정보를 저장하지 못했습니다.");
+        }
+        return noticeId;
+    }
+
+    private void importCourses(long noticeId, JsonNode researchItems) {
+        if (!researchItems.isArray()) {
+            return;
+        }
+        jdbcTemplate.update("DELETE FROM courses WHERE notice_id = ?", noticeId);
+        for (JsonNode item : researchItems) {
+            jdbcTemplate.update(
+                    """
+                    INSERT INTO courses (
+                        notice_id, display_order, department, professor_name, course_name, course_type,
+                        course_code, research_description, capacity, interview_schedule, weekly_hours,
+                        qualification, professor_emails, required_skills, mentioned_technologies,
+                        closed_to_additional_applications
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    noticeId,
+                    integer(item.path("순번"), 0),
+                    text(item.path("개설학부"), ""),
+                    text(item.path("교원명"), ""),
+                    text(item.path("과목명"), ""),
+                    text(item.path("기존/신설 여부"), ""),
+                    text(item.path("학수강좌번호"), ""),
+                    text(item.path("research_description"), text(item.path("연구내용"), "")),
+                    nullableInteger(item.path("수강정원")),
+                    text(item.path("인터뷰 일정"), ""),
+                    nullableInteger(item.path("주당 연구시간")),
+                    text(item.path("qualification"), text(item.path("수강 자격사항"), "")),
+                    writeJson(stringArray(item.path("derived").path("교수 이메일"))),
+                    writeJson(valueArray(item.path("required_skills"))),
+                    writeJson(valueArray(item.path("mentioned_technologies"))),
+                    item.path("derived").path("추가 신청 불가 여부").asBoolean(false)
+            );
+        }
+    }
+
+    private Integer nullableInteger(JsonNode node) {
+        if (node == null || node.isMissingNode() || node.isNull() || !node.canConvertToInt()) {
+            return null;
+        }
+        return node.asInt();
+    }
+
+    private int integer(JsonNode node, int fallback) {
+        Integer value = nullableInteger(node);
+        return value == null ? fallback : value;
+    }
+
+    private List<String> stringArray(JsonNode node) {
+        if (!node.isArray()) {
+            return List.of();
+        }
+        java.util.ArrayList<String> values = new java.util.ArrayList<>();
+        for (JsonNode item : node) {
+            String value = text(item, "");
+            if (!value.isBlank()) {
+                values.add(value);
+            }
+        }
+        return values;
+    }
+
+    private List<String> valueArray(JsonNode node) {
+        if (!node.isArray()) {
+            return List.of();
+        }
+        java.util.ArrayList<String> values = new java.util.ArrayList<>();
+        for (JsonNode item : node) {
+            String value = text(item.path("value"), "");
+            if (!value.isBlank()) {
+                values.add(value);
+            }
+        }
+        return values.stream().distinct().toList();
+    }
+
+    private String writeJson(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (Exception exception) {
+            return "[]";
+        }
     }
 
     private List<String> requiredDocuments(JsonNode submission) {
