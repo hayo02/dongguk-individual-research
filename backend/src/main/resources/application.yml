@@ -1,0 +1,15 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: individual-research-backend
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/individual_research?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+
+app:
+  auth:
+    secret: dongguk-individual-research-dev-secret
