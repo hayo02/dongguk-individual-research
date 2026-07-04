@@ -265,7 +265,12 @@ function Dashboard({ user, accessToken, onLogout }) {
               >
                 신청 안내
               </button>
-              <button>개설 과목</button>
+              <button
+                className={activePage === "courses" ? "active" : ""}
+                onClick={() => setActivePage("courses")}
+              >
+                개설 과목
+              </button>
               <button>내 신청 현황</button>
             </>
           ) : (
@@ -288,7 +293,13 @@ function Dashboard({ user, accessToken, onLogout }) {
       </header>
 
       {activePage === "notice" && isStudent ? (
-        <NoticeGuide accessToken={accessToken} onBack={() => setActivePage("dashboard")} />
+        <NoticeGuide
+          accessToken={accessToken}
+          onBack={() => setActivePage("dashboard")}
+          onOpenCourses={() => setActivePage("courses")}
+        />
+      ) : activePage === "courses" && isStudent ? (
+        <CourseList accessToken={accessToken} />
       ) : (
       <section className="dashboard-page">
         <div className="screen-title">
@@ -361,7 +372,7 @@ function Dashboard({ user, accessToken, onLogout }) {
   );
 }
 
-function NoticeGuide({ accessToken, onBack }) {
+function NoticeGuide({ accessToken, onBack, onOpenCourses }) {
   const [notice, setNotice] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -474,7 +485,7 @@ function NoticeGuide({ accessToken, onBack }) {
               </dl>
               <div className="actions-row">
                 <button onClick={onBack}>대시보드로 돌아가기</button>
-                <button className="primary-button">개설 과목 확인하기</button>
+                <button className="primary-button" onClick={onOpenCourses}>개설 과목 확인하기</button>
               </div>
             </article>
 
@@ -527,6 +538,210 @@ function NoticeGuide({ accessToken, onBack }) {
         </>
       )}
     </section>
+  );
+}
+
+function CourseList({ accessToken }) {
+  const [keyword, setKeyword] = useState("");
+  const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCourses() {
+      setErrorMessage("");
+      setIsLoading(true);
+
+      try {
+        const params = submittedKeyword ? `?keyword=${encodeURIComponent(submittedKeyword)}` : "";
+        const response = await fetch(`${API_BASE_URL}/api/courses${params}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const body = await response.json();
+
+        if (!response.ok || !body.success || !body.data) {
+          throw new Error(body.message ?? "개설 과목 목록을 불러오지 못했습니다.");
+        }
+
+        if (isMounted) {
+          setCourses(body.data.courses ?? []);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "개설 과목 목록을 불러오지 못했습니다.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadCourses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken, submittedKeyword]);
+
+  async function handleSearch(event) {
+    event.preventDefault();
+    setSubmittedKeyword(keyword.trim());
+  }
+
+  async function handleOpenDetail(courseId) {
+    setErrorMessage("");
+    setIsLoadingDetail(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+
+      if (!response.ok || !body.success || !body.data) {
+        throw new Error(body.message ?? "개설 과목 상세 정보를 불러오지 못했습니다.");
+      }
+
+      setSelectedCourse(body.data);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "개설 과목 상세 정보를 불러오지 못했습니다.",
+      );
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  }
+
+  return (
+    <section className="dashboard-page">
+      <div className="screen-title">
+        <span>S3</span>
+        <div>
+          <p className="eyebrow">학생 신청</p>
+          <h1>개설 과목 목록</h1>
+        </div>
+      </div>
+
+      <section className="status-panel">
+        <form className="course-filter" onSubmit={handleSearch}>
+          <input
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="과목명, 담당 교수, 학수강좌번호, 자격사항 검색"
+          />
+          <button className="primary-button">검색</button>
+        </form>
+      </section>
+
+      {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
+
+      <section className="status-panel course-table-panel">
+        {isLoading ? (
+          <p className="muted">개설 과목 목록을 불러오는 중입니다.</p>
+        ) : courses.length ? (
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>과목명</th>
+                  <th>담당 교수</th>
+                  <th>학수강좌번호</th>
+                  <th>연구 내용 요약</th>
+                  <th>동작</th>
+                </tr>
+              </thead>
+              <tbody>
+                {courses.map((course) => (
+                  <tr key={course.id}>
+                    <td>{course.courseName}</td>
+                    <td>{course.professorName}</td>
+                    <td>{course.courseCode || "-"}</td>
+                    <td>{course.researchDescription || "-"}</td>
+                    <td>
+                      <div className="table-actions">
+                        <button onClick={() => handleOpenDetail(course.id)} disabled={isLoadingDetail}>
+                          상세보기
+                        </button>
+                        <button className="primary-button">이 과목 신청하기</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="muted">표시할 개설 과목이 없습니다.</p>
+        )}
+      </section>
+
+      {selectedCourse ? (
+        <CourseDetailModal course={selectedCourse} onClose={() => setSelectedCourse(null)} />
+      ) : null}
+    </section>
+  );
+}
+
+function CourseDetailModal({ course, onClose }) {
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-detail-title">
+        <div className="modal-heading">
+          <div>
+            <p className="eyebrow">개설 과목 상세</p>
+            <h2 id="course-detail-title">{course.courseName}</h2>
+          </div>
+          <button onClick={onClose}>닫기</button>
+        </div>
+
+        <dl className="detail-list">
+          <dt>담당 교수</dt>
+          <dd>{course.professorName}</dd>
+          <dt>학수강좌번호</dt>
+          <dd>{course.courseCode || "-"}</dd>
+          <dt>개설 학부</dt>
+          <dd>{course.department || "-"}</dd>
+          <dt>기존/신설</dt>
+          <dd>{course.courseType || "-"}</dd>
+          <dt>연구 내용</dt>
+          <dd>{course.researchDescription || "-"}</dd>
+          <dt>수강 정원</dt>
+          <dd>{course.capacity ? `${course.capacity}명` : "-"}</dd>
+          <dt>인터뷰 일정</dt>
+          <dd>{course.interviewSchedule || "-"}</dd>
+          <dt>주당 연구 시간</dt>
+          <dd>{course.weeklyHours ? `${course.weeklyHours}시간` : "-"}</dd>
+          <dt>수강 자격</dt>
+          <dd>{course.qualification || "-"}</dd>
+          <dt>교수 이메일</dt>
+          <dd>{course.professorEmails?.length ? course.professorEmails.join(", ") : "-"}</dd>
+          <dt>필수 기술</dt>
+          <dd>{course.requiredSkills?.length ? course.requiredSkills.join(", ") : "-"}</dd>
+          <dt>언급 기술</dt>
+          <dd>{course.mentionedTechnologies?.length ? course.mentionedTechnologies.join(", ") : "-"}</dd>
+        </dl>
+
+        {course.closedToAdditionalApplications ? (
+          <p className="error-message">추가 신청이 제한된 과목입니다. 신청 전 담당 교수 안내를 확인해 주세요.</p>
+        ) : null}
+
+        <div className="actions-row">
+          <button className="primary-button">신청 과목으로 선택</button>
+        </div>
+      </section>
+    </div>
   );
 }
 
