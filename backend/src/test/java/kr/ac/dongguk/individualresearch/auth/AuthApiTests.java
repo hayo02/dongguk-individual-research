@@ -2,6 +2,7 @@ package kr.ac.dongguk.individualresearch.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +78,44 @@ class AuthApiTests {
         assertThat(data.get("primaryAction")).isEqualTo("개별연구 신청하기");
     }
 
+    @Test
+    void studentCanCreateApplicationAndReadCurrentApplication() {
+        String studentToken = login("2026123456", "1234");
+        String staffToken = login("2025123456", "5678");
+
+        ResponseEntity<Map> current = restTemplate.exchange(
+                url("/api/applications/me/current"),
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(studentToken)),
+                Map.class
+        );
+        assertThat(current.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NOT_FOUND);
+
+        Long courseId = firstCourseId(staffToken);
+        ResponseEntity<Map> created = restTemplate.exchange(
+                url("/api/applications"),
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        Map.of("courseId", courseId),
+                        authHeaders(studentToken)
+                ),
+                Map.class
+        );
+        assertThat(created.getStatusCode()).isIn(HttpStatus.CREATED, HttpStatus.CONFLICT);
+
+        ResponseEntity<Map> currentAfterCreate = restTemplate.exchange(
+                url("/api/applications/me/current"),
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(studentToken)),
+                Map.class
+        );
+        assertThat(currentAfterCreate.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map currentData = (Map) currentAfterCreate.getBody().get("data");
+        assertThat(currentData.get("status")).isIn("DRAFT", "SUBMITTED");
+        assertThat(currentData.get("student")).isNotNull();
+        assertThat(currentData.get("course")).isNotNull();
+    }
+
     private String login(String loginId, String password) {
         ResponseEntity<Map> login = restTemplate.postForEntity(
                 url("/api/auth/login"),
@@ -91,6 +130,19 @@ class AuthApiTests {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
         return headers;
+    }
+
+    private Long firstCourseId(String accessToken) {
+        ResponseEntity<Map> courses = restTemplate.exchange(
+                url("/api/courses"),
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(accessToken)),
+                Map.class
+        );
+        Map data = (Map) courses.getBody().get("data");
+        List items = (List) data.get("courses");
+        Map firstCourse = (Map) items.get(0);
+        return ((Number) firstCourse.get("id")).longValue();
     }
 
     private String url(String path) {
