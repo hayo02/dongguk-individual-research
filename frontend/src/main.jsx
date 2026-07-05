@@ -31,7 +31,7 @@ function App() {
         }
 
         if (isMounted) {
-          setUser(body.data.user);
+          setUser(body.data.user ?? body.data);
           setAccessToken(savedToken);
         }
       } catch {
@@ -271,7 +271,12 @@ function Dashboard({ user, accessToken, onLogout }) {
               >
                 개설 과목
               </button>
-              <button>내 신청 현황</button>
+              <button
+                className={activePage === "application" ? "active" : ""}
+                onClick={() => setActivePage("application")}
+              >
+                내 신청 현황
+              </button>
             </>
           ) : (
             <>
@@ -299,7 +304,12 @@ function Dashboard({ user, accessToken, onLogout }) {
           onOpenCourses={() => setActivePage("courses")}
         />
       ) : activePage === "courses" && isStudent ? (
-        <CourseList accessToken={accessToken} />
+        <CourseList
+          accessToken={accessToken}
+          onApplicationCreated={() => setActivePage("application")}
+        />
+      ) : activePage === "application" && isStudent ? (
+        <CurrentApplication accessToken={accessToken} onOpenCourses={() => setActivePage("courses")} />
       ) : (
       <section className="dashboard-page">
         <div className="screen-title">
@@ -541,14 +551,16 @@ function NoticeGuide({ accessToken, onBack, onOpenCourses }) {
   );
 }
 
-function CourseList({ accessToken }) {
+function CourseList({ accessToken, onApplicationCreated }) {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [applyingCourseId, setApplyingCourseId] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -600,6 +612,7 @@ function CourseList({ accessToken }) {
 
   async function handleOpenDetail(courseId) {
     setErrorMessage("");
+    setSuccessMessage("");
     setIsLoadingDetail(true);
 
     try {
@@ -621,6 +634,40 @@ function CourseList({ accessToken }) {
       );
     } finally {
       setIsLoadingDetail(false);
+    }
+  }
+
+  async function handleCreateApplication(courseId) {
+    setErrorMessage("");
+    setSuccessMessage("");
+    setApplyingCourseId(courseId);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ courseId }),
+      });
+      const body = await response.json();
+
+      if (!response.ok || !body.success || !body.data) {
+        throw new Error(body.message ?? "신청서를 생성하지 못했습니다.");
+      }
+
+      setSelectedCourse(null);
+      setSuccessMessage("신청 과목을 선택하고 신청서를 생성했습니다.");
+      onApplicationCreated?.();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "신청서를 생성하지 못했습니다.",
+      );
+    } finally {
+      setApplyingCourseId(null);
     }
   }
 
@@ -646,6 +693,7 @@ function CourseList({ accessToken }) {
       </section>
 
       {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
+      {successMessage ? <p className="success-message">{successMessage}</p> : null}
 
       <section className="status-panel course-table-panel">
         {isLoading ? (
@@ -674,7 +722,13 @@ function CourseList({ accessToken }) {
                         <button onClick={() => handleOpenDetail(course.id)} disabled={isLoadingDetail}>
                           상세보기
                         </button>
-                        <button className="primary-button">이 과목 신청하기</button>
+                        <button
+                          className="primary-button"
+                          onClick={() => handleCreateApplication(course.id)}
+                          disabled={applyingCourseId === course.id}
+                        >
+                          {applyingCourseId === course.id ? "신청 중" : "이 과목 신청하기"}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -688,13 +742,18 @@ function CourseList({ accessToken }) {
       </section>
 
       {selectedCourse ? (
-        <CourseDetailModal course={selectedCourse} onClose={() => setSelectedCourse(null)} />
+        <CourseDetailModal
+          course={selectedCourse}
+          isApplying={applyingCourseId === selectedCourse.id}
+          onApply={() => handleCreateApplication(selectedCourse.id)}
+          onClose={() => setSelectedCourse(null)}
+        />
       ) : null}
     </section>
   );
 }
 
-function CourseDetailModal({ course, onClose }) {
+function CourseDetailModal({ course, isApplying, onApply, onClose }) {
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="course-modal" role="dialog" aria-modal="true" aria-labelledby="course-detail-title">
@@ -738,10 +797,229 @@ function CourseDetailModal({ course, onClose }) {
         ) : null}
 
         <div className="actions-row">
-          <button className="primary-button">신청 과목으로 선택</button>
+          <button className="primary-button" onClick={onApply} disabled={isApplying}>
+            {isApplying ? "신청 중" : "신청 과목으로 선택"}
+          </button>
         </div>
       </section>
     </div>
+  );
+}
+
+function CurrentApplication({ accessToken, onOpenCourses }) {
+  const [application, setApplication] = useState(null);
+  const [applicationReason, setApplicationReason] = useState("");
+  const [researchPurpose, setResearchPurpose] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadApplication() {
+      setErrorMessage("");
+      setSuccessMessage("");
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/applications/me/current`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const body = await response.json();
+
+        if (response.status === 404) {
+          if (isMounted) {
+            setApplication(null);
+          }
+          return;
+        }
+        if (!response.ok || !body.success || !body.data) {
+          throw new Error(body.message ?? "신청서 정보를 불러오지 못했습니다.");
+        }
+
+        if (isMounted) {
+          setApplication(body.data);
+          setApplicationReason(body.data.applicationReason ?? "");
+          setResearchPurpose(body.data.researchPurpose ?? "");
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "신청서 정보를 불러오지 못했습니다.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadApplication();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken]);
+
+  async function handleSave(event) {
+    event.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsSaving(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications/me/current`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ applicationReason, researchPurpose }),
+      });
+      const body = await response.json();
+
+      if (!response.ok || !body.success || !body.data) {
+        throw new Error(body.message ?? "신청서를 저장하지 못했습니다.");
+      }
+
+      setApplication(body.data);
+      setApplicationReason(body.data.applicationReason ?? "");
+      setResearchPurpose(body.data.researchPurpose ?? "");
+      setSuccessMessage("신청서를 임시 저장했습니다.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "신청서를 저장하지 못했습니다.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm("임시저장된 신청서를 삭제할까요? 삭제 후 다른 과목을 다시 선택할 수 있습니다.")) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications/me/current`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+
+      if (!response.ok || !body.success) {
+        throw new Error(body.message ?? "신청서를 삭제하지 못했습니다.");
+      }
+
+      setApplication(null);
+      setApplicationReason("");
+      setResearchPurpose("");
+      setSuccessMessage("임시저장 신청서를 삭제했습니다.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "신청서를 삭제하지 못했습니다.",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  const canEdit = application?.status === "DRAFT" || application?.status === "REVISION_REQUESTED";
+
+  return (
+    <section className="dashboard-page">
+      <div className="screen-title">
+        <span>S4</span>
+        <div>
+          <p className="eyebrow">학생 신청</p>
+          <h1>내 신청 현황</h1>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <section className="status-panel">
+          <p className="muted">신청서 정보를 불러오는 중입니다.</p>
+        </section>
+      ) : errorMessage ? (
+        <p className="error-message">{errorMessage}</p>
+      ) : !application ? (
+        <section className="status-panel">
+          <h2>아직 생성된 신청서가 없습니다.</h2>
+          <p className="muted">개설 과목 목록에서 신청할 과목을 먼저 선택해 주세요.</p>
+          <button className="primary-button" onClick={onOpenCourses}>개설 과목 보러가기</button>
+        </section>
+      ) : (
+        <>
+          {successMessage ? <p className="success-message">{successMessage}</p> : null}
+          <section className="application-layout">
+            <article className="status-panel">
+              <h2>선택 과목</h2>
+              <dl>
+                <dt>상태</dt>
+                <dd>{application.status}</dd>
+                <dt>과목명</dt>
+                <dd>{application.course?.courseName ?? "-"}</dd>
+                <dt>담당 교수</dt>
+                <dd>{application.course?.professorName ?? "-"}</dd>
+                <dt>학수강좌번호</dt>
+                <dd>{application.course?.courseCode ?? "-"}</dd>
+              </dl>
+            </article>
+
+            <form className="status-panel application-form" onSubmit={handleSave}>
+              <h2>신청서 작성</h2>
+              <label>
+                신청 사유
+                <textarea
+                  value={applicationReason}
+                  onChange={(event) => setApplicationReason(event.target.value)}
+                  disabled={!canEdit || isSaving}
+                  rows={6}
+                  placeholder="해당 과목을 신청하는 이유를 입력해 주세요."
+                />
+              </label>
+              <label>
+                연구 목적
+                <textarea
+                  value={researchPurpose}
+                  onChange={(event) => setResearchPurpose(event.target.value)}
+                  disabled={!canEdit || isSaving}
+                  rows={6}
+                  placeholder="개별연구를 통해 달성하고 싶은 목표를 입력해 주세요."
+                />
+              </label>
+              <div className="actions-row">
+                <button className="primary-button" disabled={!canEdit || isSaving}>
+                  {isSaving ? "저장 중" : "임시 저장"}
+                </button>
+                <button
+                  className="danger-button"
+                  type="button"
+                  disabled={application.status !== "DRAFT" || isDeleting}
+                  onClick={handleDelete}
+                >
+                  {isDeleting ? "삭제 중" : "임시저장 삭제"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </>
+      )}
+    </section>
   );
 }
 

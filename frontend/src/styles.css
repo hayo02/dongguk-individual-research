@@ -119,6 +119,23 @@ input {
   cursor: default;
 }
 
+.danger-button {
+  min-height: 40px;
+  padding: 10px 14px;
+  border: 1px solid #b42318;
+  border-radius: 6px;
+  background: #fff;
+  color: #b42318;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.danger-button:disabled {
+  border-color: #d0d5dd;
+  color: #98a2b3;
+  cursor: default;
+}
+
 .error-message {
   margin: 0;
   padding: 10px;
@@ -126,6 +143,15 @@ input {
   border-radius: 6px;
   background: #fff0f0;
   color: #7f1d1d;
+}
+
+.success-message {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #2f6f4e;
+  border-radius: 6px;
+  background: #effaf3;
+  color: #14532d;
 }
 
 .login-help,
@@ -356,6 +382,41 @@ input {
   background: #eef0f4;
   color: #374151;
   word-break: break-all;
+}
+
+.application-layout {
+  display: grid;
+  grid-template-columns: .9fr 1.3fr;
+  gap: 18px;
+}
+
+.application-form {
+  display: grid;
+  gap: 16px;
+}
+
+.application-form label {
+  display: grid;
+  gap: 8px;
+  color: #374151;
+  font-weight: 800;
+}
+
+.application-form textarea {
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid #c7ccd4;
+  border-radius: 6px;
+  color: #111827;
+  font: inherit;
+  line-height: 1.5;
+}
+
+.application-form textarea:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 .muted {
@@ -740,6 +801,10 @@ input {
   }
 
   .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .application-layout {
     grid-template-columns: 1fr;
   }
 
