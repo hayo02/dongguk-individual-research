@@ -118,6 +118,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                     student_id BIGINT NOT NULL,
                     course_id BIGINT,
                     status VARCHAR(30) NOT NULL,
+                    contact VARCHAR(100),
                     application_reason TEXT,
                     research_purpose TEXT,
                     submitted_at TIMESTAMP,
@@ -126,6 +127,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                 )
                 """
         );
+        ensureApplicationContactColumn();
         jdbcTemplate.execute(
                 """
                 CREATE TABLE IF NOT EXISTS revoked_tokens (
@@ -152,6 +154,22 @@ public class DatabaseInitializer implements ApplicationRunner {
         );
         if (count == null || count == 0) {
             jdbcTemplate.execute("ALTER TABLE notices ADD COLUMN body_text MEDIUMTEXT");
+        }
+    }
+
+    private void ensureApplicationContactColumn() {
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*)
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'applications'
+                  AND COLUMN_NAME = 'contact'
+                """,
+                Integer.class
+        );
+        if (count == null || count == 0) {
+            jdbcTemplate.execute("ALTER TABLE applications ADD COLUMN contact VARCHAR(100)");
         }
     }
 

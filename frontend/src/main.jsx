@@ -808,11 +808,14 @@ function CourseDetailModal({ course, isApplying, onApply, onClose }) {
 
 function CurrentApplication({ accessToken, onOpenCourses }) {
   const [application, setApplication] = useState(null);
+  const [contact, setContact] = useState("");
   const [applicationReason, setApplicationReason] = useState("");
   const [researchPurpose, setResearchPurpose] = useState("");
+  const [autofill, setAutofill] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -833,6 +836,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
         if (response.status === 404) {
           if (isMounted) {
             setApplication(null);
+            setAutofill(null);
           }
           return;
         }
@@ -842,8 +846,20 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
 
         if (isMounted) {
           setApplication(body.data);
+          setContact(body.data.student?.contact ?? body.data.student?.phone ?? "");
           setApplicationReason(body.data.applicationReason ?? "");
           setResearchPurpose(body.data.researchPurpose ?? "");
+        }
+
+        const autofillResponse = await fetch(`${API_BASE_URL}/api/applications/${body.data.id}/autofill`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const autofillBody = await autofillResponse.json();
+        if (!autofillResponse.ok || !autofillBody.success || !autofillBody.data) {
+          throw new Error(autofillBody.message ?? "자동채움 데이터를 불러오지 못했습니다.");
+        }
+        if (isMounted) {
+          setAutofill(autofillBody.data);
         }
       } catch (error) {
         if (isMounted) {
@@ -880,7 +896,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ applicationReason, researchPurpose }),
+        body: JSON.stringify({ contact, applicationReason, researchPurpose }),
       });
       const body = await response.json();
 
@@ -889,6 +905,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       }
 
       setApplication(body.data);
+      setContact(body.data.student?.contact ?? body.data.student?.phone ?? "");
       setApplicationReason(body.data.applicationReason ?? "");
       setResearchPurpose(body.data.researchPurpose ?? "");
       setSuccessMessage("신청서를 임시 저장했습니다.");
@@ -924,6 +941,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       }
 
       setApplication(null);
+      setContact("");
       setApplicationReason("");
       setResearchPurpose("");
       setSuccessMessage("임시저장 신청서를 삭제했습니다.");
@@ -935,6 +953,84 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       );
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleDownloadHwp() {
+    if (!application) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsDownloading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications/${application.id}/document.hwp`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? "신청서 HWP를 다운로드하지 못했습니다.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `individual-research-application-${application.id}.hwp`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "신청서 HWP를 다운로드하지 못했습니다.",
+      );
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
+  async function handleDownloadInterviewImage() {
+    if (!application) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsDownloading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications/${application.id}/interview.png`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? "면담자료 이미지를 다운로드하지 못했습니다.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `individual-research-interview-${application.id}.png`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "면담자료 이미지를 다운로드하지 못했습니다.",
+      );
+    } finally {
+      setIsDownloading(false);
     }
   }
 
@@ -978,10 +1074,51 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <dt>학수강좌번호</dt>
                 <dd>{application.course?.courseCode ?? "-"}</dd>
               </dl>
+              <div className="actions-row">
+                <button type="button" onClick={handleDownloadHwp} disabled={isDownloading}>
+                  {isDownloading ? "HWP 준비 중" : "신청서 HWP 다운로드"}
+                </button>
+                <button type="button" onClick={handleDownloadInterviewImage} disabled={isDownloading}>
+                  {isDownloading ? "자료 준비 중" : "면담자료 이미지 다운로드"}
+                </button>
+              </div>
+            </article>
+
+            <article className="status-panel autofill-panel">
+              <h2>자동채움 데이터</h2>
+              {autofill ? (
+                <dl>
+                  <dt>학생</dt>
+                  <dd>{autofill.student?.name ?? "-"} / {autofill.student?.loginId ?? "-"}</dd>
+                  <dt>학과</dt>
+                  <dd>{autofill.student?.department ?? "-"}</dd>
+                  <dt>연락처</dt>
+                  <dd>{autofill.student?.email ?? "-"} / {contact || "-"}</dd>
+                  <dt>학기</dt>
+                  <dd>{autofill.course?.semester ?? "-"}</dd>
+                  <dt>과목</dt>
+                  <dd>{autofill.course?.courseName ?? "-"}</dd>
+                  <dt>교수</dt>
+                  <dd>{autofill.course?.professorName ?? "-"}</dd>
+                  <dt>주당 시간</dt>
+                  <dd>{autofill.course?.weeklyHours ?? "-"}</dd>
+                </dl>
+              ) : (
+                <p className="muted">자동채움 데이터를 불러오는 중입니다.</p>
+              )}
             </article>
 
             <form className="status-panel application-form" onSubmit={handleSave}>
               <h2>신청서 작성</h2>
+              <label>
+                연락처
+                <input
+                  value={contact}
+                  onChange={(event) => setContact(event.target.value)}
+                  disabled={!canEdit || isSaving}
+                  placeholder="신청서에 들어갈 연락처"
+                />
+              </label>
               <label>
                 신청 사유
                 <textarea

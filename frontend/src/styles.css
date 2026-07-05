@@ -392,6 +392,7 @@ input {
 
 .application-form {
   display: grid;
+  grid-column: 1 / -1;
   gap: 16px;
 }
 
@@ -402,10 +403,9 @@ input {
   font-weight: 800;
 }
 
+.application-form input,
 .application-form textarea {
   width: 100%;
-  min-height: 132px;
-  resize: vertical;
   padding: 12px;
   border: 1px solid #c7ccd4;
   border-radius: 6px;
@@ -414,6 +414,16 @@ input {
   line-height: 1.5;
 }
 
+.application-form input {
+  min-height: 46px;
+}
+
+.application-form textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+.application-form input:disabled,
 .application-form textarea:disabled {
   background: #f3f4f6;
   color: #6b7280;

@@ -22,18 +22,21 @@ public record ApplicationDetailResponse(
             String name,
             String department,
             String email,
-            String phone
+            String phone,
+            String contact
     ) {
     }
 
     public record CourseSummary(
             Long id,
             Long noticeId,
+            String semester,
             String department,
             String professorName,
             String courseName,
             String courseType,
-            String courseCode
+            String courseCode,
+            Integer weeklyHours
     ) {
     }
 

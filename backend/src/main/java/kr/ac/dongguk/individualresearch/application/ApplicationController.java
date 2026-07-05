@@ -4,11 +4,15 @@ import kr.ac.dongguk.individualresearch.auth.AuthFacade;
 import kr.ac.dongguk.individualresearch.auth.PublicUser;
 import kr.ac.dongguk.individualresearch.auth.UserRole;
 import kr.ac.dongguk.individualresearch.common.ApiResponse;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -59,5 +63,44 @@ public class ApplicationController {
         PublicUser student = authFacade.currentUser(authorization, UserRole.STUDENT);
         applicationService.deleteCurrent(student);
         return ApiResponse.okMessage("임시저장 신청서를 삭제했습니다.");
+    }
+
+    @GetMapping("/{applicationId}/autofill")
+    public ApiResponse<ApplicationAutofillResponse> autofill(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable long applicationId
+    ) {
+        PublicUser student = authFacade.currentUser(authorization, UserRole.STUDENT);
+        return ApiResponse.ok(applicationService.autofill(student, applicationId));
+    }
+
+    @GetMapping("/{applicationId}/document.hwp")
+    public ResponseEntity<byte[]> document(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable long applicationId
+    ) {
+        PublicUser student = authFacade.currentUser(authorization, UserRole.STUDENT);
+        ApplicationDocumentResponse document = applicationService.hwpDocument(student, applicationId);
+        return download(document);
+    }
+
+    @GetMapping("/{applicationId}/interview.png")
+    public ResponseEntity<byte[]> interview(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable long applicationId
+    ) {
+        PublicUser student = authFacade.currentUser(authorization, UserRole.STUDENT);
+        ApplicationDocumentResponse document = applicationService.interviewImage(student, applicationId);
+        return download(document);
+    }
+
+    private ResponseEntity<byte[]> download(ApplicationDocumentResponse document) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(document.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(document.filename())
+                        .build()
+                        .toString())
+                .body(document.content());
     }
 }

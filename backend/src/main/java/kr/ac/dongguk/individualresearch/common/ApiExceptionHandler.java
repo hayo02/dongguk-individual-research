@@ -2,6 +2,7 @@ package kr.ac.dongguk.individualresearch.common;
 
 import kr.ac.dongguk.individualresearch.auth.AuthException;
 import kr.ac.dongguk.individualresearch.application.ApplicationConflictException;
+import kr.ac.dongguk.individualresearch.application.ApplicationForbiddenException;
 import kr.ac.dongguk.individualresearch.application.ApplicationNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ApplicationConflictException.class)
     public ResponseEntity<ApiResponse<Void>> handleConflict(ApplicationConflictException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.fail(exception.getMessage()));
+    }
+
+    @ExceptionHandler(ApplicationForbiddenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(ApplicationForbiddenException exception) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.fail(exception.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

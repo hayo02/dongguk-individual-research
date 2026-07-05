@@ -191,6 +191,9 @@ src/dongguk_notice/
 | `GET` | `/api/applications/me/current` | 내 최신 신청서 조회 |
 | `PATCH` | `/api/applications/me/current` | 내 최신 신청서 임시 저장 |
 | `DELETE` | `/api/applications/me/current` | DRAFT 상태의 내 임시저장 신청서 삭제 |
+| `GET` | `/api/applications/{applicationId}/autofill` | 신청서 자동채움 데이터 조회 |
+| `GET` | `/api/applications/{applicationId}/document.hwp` | 크롤링된 원본 HWP 양식 기반 자동채움 신청서 다운로드 |
+| `GET` | `/api/applications/{applicationId}/interview.png` | 신청사유·연구목적이 포함된 교수 면담자료 이미지 다운로드 |
 
 ---
 

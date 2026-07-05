@@ -23,18 +23,39 @@ public class ApplicationRepository {
                 SELECT a.id, a.student_id,
                        u.login_id AS student_login_id, u.name AS student_name, u.department AS student_department,
                        u.email AS student_email, u.phone AS student_phone,
-                       a.course_id, c.notice_id, c.department, c.course_name, c.course_type, c.course_code,
-                       c.professor_name, a.status,
-                       a.application_reason, a.research_purpose, a.submitted_at, a.created_at, a.updated_at
+                       a.course_id, c.notice_id, n.semester, c.department, c.course_name, c.course_type, c.course_code,
+                       c.weekly_hours, c.professor_name, a.status,
+                       a.contact, a.application_reason, a.research_purpose, a.submitted_at, a.created_at, a.updated_at
                 FROM applications a
                 JOIN users u ON u.id = a.student_id
                 LEFT JOIN courses c ON c.id = a.course_id
+                LEFT JOIN notices n ON n.id = c.notice_id
                 WHERE a.student_id = ?
                 ORDER BY a.updated_at DESC, a.id DESC
                 LIMIT 1
                 """,
                 (rs, rowNum) -> mapRecord(rs),
                 studentId
+        ).stream().findFirst();
+    }
+
+    public Optional<ApplicationRecord> findById(long applicationId) {
+        return jdbcTemplate.query(
+                """
+                SELECT a.id, a.student_id,
+                       u.login_id AS student_login_id, u.name AS student_name, u.department AS student_department,
+                       u.email AS student_email, u.phone AS student_phone,
+                       a.course_id, c.notice_id, n.semester, c.department, c.course_name, c.course_type, c.course_code,
+                       c.weekly_hours, c.professor_name, a.status,
+                       a.contact, a.application_reason, a.research_purpose, a.submitted_at, a.created_at, a.updated_at
+                FROM applications a
+                JOIN users u ON u.id = a.student_id
+                LEFT JOIN courses c ON c.id = a.course_id
+                LEFT JOIN notices n ON n.id = c.notice_id
+                WHERE a.id = ?
+                """,
+                (rs, rowNum) -> mapRecord(rs),
+                applicationId
         ).stream().findFirst();
     }
 
@@ -55,15 +76,17 @@ public class ApplicationRepository {
         return id;
     }
 
-    public void updateCurrent(long applicationId, String applicationReason, String researchPurpose) {
+    public void updateCurrent(long applicationId, String contact, String applicationReason, String researchPurpose) {
         jdbcTemplate.update(
                 """
                 UPDATE applications
-                SET application_reason = ?,
+                SET contact = ?,
+                    application_reason = ?,
                     research_purpose = ?,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
                 """,
+                contact,
                 applicationReason,
                 researchPurpose,
                 applicationId
@@ -109,12 +132,15 @@ public class ApplicationRepository {
                 rs.getString("student_department"),
                 rs.getString("student_email"),
                 rs.getString("student_phone"),
+                rs.getString("contact"),
                 nullableLong(rs, "course_id"),
                 nullableLong(rs, "notice_id"),
+                rs.getString("semester"),
                 rs.getString("department"),
                 rs.getString("course_name"),
                 rs.getString("course_type"),
                 rs.getString("course_code"),
+                nullableInt(rs, "weekly_hours"),
                 rs.getString("professor_name"),
                 ApplicationStatus.valueOf(rs.getString("status")),
                 rs.getString("application_reason"),
@@ -127,6 +153,11 @@ public class ApplicationRepository {
 
     private Long nullableLong(ResultSet rs, String columnName) throws SQLException {
         long value = rs.getLong(columnName);
+        return rs.wasNull() ? null : value;
+    }
+
+    private Integer nullableInt(ResultSet rs, String columnName) throws SQLException {
+        int value = rs.getInt(columnName);
         return rs.wasNull() ? null : value;
     }
 
