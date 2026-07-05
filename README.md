@@ -183,6 +183,15 @@ src/dongguk_notice/
 | `GET` | `/api/courses?keyword={keyword}` | 개설 과목 검색 |
 | `GET` | `/api/courses/{courseId}` | 개설 과목 상세 조회 |
 
+### Application
+
+| Method | URL | 설명 |
+| --- | --- | --- |
+| `POST` | `/api/applications` | 신청 과목 선택 및 DRAFT 신청서 생성 |
+| `GET` | `/api/applications/me/current` | 내 최신 신청서 조회 |
+| `PATCH` | `/api/applications/me/current` | 내 최신 신청서 임시 저장 |
+| `DELETE` | `/api/applications/me/current` | DRAFT 상태의 내 임시저장 신청서 삭제 |
+
 ---
 
 ## 로컬 실행
@@ -200,7 +209,7 @@ CREATE DATABASE individual_research
 기본 개발 DB 포트는 `3307`입니다. 다른 포트를 사용한다면 `DB_URL`을 수정합니다.
 
 ```text
-DB_URL=jdbc:mariadb://127.0.0.1:3307/individual_research?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8
+DB_URL=jdbc:mysql://127.0.0.1:3307/individual_research?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8
 DB_USERNAME=root
 DB_PASSWORD=your_password
 ```
