@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
@@ -186,7 +186,9 @@ function LoginPage({ onLogin }) {
 
 function Dashboard({ user, accessToken, onLogout }) {
   const isStudent = user.role === "STUDENT";
-  const [activePage, setActivePage] = useState("dashboard");
+  const [activePage, setActivePage] = useState(() =>
+    window.location.pathname.startsWith("/applications") ? "application" : "dashboard",
+  );
   const [dashboard, setDashboard] = useState(null);
   const [dashboardError, setDashboardError] = useState("");
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
@@ -288,6 +290,12 @@ function Dashboard({ user, accessToken, onLogout }) {
               </button>
               <button>신청 목록</button>
               <button>크롤링 결과</button>
+              <button
+                className={activePage === "templates" ? "active" : ""}
+                onClick={() => setActivePage("templates")}
+              >
+                HWPX 템플릿
+              </button>
             </>
           )}
         </nav>
@@ -297,7 +305,9 @@ function Dashboard({ user, accessToken, onLogout }) {
         </div>
       </header>
 
-      {activePage === "notice" && isStudent ? (
+      {activePage === "templates" && !isStudent ? (
+        <TemplateManager accessToken={accessToken} />
+      ) : activePage === "notice" && isStudent ? (
         <NoticeGuide
           accessToken={accessToken}
           onBack={() => setActivePage("dashboard")}
@@ -806,16 +816,101 @@ function CourseDetailModal({ course, isApplying, onApply, onClose }) {
   );
 }
 
+function TemplateManager({ accessToken }) {
+  const [templates, setTemplates] = useState([]);
+  const [file, setFile] = useState(null);
+  const [templateName, setTemplateName] = useState("개별연구 수강신청원");
+  const [noticeId, setNoticeId] = useState("");
+  const [semester, setSemester] = useState("");
+  const [result, setResult] = useState("");
+
+  async function load() {
+    const response = await fetch(`${API_BASE_URL}/api/staff/document-templates`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const body = await response.json();
+    if (response.ok && body.success) setTemplates(body.data);
+  }
+  useEffect(() => { void load(); }, [accessToken]);
+
+  async function upload(event) {
+    event.preventDefault();
+    if (!file) return setResult("HWPX 파일을 선택해 주세요.");
+    const form = new FormData();
+    form.append("file", file); form.append("templateName", templateName);
+    if (noticeId) form.append("noticeId", noticeId);
+    if (semester) form.append("semester", semester);
+    form.append("active", "true");
+    const response = await fetch(`${API_BASE_URL}/api/staff/document-templates`, {
+      method: "POST", headers: { Authorization: `Bearer ${accessToken}` }, body: form,
+    });
+    const body = await response.json();
+    setResult(response.ok && body.success
+      ? `검사 통과 · 발견한 필수 placeholder ${body.data.foundPlaceholders.length}개`
+      : body.message ?? "템플릿 등록에 실패했습니다.");
+    if (response.ok) void load();
+  }
+
+  async function change(id, method, suffix = "") {
+    await fetch(`${API_BASE_URL}/api/staff/document-templates/${id}${suffix}`, {
+      method, headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    void load();
+  }
+
+  return (
+    <section className="dashboard-page">
+      <div className="screen-title"><span>A2</span><div><p className="eyebrow">교직원 관리</p><h1>HWPX 템플릿</h1></div></div>
+      <form className="status-panel application-form" onSubmit={upload}>
+        <h2>템플릿 등록</h2>
+        <label>템플릿명<input value={templateName} onChange={(e) => setTemplateName(e.target.value)} /></label>
+        <label>학기<input value={semester} onChange={(e) => setSemester(e.target.value)} placeholder="2026학년도 여름학기" /></label>
+        <label>공지 ID<input value={noticeId} onChange={(e) => setNoticeId(e.target.value)} inputMode="numeric" /></label>
+        <label>HWPX 파일<input type="file" accept=".hwpx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
+        <button className="primary-button">검사 후 활성 템플릿으로 등록</button>
+        {result ? <p className="notice-note">{result}</p> : null}
+      </form>
+      <section className="status-panel">
+        <h2>등록된 템플릿</h2>
+        <div className="table-wrap"><table><thead><tr><th>이름</th><th>학기</th><th>버전</th><th>상태</th><th>관리</th></tr></thead>
+          <tbody>{templates.map((item) => <tr key={item.id}><td>{item.templateName}</td><td>{item.semester || "-"}</td><td>v{item.templateVersion}</td><td>{item.active ? "활성" : "비활성"}</td>
+            <td className="actions-row">
+              {!item.active ? <button onClick={() => change(item.id, "PATCH", "/activate")}>활성화</button> : null}
+              <a href={`${API_BASE_URL}/api/staff/document-templates/${item.id}/download`} onClick={(event) => { event.preventDefault(); fetch(event.currentTarget.href, {headers:{Authorization:`Bearer ${accessToken}`}}).then(r=>r.blob()).then(blob=>{const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=item.originalFilename;a.click();URL.revokeObjectURL(u);}); }}>다운로드</a>
+              <button className="danger-button" onClick={() => change(item.id, "DELETE")}>비활성화</button>
+            </td></tr>)}</tbody>
+        </table></div>
+      </section>
+    </section>
+  );
+}
+
 function CurrentApplication({ accessToken, onOpenCourses }) {
   const [application, setApplication] = useState(null);
   const [contact, setContact] = useState("");
   const [applicationReason, setApplicationReason] = useState("");
   const [researchPurpose, setResearchPurpose] = useState("");
+  const [relatedExperience, setRelatedExperience] = useState("");
+  const [researchPlan, setResearchPlan] = useState("");
+  const [interviewQuestions, setInterviewQuestions] = useState("");
+  const [draftId, setDraftId] = useState(null);
+  const [saveState, setSaveState] = useState("저장됨");
+  const [lastSavedAt, setLastSavedAt] = useState("");
+  const [generatedFiles, setGeneratedFiles] = useState({});
+  const draftCreating = useRef(false);
   const [autofill, setAutofill] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationResult, setValidationResult] = useState(null);
+  const [flowStep, setFlowStep] = useState("summary");
+  const [applicationFiles, setApplicationFiles] = useState([]);
+  const [selectedUpload, setSelectedUpload] = useState(null);
+  const [isFileLoading, setIsFileLoading] = useState(false);
+  const [isFileAction, setIsFileAction] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -861,6 +956,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
         if (isMounted) {
           setAutofill(autofillBody.data);
         }
+        await loadApplicationFiles(body.data.id, isMounted);
       } catch (error) {
         if (isMounted) {
           setErrorMessage(
@@ -883,8 +979,133 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
     };
   }, [accessToken]);
 
+  useEffect(() => {
+    if (!application) return;
+    const segment = window.location.pathname.split("/").filter(Boolean).at(-1);
+    const known = new Set(["applicant", "content", "documents", "signature-guide", "files", "review", "complete"]);
+    if (known.has(segment)) setFlowStep(segment);
+  }, [application?.id]);
+
+  async function loadApplicationFiles(applicationId = application?.id, apply = true) {
+    if (!applicationId) return;
+    setIsFileLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications/${applicationId}/files`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "제출 파일 목록을 불러오지 못했습니다.");
+      if (apply) setApplicationFiles(body.data?.items ?? []);
+    } catch (error) {
+      if (apply) setErrorMessage(error instanceof Error ? error.message : "제출 파일 목록을 불러오지 못했습니다.");
+    } finally {
+      if (apply) setIsFileLoading(false);
+    }
+  }
+
+  function goStep(step) {
+    setFlowStep(step);
+    if (application) {
+      const suffix = step === "summary" ? "" : `/${step}`;
+      window.history.pushState({}, "", `/applications/${application.id}${suffix}`);
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function draftPayload() {
+    return {
+      noticeId: application?.course?.noticeId ?? null,
+      researchTopicId: application?.course?.id ?? null,
+      semester: application?.course?.semester ?? "",
+      studentName: application?.student?.name ?? "",
+      studentNumber: application?.student?.loginId ?? "",
+      department: application?.student?.department ?? "",
+      grade: "",
+      phone: contact,
+      email: application?.student?.email ?? "",
+      professorName: application?.course?.professorName ?? "",
+      researchTitle: application?.course?.courseName ?? "",
+      researchContent: "",
+      courseName: application?.course?.courseName ?? "개별연구",
+      applicationReason,
+      researchPurpose,
+      relatedExperience,
+      researchPlan,
+      interviewQuestions,
+      status: "DRAFT",
+    };
+  }
+
+  useEffect(() => {
+    if (!application || draftId || draftCreating.current) return;
+    draftCreating.current = true;
+    fetch(`${API_BASE_URL}/api/drafts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(draftPayload()),
+    }).then((response) => response.json().then((body) => ({ response, body })))
+      .then(({ response, body }) => {
+        if (!response.ok || !body.success) throw new Error(body.message);
+        setDraftId(body.data.id);
+        setLastSavedAt(new Date(body.data.updatedAt).toLocaleTimeString());
+      })
+      .catch(() => setSaveState("저장 실패"));
+  }, [application, accessToken]);
+
+  useEffect(() => {
+    if (!draftId || !application) return;
+    setSaveState("저장 중...");
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/drafts/${draftId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify(draftPayload()),
+        });
+        const body = await response.json();
+        if (!response.ok || !body.success) throw new Error(body.message);
+        setSaveState("저장됨");
+        setLastSavedAt(new Date(body.data.updatedAt).toLocaleTimeString());
+      } catch {
+        setSaveState("저장 실패");
+      }
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [draftId, contact, applicationReason, researchPurpose, relatedExperience, researchPlan, interviewQuestions]);
+
+  async function handleGenerate(kind) {
+    if (!draftId) return;
+    setIsDownloading(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/drafts/${draftId}/documents/${kind}`, {
+        method: "POST", headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "문서를 생성하지 못했습니다.");
+      setGeneratedFiles((value) => ({ ...value, [kind]: body.data }));
+      setSuccessMessage(kind === "application-hwpx" ? "수강신청원이 생성되었습니다." : "인터뷰 자료가 생성되었습니다.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "문서를 생성하지 못했습니다.");
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
+  async function downloadGenerated(fileInfo) {
+    const response = await fetch(`${API_BASE_URL}${fileInfo.downloadUrl}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) return setErrorMessage("생성 파일을 다운로드하지 못했습니다.");
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url; anchor.download = fileInfo.filename; anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function handleSave(event) {
-    event.preventDefault();
+    event?.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
     setIsSaving(true);
@@ -909,14 +1130,110 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       setApplicationReason(body.data.applicationReason ?? "");
       setResearchPurpose(body.data.researchPurpose ?? "");
       setSuccessMessage("신청서를 임시 저장했습니다.");
+      return true;
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
           : "신청서를 저장하지 못했습니다.",
       );
+      return false;
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function saveAndGo(step) {
+    if (await handleSave()) goStep(step);
+  }
+
+  async function uploadApplicationFile() {
+    if (!application || !selectedUpload) return;
+    setIsFileAction(true);
+    setErrorMessage("");
+    const form = new FormData();
+    form.append("documentType", "SIGNED_APPLICATION");
+    form.append("file", selectedUpload);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications/${application.id}/files`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: form,
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "파일을 업로드하지 못했습니다.");
+      setSelectedUpload(null);
+      setSuccessMessage("교수 서명본을 업로드했습니다.");
+      await loadApplicationFiles(application.id);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "파일을 업로드하지 못했습니다.");
+    } finally {
+      setIsFileAction(false);
+    }
+  }
+
+  async function replaceApplicationFile(fileId, file) {
+    if (!file) return;
+    setIsFileAction(true);
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/application-files/${fileId}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: form,
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "파일을 교체하지 못했습니다.");
+      setSuccessMessage("제출 파일을 교체했습니다.");
+      await loadApplicationFiles(application.id);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "파일을 교체하지 못했습니다.");
+    } finally {
+      setIsFileAction(false);
+    }
+  }
+
+  async function deleteApplicationFile(fileId) {
+    if (!window.confirm("이 제출 파일을 삭제할까요?")) return;
+    setIsFileAction(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/application-files/${fileId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "파일을 삭제하지 못했습니다.");
+      setSuccessMessage("제출 파일을 삭제했습니다.");
+      await loadApplicationFiles(application.id);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "파일을 삭제하지 못했습니다.");
+    } finally {
+      setIsFileAction(false);
+    }
+  }
+
+  async function downloadApplicationFile(file) {
+    setIsFileAction(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/application-files/${file.id}/download`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? "파일을 다운로드하지 못했습니다.");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = file.fileName;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "파일을 다운로드하지 못했습니다.");
+    } finally {
+      setIsFileAction(false);
     }
   }
 
@@ -1034,15 +1351,94 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
     }
   }
 
+  async function handleDownloadPdf() {
+    if (!application) return;
+    setErrorMessage("");
+    setIsDownloading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications/${application.id}/document.pdf`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? "신청서 PDF를 다운로드하지 못했습니다.");
+      }
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") ?? "";
+      const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+      const filename = encoded ? decodeURIComponent(encoded) : "개별연구_신청서.pdf";
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "신청서 PDF를 다운로드하지 못했습니다.");
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
+  async function validateApplication() {
+    if (!application) return null;
+    setErrorMessage("");
+    setIsValidating(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications/${application.id}/validate`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "제출 전 검증에 실패했습니다.");
+      setValidationResult(body.data);
+      setSuccessMessage(body.data.valid ? "제출 가능한 상태입니다." : "");
+      return body.data;
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "제출 전 검증에 실패했습니다.");
+      return null;
+    } finally {
+      setIsValidating(false);
+    }
+  }
+
+  async function handleSubmitApplication() {
+    if (!application) return;
+    const result = await validateApplication();
+    if (!result?.valid) return;
+    if (!window.confirm("제출 후에는 수정할 수 없습니다. 최종 제출하시겠습니까?")) return;
+    setIsSubmitting(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/applications/${application.id}/submit`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "신청서를 제출하지 못했습니다.");
+      setApplication((current) => ({
+        ...current,
+        status: body.data.status,
+        submittedAt: body.data.submittedAt,
+      }));
+      setSuccessMessage("신청서 제출이 완료되었습니다.");
+      goStep("complete");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "신청서를 제출하지 못했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   const canEdit = application?.status === "DRAFT" || application?.status === "REVISION_REQUESTED";
 
   return (
     <section className="dashboard-page">
       <div className="screen-title">
-        <span>S4</span>
+        <span>{flowStep === "summary" ? "S9" : `S${["applicant", "content", "documents", "signature-guide", "files", "review", "complete"].indexOf(flowStep) + 2}`}</span>
         <div>
           <p className="eyebrow">학생 신청</p>
-          <h1>내 신청 현황</h1>
+          <h1>{flowStep === "summary" ? "내 신청 현황" : "개별연구 신청"}</h1>
         </div>
       </div>
 
@@ -1061,102 +1457,185 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       ) : (
         <>
           {successMessage ? <p className="success-message">{successMessage}</p> : null}
-          <section className="application-layout">
-            <article className="status-panel">
-              <h2>선택 과목</h2>
+          <ApplicationStepBar current={flowStep} submitted={application.status === "SUBMITTED"} />
+
+          {flowStep === "summary" ? (
+            <section className="status-panel application-summary">
+              <h2>신청 상태 요약</h2>
               <dl>
-                <dt>상태</dt>
-                <dd>{application.status}</dd>
-                <dt>과목명</dt>
-                <dd>{application.course?.courseName ?? "-"}</dd>
-                <dt>담당 교수</dt>
-                <dd>{application.course?.professorName ?? "-"}</dd>
-                <dt>학수강좌번호</dt>
-                <dd>{application.course?.courseCode ?? "-"}</dd>
+                <dt>신청 ID</dt><dd>{application.id}</dd>
+                <dt>학년도/학기</dt><dd>{application.course?.semester ?? "-"}</dd>
+                <dt>담당교수</dt><dd>{application.course?.professorName ?? "-"}</dd>
+                <dt>연구주제/교과목명</dt><dd>{application.course?.courseName ?? "-"}</dd>
+                <dt>현재 상태</dt><dd>{application.status}</dd>
+                <dt>현재 진행 단계</dt><dd>{application.status === "SUBMITTED" ? "S8 제출 완료" : applicationFiles.length ? "S7 제출 전 검증" : "S2 신청자 정보"}</dd>
+                <dt>제출일시</dt><dd>{application.submittedAt ? new Date(application.submittedAt).toLocaleString() : "-"}</dd>
+                <dt>업로드 파일</dt><dd>{isFileLoading ? "확인 중" : `${applicationFiles.length}개`}</dd>
               </dl>
               <div className="actions-row">
-                <button type="button" onClick={handleDownloadHwp} disabled={isDownloading}>
-                  {isDownloading ? "HWP 준비 중" : "신청서 HWP 다운로드"}
+                <button className="primary-button" onClick={() => goStep(application.status === "SUBMITTED" ? "complete" : applicationFiles.length ? "review" : "applicant")}>
+                  {application.status === "SUBMITTED" ? "제출 완료 상세보기" : "이어 작성하기"}
                 </button>
-                <button type="button" onClick={handleDownloadInterviewImage} disabled={isDownloading}>
-                  {isDownloading ? "자료 준비 중" : "면담자료 이미지 다운로드"}
-                </button>
+                {canEdit ? <button className="danger-button" onClick={handleDelete} disabled={isDeleting}>{isDeleting ? "삭제 중" : "임시저장 삭제"}</button> : null}
               </div>
-            </article>
+            </section>
+          ) : null}
 
-            <article className="status-panel autofill-panel">
-              <h2>자동채움 데이터</h2>
-              {autofill ? (
-                <dl>
-                  <dt>학생</dt>
-                  <dd>{autofill.student?.name ?? "-"} / {autofill.student?.loginId ?? "-"}</dd>
-                  <dt>학과</dt>
-                  <dd>{autofill.student?.department ?? "-"}</dd>
-                  <dt>연락처</dt>
-                  <dd>{autofill.student?.email ?? "-"} / {contact || "-"}</dd>
-                  <dt>학기</dt>
-                  <dd>{autofill.course?.semester ?? "-"}</dd>
-                  <dt>과목</dt>
-                  <dd>{autofill.course?.courseName ?? "-"}</dd>
-                  <dt>교수</dt>
-                  <dd>{autofill.course?.professorName ?? "-"}</dd>
-                  <dt>주당 시간</dt>
-                  <dd>{autofill.course?.weeklyHours ?? "-"}</dd>
-                </dl>
+          {flowStep === "applicant" ? (
+            <section className="status-panel application-form">
+              <h2>S2. 신청자 정보 입력</h2>
+              <div className="readonly-grid">
+                <label>성명<input value={application.student?.name ?? ""} disabled /></label>
+                <label>학번<input value={application.student?.loginId ?? ""} disabled /></label>
+                <label>소속<input value={application.student?.department ?? ""} disabled /></label>
+                <label>이메일<input value={application.student?.email ?? ""} disabled /></label>
+                <label>학년도/학기<input value={application.course?.semester ?? ""} disabled /></label>
+                <label>학년<input value="-" disabled /></label>
+              </div>
+              <label>연락처<input value={contact} onChange={(event) => setContact(event.target.value)} disabled={!canEdit || isSaving} /></label>
+              <StepActions onPrevious={() => goStep("summary")} onNext={() => saveAndGo("content")} nextDisabled={!canEdit || !contact.trim() || isSaving} />
+            </section>
+          ) : null}
+
+          {flowStep === "content" ? (
+            <section className="status-panel application-form">
+              <h2>S3. 신청 내용 작성</h2>
+              <p className={saveState === "저장 실패" ? "error-message" : "muted"}>{saveState}{lastSavedAt ? ` · 마지막 저장 ${lastSavedAt}` : ""}</p>
+              <div className="readonly-grid">
+                <label>교과목명<input value={application.course?.courseName ?? ""} disabled /></label>
+                <label>담당교수<input value={application.course?.professorName ?? ""} disabled /></label>
+                <label>연구주제<input value={application.course?.courseName ?? ""} disabled /></label>
+                <label>연구내용<textarea value={application.course?.researchDescription ?? ""} disabled rows={3} /></label>
+              </div>
+              <label>신청사유<textarea value={applicationReason} onChange={(event) => setApplicationReason(event.target.value)} disabled={!canEdit} rows={5} /></label>
+              <label>연구목적<textarea value={researchPurpose} onChange={(event) => setResearchPurpose(event.target.value)} disabled={!canEdit} rows={5} /></label>
+              <label>관련 경험<textarea value={relatedExperience} onChange={(event) => setRelatedExperience(event.target.value)} disabled={!canEdit} rows={3} /></label>
+              <label>연구 수행 계획<textarea value={researchPlan} onChange={(event) => setResearchPlan(event.target.value)} disabled={!canEdit} rows={3} /></label>
+              <label>면담 질문<textarea value={interviewQuestions} onChange={(event) => setInterviewQuestions(event.target.value)} disabled={!canEdit} rows={3} /></label>
+              <StepActions onPrevious={() => goStep("applicant")} onNext={() => saveAndGo("documents")}
+                           nextDisabled={!canEdit || !applicationReason.trim() || !researchPurpose.trim() || isSaving} />
+            </section>
+          ) : null}
+
+          {flowStep === "documents" ? (
+            <section className="status-panel">
+              <h2>S4. 신청서 문서 생성 및 다운로드</h2>
+              <p className="muted">제출 전 확인용 PDF와 수강신청원 HWPX를 내려받아 내용을 확인하세요.</p>
+              <div className="document-actions">
+                <button onClick={handleDownloadPdf} disabled={isDownloading}>{isDownloading ? "다운로드 중" : "신청서 PDF 다운로드"}</button>
+                <button onClick={() => handleGenerate("application-hwpx")} disabled={isDownloading || !draftId}>수강신청원 HWPX 생성</button>
+                {generatedFiles["application-hwpx"] ? <button onClick={() => downloadGenerated(generatedFiles["application-hwpx"])}>생성된 HWPX 다운로드</button> : null}
+              </div>
+              <StepActions onPrevious={() => goStep("content")} onNext={() => goStep("signature-guide")} />
+            </section>
+          ) : null}
+
+          {flowStep === "signature-guide" ? (
+            <section className="status-panel signature-guide">
+              <h2>S5. 교수 서명본 준비</h2>
+              <strong>교수 서명본을 PDF/JPG/PNG로 준비해주세요.</strong>
+              <ol>
+                <li>앞 단계에서 신청서 파일을 다운로드합니다.</li>
+                <li>담당 교수님께 신청 내용 확인과 서명을 받습니다.</li>
+                <li>서명된 문서를 PDF, JPG, JPEG 또는 PNG 파일로 준비합니다.</li>
+                <li>파일 크기는 10MB 이하여야 합니다.</li>
+              </ol>
+              <StepActions onPrevious={() => goStep("documents")} onNext={() => goStep("files")} />
+            </section>
+          ) : null}
+
+          {flowStep === "files" ? (
+            <section className="status-panel">
+              <h2>S6. 제출 파일 업로드</h2>
+              {canEdit && !applicationFiles.some((file) => file.documentType === "SIGNED_APPLICATION") ? (
+                <div className="file-upload-row">
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(event) => setSelectedUpload(event.target.files?.[0] ?? null)} />
+                  <button className="primary-button" onClick={uploadApplicationFile} disabled={!selectedUpload || isFileAction}>교수 서명본 업로드</button>
+                </div>
+              ) : application.status === "SUBMITTED" ? (
+                <p className="muted">제출 완료 후에는 파일을 변경할 수 없습니다.</p>
               ) : (
-                <p className="muted">자동채움 데이터를 불러오는 중입니다.</p>
+                <p className="muted">교수 서명본이 등록되어 있습니다. 새 파일은 기존 파일의 교체 버튼을 사용하세요.</p>
               )}
-            </article>
+              {isFileLoading ? <p>파일 목록을 불러오는 중입니다.</p> : applicationFiles.length ? (
+                <div className="table-wrap"><table><thead><tr><th>문서 종류</th><th>파일명</th><th>업로드 일시</th><th>관리</th></tr></thead>
+                  <tbody>{applicationFiles.map((file) => <tr key={file.id}>
+                    <td>{file.documentType === "SIGNED_APPLICATION" ? "교수 서명본" : "추가 파일"}</td>
+                    <td>{file.fileName}</td><td>{new Date(file.uploadedAt).toLocaleString()}</td>
+                    <td className="actions-row">
+                      <button onClick={() => downloadApplicationFile(file)} disabled={isFileAction}>다운로드</button>
+                      {canEdit ? <label className="file-replace-button">교체<input type="file" accept=".pdf,.jpg,.jpeg,.png" hidden onChange={(event) => replaceApplicationFile(file.id, event.target.files?.[0])} /></label> : null}
+                      {canEdit ? <button className="danger-button" onClick={() => deleteApplicationFile(file.id)} disabled={isFileAction}>삭제</button> : null}
+                    </td>
+                  </tr>)}</tbody>
+                </table></div>
+              ) : <p className="muted">업로드된 제출 파일이 없습니다.</p>}
+              <StepActions onPrevious={() => goStep("signature-guide")} onNext={() => goStep("review")}
+                           nextDisabled={!applicationFiles.some((file) => file.documentType === "SIGNED_APPLICATION")} />
+            </section>
+          ) : null}
 
-            <form className="status-panel application-form" onSubmit={handleSave}>
-              <h2>신청서 작성</h2>
-              <label>
-                연락처
-                <input
-                  value={contact}
-                  onChange={(event) => setContact(event.target.value)}
-                  disabled={!canEdit || isSaving}
-                  placeholder="신청서에 들어갈 연락처"
-                />
-              </label>
-              <label>
-                신청 사유
-                <textarea
-                  value={applicationReason}
-                  onChange={(event) => setApplicationReason(event.target.value)}
-                  disabled={!canEdit || isSaving}
-                  rows={6}
-                  placeholder="해당 과목을 신청하는 이유를 입력해 주세요."
-                />
-              </label>
-              <label>
-                연구 목적
-                <textarea
-                  value={researchPurpose}
-                  onChange={(event) => setResearchPurpose(event.target.value)}
-                  disabled={!canEdit || isSaving}
-                  rows={6}
-                  placeholder="개별연구를 통해 달성하고 싶은 목표를 입력해 주세요."
-                />
-              </label>
-              <div className="actions-row">
-                <button className="primary-button" disabled={!canEdit || isSaving}>
-                  {isSaving ? "저장 중" : "임시 저장"}
-                </button>
-                <button
-                  className="danger-button"
-                  type="button"
-                  disabled={application.status !== "DRAFT" || isDeleting}
-                  onClick={handleDelete}
-                >
-                  {isDeleting ? "삭제 중" : "임시저장 삭제"}
+          {flowStep === "review" ? (
+            <section className="status-panel">
+              <h2>S7. 제출 전 최종 검증</h2>
+              <button onClick={validateApplication} disabled={isValidating}>{isValidating ? "검증 중" : "제출 전 확인"}</button>
+              {validationResult?.valid ? <p className="success-message">제출 가능한 상태입니다.</p> : null}
+              {validationResult && !validationResult.valid ? (
+                <div className="validation-summary"><strong>제출 전 확인이 필요합니다.</strong>
+                  {validationResult.missingFields.length ? <><p>누락된 입력값:</p><ul>{validationResult.missingFields.map((field) => <li key={field}>{validationFieldLabel(field)}</li>)}</ul></> : null}
+                  {validationResult.missingFiles.length ? <><p>누락된 파일:</p><ul>{validationResult.missingFiles.map((file) => <li key={file}>{file === "SIGNED_APPLICATION" ? "교수 서명본" : file}</li>)}</ul></> : null}
+                </div>
+              ) : null}
+              <div className="step-actions">
+                <button onClick={() => goStep("files")}>이전</button>
+                <button className="primary-button" onClick={handleSubmitApplication} disabled={isSubmitting || isValidating || application.status === "SUBMITTED"}>
+                  {isSubmitting ? "제출 중" : "최종 제출"}
                 </button>
               </div>
-            </form>
-          </section>
+            </section>
+          ) : null}
+
+          {flowStep === "complete" ? (
+            <section className="status-panel completion-panel">
+              <h2>S8. 제출 완료</h2>
+              <p className="success-message">개별연구 신청서가 제출되었습니다.</p>
+              <dl><dt>상태</dt><dd>{application.status}</dd><dt>제출일시</dt><dd>{application.submittedAt ? new Date(application.submittedAt).toLocaleString() : "-"}</dd><dt>제출 파일</dt><dd>{applicationFiles.length}개</dd></dl>
+              <button onClick={() => goStep("summary")}>내 신청 현황으로</button>
+            </section>
+          ) : null}
         </>
       )}
     </section>
+  );
+}
+
+function ApplicationStepBar({ current, submitted }) {
+  const steps = [
+    ["applicant", "신청자 정보"],
+    ["content", "신청 내용"],
+    ["documents", "문서 생성"],
+    ["signature-guide", "서명 준비"],
+    ["files", "파일 업로드"],
+    ["review", "최종 검증"],
+    ["complete", "제출 완료"],
+  ];
+  return (
+    <ol className="application-step-bar" aria-label="신청 단계">
+      {steps.map(([key, label], index) => (
+        <li className={current === key || (submitted && key === "complete") ? "active" : ""} key={key}>
+          <span>{index + 2}</span>{label}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function StepActions({ onPrevious, onNext, nextDisabled = false }) {
+  return (
+    <div className="step-actions">
+      <button type="button" onClick={onPrevious}>이전</button>
+      <button className="primary-button" type="button" onClick={onNext} disabled={nextDisabled}>다음</button>
+    </div>
   );
 }
 
@@ -1179,6 +1658,21 @@ function InfoMap({ values }) {
       </tbody>
     </table>
   );
+}
+
+function validationFieldLabel(field) {
+  return {
+    studentName: "성명",
+    studentNumber: "학번",
+    department: "소속",
+    phone: "연락처",
+    email: "이메일",
+    semester: "학년도/학기",
+    courseName: "교과목명",
+    professorName: "담당교수",
+    applicationReason: "신청사유",
+    researchPurpose: "연구목적",
+  }[field] ?? field;
 }
 
 function displayRequiredDocuments(documents = []) {

@@ -390,6 +390,137 @@ input {
   gap: 18px;
 }
 
+.validation-summary {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #d69b35;
+  border-radius: 8px;
+  background: #fff8e8;
+}
+
+.validation-summary p {
+  margin: 10px 0 4px;
+}
+
+.validation-summary ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.application-step-bar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(90px, 1fr));
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.application-step-bar li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid #d8dce3;
+  border-radius: 8px;
+  color: #687080;
+  background: #fff;
+  font-size: 13px;
+}
+
+.application-step-bar li span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e9ecf1;
+  font-weight: 700;
+}
+
+.application-step-bar li.active {
+  border-color: #c86422;
+  color: #8b3d10;
+  background: #fff5ec;
+  font-weight: 700;
+}
+
+.application-step-bar li.active span {
+  color: white;
+  background: #c86422;
+}
+
+.application-summary dl,
+.completion-panel dl {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 0;
+  margin: 18px 0;
+}
+
+.application-summary dt,
+.application-summary dd,
+.completion-panel dt,
+.completion-panel dd {
+  margin: 0;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e5ea;
+}
+
+.application-summary dt,
+.completion-panel dt {
+  font-weight: 700;
+  background: #f7f8fa;
+}
+
+.readonly-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.document-actions,
+.file-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.signature-guide {
+  line-height: 1.7;
+}
+
+.file-replace-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #c7ccd4;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 600;
+  background: #fff;
+}
+
+@media (max-width: 900px) {
+  .application-step-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .readonly-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .application-form {
   display: grid;
   grid-column: 1 / -1;
