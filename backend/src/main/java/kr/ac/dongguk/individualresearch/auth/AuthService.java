@@ -59,13 +59,20 @@ public class AuthService {
         long issuedAt = Instant.now().getEpochSecond();
         String payloadJson = "{\"exp\":" + (issuedAt + TOKEN_TTL_SECONDS)
                 + ",\"iat\":" + issuedAt
-                + ",\"role\":\"" + user.role().name()
+                + ",\"jti\":\"" + randomTokenId()
+                + "\",\"role\":\"" + user.role().name()
                 + "\",\"sub\":\"" + user.id() + "\"}";
         byte[] payloadBytes = payloadJson.getBytes(StandardCharsets.UTF_8);
         byte[] signature = hmac(payloadBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(payloadBytes)
                 + "."
                 + Base64.getUrlEncoder().withoutPadding().encodeToString(signature);
+    }
+
+    private String randomTokenId() {
+        byte[] tokenId = new byte[16];
+        secureRandom.nextBytes(tokenId);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(tokenId);
     }
 
     public TokenPayload verifyAccessToken(String token) {

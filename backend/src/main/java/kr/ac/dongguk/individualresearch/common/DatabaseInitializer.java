@@ -139,38 +139,96 @@ public class DatabaseInitializer implements ApplicationRunner {
                 )
                 """
         );
+        jdbcTemplate.execute(
+                """
+                CREATE TABLE IF NOT EXISTS application_draft (
+                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    user_id BIGINT NOT NULL,
+                    notice_id BIGINT,
+                    research_topic_id BIGINT,
+                    semester VARCHAR(100),
+                    student_name VARCHAR(100),
+                    student_number VARCHAR(50),
+                    department VARCHAR(100),
+                    grade VARCHAR(30),
+                    phone VARCHAR(50),
+                    email VARCHAR(100),
+                    professor_name VARCHAR(100),
+                    research_title VARCHAR(255),
+                    research_content TEXT,
+                    course_name VARCHAR(255),
+                    application_reason TEXT,
+                    research_purpose TEXT,
+                    related_experience TEXT,
+                    research_plan TEXT,
+                    interview_questions TEXT,
+                    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+        );
+        jdbcTemplate.execute(
+                """
+                CREATE TABLE IF NOT EXISTS document_template (
+                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    notice_id BIGINT,
+                    semester VARCHAR(100),
+                    template_name VARCHAR(255) NOT NULL,
+                    document_type VARCHAR(50) NOT NULL,
+                    original_filename VARCHAR(255) NOT NULL,
+                    stored_filename VARCHAR(255) NOT NULL,
+                    file_path VARCHAR(1000) NOT NULL,
+                    template_version INT NOT NULL,
+                    file_hash VARCHAR(64) NOT NULL UNIQUE,
+                    is_active BOOLEAN NOT NULL DEFAULT FALSE,
+                    needs_review BOOLEAN NOT NULL DEFAULT FALSE,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+        );
+        jdbcTemplate.execute(
+                """
+                CREATE TABLE IF NOT EXISTS generated_document (
+                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    draft_id BIGINT NOT NULL,
+                    template_id BIGINT,
+                    document_type VARCHAR(50) NOT NULL,
+                    filename VARCHAR(255) NOT NULL,
+                    file_path VARCHAR(1000) NOT NULL,
+                    file_hash VARCHAR(64) NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP NULL
+                )
+                """
+        );
+        jdbcTemplate.execute(
+                """
+                CREATE TABLE IF NOT EXISTS application_files (
+                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    application_id BIGINT NOT NULL,
+                    document_type VARCHAR(40) NOT NULL,
+                    original_file_name VARCHAR(255) NOT NULL,
+                    stored_file_name VARCHAR(255) NOT NULL,
+                    file_path VARCHAR(1000) NOT NULL,
+                    content_type VARCHAR(100) NOT NULL,
+                    file_size BIGINT NOT NULL,
+                    file_hash VARCHAR(64) NOT NULL,
+                    uploaded_by BIGINT NOT NULL,
+                    uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+        );
     }
 
     private void ensureNoticeBodyTextColumn() {
-        Integer count = jdbcTemplate.queryForObject(
-                """
-                SELECT COUNT(*)
-                FROM information_schema.COLUMNS
-                WHERE TABLE_SCHEMA = DATABASE()
-                  AND TABLE_NAME = 'notices'
-                  AND COLUMN_NAME = 'body_text'
-                """,
-                Integer.class
-        );
-        if (count == null || count == 0) {
-            jdbcTemplate.execute("ALTER TABLE notices ADD COLUMN body_text MEDIUMTEXT");
-        }
+        jdbcTemplate.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS body_text MEDIUMTEXT");
     }
 
     private void ensureApplicationContactColumn() {
-        Integer count = jdbcTemplate.queryForObject(
-                """
-                SELECT COUNT(*)
-                FROM information_schema.COLUMNS
-                WHERE TABLE_SCHEMA = DATABASE()
-                  AND TABLE_NAME = 'applications'
-                  AND COLUMN_NAME = 'contact'
-                """,
-                Integer.class
-        );
-        if (count == null || count == 0) {
-            jdbcTemplate.execute("ALTER TABLE applications ADD COLUMN contact VARCHAR(100)");
-        }
+        jdbcTemplate.execute("ALTER TABLE applications ADD COLUMN IF NOT EXISTS contact VARCHAR(100)");
     }
 
     private void seedUsers() {

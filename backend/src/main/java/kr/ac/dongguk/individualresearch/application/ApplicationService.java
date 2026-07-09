@@ -141,7 +141,7 @@ public class ApplicationService {
         return StringUtils.hasText(record.contact()) ? record.contact() : record.studentPhone();
     }
 
-    private ApplicationRecord findOwnedApplication(PublicUser student, long applicationId) {
+    public ApplicationRecord findOwnedApplication(PublicUser student, long applicationId) {
         ApplicationRecord application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ApplicationNotFoundException("신청서 정보를 찾을 수 없습니다."));
         if (application.studentId() != student.id()) {

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+    @page { size: A4 portrait; margin: 16mm; }
+    body { margin: 0; color: #111; font-family: KoreanDocumentFont, sans-serif; font-size: 10.5pt; }
+    h1 { margin: 0 0 9mm; text-align: center; font-size: 22pt; }
+    h2 { margin: 7mm 0 2mm; padding-bottom: 2mm; border-bottom: 1.5px solid #222; font-size: 13pt; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { border: 1px solid #555; padding: 2.5mm 3mm; vertical-align: top; }
+    th { width: 24%; background: #f3f3f3; text-align: left; }
+    td { white-space: pre-line; overflow-wrap: break-word; }
+    .long { height: 12mm; }
+    .generated { margin-top: 8mm; color: #555; text-align: right; font-size: 9pt; }
+    .notice { margin-top: 4mm; color: #555; font-size: 9pt; }
+  </style>
+</head>
+<body>
+  <h1>개별연구 신청서</h1>
+
+  <h2>신청자 정보</h2>
+  <table>
+    <tr><th>성명</th><td th:text="${application.studentName}"></td><th>학번</th><td th:text="${application.studentLoginId}"></td></tr>
+    <tr><th>소속</th><td th:text="${application.studentDepartment}"></td><th>연락처</th><td th:text="${contact}"></td></tr>
+    <tr><th>이메일</th><td colspan="3" th:text="${application.studentEmail}"></td></tr>
+  </table>
+
+  <h2>신청 정보</h2>
+  <table>
+    <tr><th>학년도/학기</th><td th:text="${application.semester}"></td><th>교과목명</th><td th:text="${application.courseName}"></td></tr>
+    <tr><th>담당교수</th><td colspan="3" th:text="${application.professorName}"></td></tr>
+    <tr><th>연구주제</th><td colspan="3" th:text="${researchTitle}"></td></tr>
+    <tr><th>연구내용</th><td colspan="3" class="long" th:text="${researchContent}"></td></tr>
+  </table>
+
+  <h2>작성 내용</h2>
+  <table>
+    <tr><th>신청사유</th><td class="long" th:text="${application.applicationReason}"></td></tr>
+    <tr><th>연구목적</th><td class="long" th:text="${application.researchPurpose}"></td></tr>
+    <tr><th>관련 경험</th><td class="long" th:text="${relatedExperience}"></td></tr>
+    <tr><th>연구 수행 계획</th><td class="long" th:text="${researchPlan}"></td></tr>
+    <tr><th>면담 질문</th><td class="long" th:text="${interviewQuestions}"></td></tr>
+  </table>
+
+  <p class="generated">생성일시: <span th:text="${generatedAt}"></span></p>
+  <p class="notice">본 문서는 제출 전 내용 확인용 PDF이며 학교 공식 신청서 양식이 아닙니다.</p>
+</body>
+</html>

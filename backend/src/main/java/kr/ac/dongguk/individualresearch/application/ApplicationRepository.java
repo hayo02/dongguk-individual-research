@@ -93,6 +93,20 @@ public class ApplicationRepository {
         );
     }
 
+    public boolean submit(long applicationId) {
+        return jdbcTemplate.update(
+                """
+                UPDATE applications
+                SET status = ?, submitted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND status IN (?, ?)
+                """,
+                ApplicationStatus.SUBMITTED.name(),
+                applicationId,
+                ApplicationStatus.DRAFT.name(),
+                ApplicationStatus.REVISION_REQUESTED.name()
+        ) == 1;
+    }
+
     public void delete(long applicationId) {
         jdbcTemplate.update("DELETE FROM applications WHERE id = ?", applicationId);
     }

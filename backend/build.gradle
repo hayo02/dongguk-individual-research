@@ -22,9 +22,12 @@ configurations {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.apache.poi:poi:5.3.0'
+    implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
 
     runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'com.h2database:h2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

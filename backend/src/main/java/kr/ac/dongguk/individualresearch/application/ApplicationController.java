@@ -24,10 +24,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApplicationController {
     private final AuthFacade authFacade;
     private final ApplicationService applicationService;
+    private final ApplicationPdfService applicationPdfService;
+    private final ApplicationValidationService applicationValidationService;
+    private final ApplicationSubmitService applicationSubmitService;
 
-    public ApplicationController(AuthFacade authFacade, ApplicationService applicationService) {
+    public ApplicationController(
+            AuthFacade authFacade,
+            ApplicationService applicationService,
+            ApplicationPdfService applicationPdfService,
+            ApplicationValidationService applicationValidationService,
+            ApplicationSubmitService applicationSubmitService
+    ) {
         this.authFacade = authFacade;
         this.applicationService = applicationService;
+        this.applicationPdfService = applicationPdfService;
+        this.applicationValidationService = applicationValidationService;
+        this.applicationSubmitService = applicationSubmitService;
     }
 
     @PostMapping
@@ -94,11 +106,38 @@ public class ApplicationController {
         return download(document);
     }
 
+    @GetMapping("/{applicationId}/document.pdf")
+    public ResponseEntity<byte[]> pdf(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable long applicationId
+    ) {
+        PublicUser student = authFacade.currentUser(authorization, UserRole.STUDENT);
+        return download(applicationPdfService.generate(student, applicationId));
+    }
+
+    @PostMapping("/{applicationId}/validate")
+    public ApiResponse<ApplicationValidationResponse> validate(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable long applicationId
+    ) {
+        PublicUser student = authFacade.currentUser(authorization, UserRole.STUDENT);
+        return ApiResponse.ok(applicationValidationService.validate(student, applicationId));
+    }
+
+    @PostMapping("/{applicationId}/submit")
+    public ApiResponse<ApplicationSubmitResponse> submit(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable long applicationId
+    ) {
+        PublicUser student = authFacade.currentUser(authorization, UserRole.STUDENT);
+        return ApiResponse.ok(applicationSubmitService.submit(student, applicationId));
+    }
+
     private ResponseEntity<byte[]> download(ApplicationDocumentResponse document) {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(document.contentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-                        .filename(document.filename())
+                        .filename(document.filename(), java.nio.charset.StandardCharsets.UTF_8)
                         .build()
                         .toString())
                 .body(document.content());

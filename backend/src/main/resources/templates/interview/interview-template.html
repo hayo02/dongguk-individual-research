@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+    @page { size: A4 portrait; margin: 12mm 9mm 10mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #000; font-family: KoreanDocumentFont, sans-serif; }
+    h1 { margin: 2mm 0 7mm; text-align: center; font-size: 24pt; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13pt; }
+    th, td { border: 1px solid #000; padding: 2mm 3mm; vertical-align: middle; }
+    th { font-weight: 700; text-align: center; }
+    td { text-align: left; }
+    .section { height: 11mm; text-align: center; font-size: 14pt; }
+    .identity { height: 15mm; }
+    .line { height: 11mm; }
+    .long-label { width: 19%; font-size: 14pt; }
+    .long-value { padding: 5mm; vertical-align: top; white-space: pre-line; line-height: 1.55; }
+    .reason { height: 57mm; }
+    .purpose { height: 58mm; }
+  </style>
+</head>
+<body>
+<h1>개별연구 인터뷰 자료</h1>
+<table>
+  <colgroup><col style="width:19%"/><col style="width:31%"/><col style="width:19%"/><col style="width:31%"/></colgroup>
+  <tr class="line"><th colspan="2">학년도/학기</th><td colspan="2" th:text="${draft.semester}"></td></tr>
+  <tr><th colspan="4" class="section">인적사항</th></tr>
+  <tr class="identity"><th class="label">소속</th><td class="value" th:text="${draft.department}"></td><th class="label">연락처</th><td class="value" th:text="${draft.phone}"></td></tr>
+  <tr class="identity"><th>학번</th><td th:text="${draft.studentNumber}"></td><th>성명</th><td th:text="${draft.studentName}"></td></tr>
+  <tr><th colspan="4" class="section">개별연구 수강 신청</th></tr>
+  <tr class="line"><th>교과목명</th><td colspan="3" th:text="${courseName}"></td></tr>
+  <tr class="line"><th>담당교수</th><td colspan="3" th:text="${draft.professorName}"></td></tr>
+  <tr class="reason"><th class="long-label">신청사유</th><td colspan="3" class="long-value" th:text="${draft.applicationReason}"></td></tr>
+  <tr class="purpose"><th class="long-label">연구목적</th><td colspan="3" class="long-value" th:text="${draft.researchPurpose}"></td></tr>
+</table>
+</body>
+</html>

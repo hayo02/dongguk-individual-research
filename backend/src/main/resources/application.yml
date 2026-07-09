@@ -8,8 +8,15 @@ spring:
     url: ${DB_URL:jdbc:mysql://127.0.0.1:3307/individual_research?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8}
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD:Gkdud0211@}
 
 app:
   auth:
     secret: dongguk-individual-research-dev-secret
+  storage:
+    root-path: ${STORAGE_ROOT:./storage}
+    upload-max-bytes: ${UPLOAD_MAX_BYTES:10485760}
+  pdf:
+    font-path: ${PDF_FONT_PATH:C:/Windows/Fonts/malgun.ttf}
+  documents:
+    sample-hwpx-path: ${SAMPLE_HWPX_PATH:../samples/2. 2026-여름학기 개별연구 수강신청원(학생용).hwpx}
