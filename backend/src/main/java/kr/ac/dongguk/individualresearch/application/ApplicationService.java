@@ -121,6 +121,7 @@ public class ApplicationService {
                         record.courseName(),
                         record.courseType(),
                         record.courseCode(),
+                        record.researchDescription(),
                         record.weeklyHours()
                 ),
                 record.applicationReason(),

@@ -88,7 +88,7 @@ public class DocumentService {
             throw new DocumentException("DOCUMENT_NOT_FOUND", "다운로드할 파일이 없습니다.");
         }
         try {
-            String media = type.endsWith("PDF") ? "application/pdf" : "application/octet-stream";
+            String media = type.endsWith("PDF") ? "application/pdf" : "application/vnd.hancom.hwpx";
             return new Download(filename, media, Files.readAllBytes(normalized));
         } catch (IOException e) {
             throw new DocumentException("FILE_STORAGE_FAILED", "파일을 읽지 못했습니다.");

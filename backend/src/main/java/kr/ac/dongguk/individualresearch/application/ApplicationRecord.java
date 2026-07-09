@@ -19,6 +19,7 @@ public record ApplicationRecord(
         String courseName,
         String courseType,
         String courseCode,
+        String researchDescription,
         Integer weeklyHours,
         String professorName,
         ApplicationStatus status,

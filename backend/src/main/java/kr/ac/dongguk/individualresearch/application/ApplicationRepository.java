@@ -24,6 +24,7 @@ public class ApplicationRepository {
                        u.login_id AS student_login_id, u.name AS student_name, u.department AS student_department,
                        u.email AS student_email, u.phone AS student_phone,
                        a.course_id, c.notice_id, n.semester, c.department, c.course_name, c.course_type, c.course_code,
+                       c.research_description,
                        c.weekly_hours, c.professor_name, a.status,
                        a.contact, a.application_reason, a.research_purpose, a.submitted_at, a.created_at, a.updated_at
                 FROM applications a
@@ -46,6 +47,7 @@ public class ApplicationRepository {
                        u.login_id AS student_login_id, u.name AS student_name, u.department AS student_department,
                        u.email AS student_email, u.phone AS student_phone,
                        a.course_id, c.notice_id, n.semester, c.department, c.course_name, c.course_type, c.course_code,
+                       c.research_description,
                        c.weekly_hours, c.professor_name, a.status,
                        a.contact, a.application_reason, a.research_purpose, a.submitted_at, a.created_at, a.updated_at
                 FROM applications a
@@ -154,6 +156,7 @@ public class ApplicationRepository {
                 rs.getString("course_name"),
                 rs.getString("course_type"),
                 rs.getString("course_code"),
+                rs.getString("research_description"),
                 nullableInt(rs, "weekly_hours"),
                 rs.getString("professor_name"),
                 ApplicationStatus.valueOf(rs.getString("status")),

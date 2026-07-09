@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 const ACCESS_TOKEN_KEY = "individualResearchAccessToken";
 
 function App() {
@@ -1025,7 +1025,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       email: application?.student?.email ?? "",
       professorName: application?.course?.professorName ?? "",
       researchTitle: application?.course?.courseName ?? "",
-      researchContent: "",
+      researchContent: application?.course?.researchDescription ?? "",
       courseName: application?.course?.courseName ?? "개별연구",
       applicationReason,
       researchPurpose,

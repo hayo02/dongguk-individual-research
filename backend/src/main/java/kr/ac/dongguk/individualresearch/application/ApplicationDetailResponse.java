@@ -36,6 +36,7 @@ public record ApplicationDetailResponse(
             String courseName,
             String courseType,
             String courseCode,
+            String researchDescription,
             Integer weeklyHours
     ) {
     }

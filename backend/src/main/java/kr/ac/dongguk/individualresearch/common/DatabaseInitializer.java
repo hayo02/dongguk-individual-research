@@ -14,6 +14,7 @@ import kr.ac.dongguk.individualresearch.auth.UserRole;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -224,11 +225,22 @@ public class DatabaseInitializer implements ApplicationRunner {
     }
 
     private void ensureNoticeBodyTextColumn() {
-        jdbcTemplate.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS body_text MEDIUMTEXT");
+        addColumnIfMissing("notices", "body_text", "body_text MEDIUMTEXT");
     }
 
     private void ensureApplicationContactColumn() {
-        jdbcTemplate.execute("ALTER TABLE applications ADD COLUMN IF NOT EXISTS contact VARCHAR(100)");
+        addColumnIfMissing("applications", "contact", "contact VARCHAR(100)");
+    }
+
+    private void addColumnIfMissing(String tableName, String columnName, String columnDefinition) {
+        try {
+            jdbcTemplate.execute("ALTER TABLE " + tableName + " ADD COLUMN " + columnDefinition);
+        } catch (BadSqlGrammarException exception) {
+            String message = exception.getMostSpecificCause().getMessage();
+            if (message == null || !message.toLowerCase(java.util.Locale.ROOT).contains("duplicate column")) {
+                throw exception;
+            }
+        }
     }
 
     private void seedUsers() {

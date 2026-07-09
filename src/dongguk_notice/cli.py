@@ -13,6 +13,12 @@ def parser() -> argparse.ArgumentParser:
 
     crawl_parser = sub.add_parser("crawl", help="최신 개별연구 공지와 첨부파일 수집")
     crawl_parser.add_argument("--data-dir", default="data")
+    crawl_parser.add_argument(
+        "--category",
+        default="individual-research",
+        choices=["individual-research", "all", "affiliation-change"],
+        help="호환성을 위한 카테고리 옵션입니다. 현재 크롤러는 개별연구 공지를 수집합니다.",
+    )
 
     return root
 
@@ -20,6 +26,8 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     if args.command == "crawl":
+        if args.category != "individual-research":
+            print(f"카테고리 {args.category!r} 요청을 받았지만 현재 구현은 개별연구 공지 수집으로 처리합니다.")
         result = crawl(args.data_dir)
         print_crawl_summary(result)
     return 0

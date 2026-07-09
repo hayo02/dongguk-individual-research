@@ -129,7 +129,7 @@ class ApplicationSubmissionServiceTest {
                 1L, student.id(), student.loginId(), student.name(), student.department(),
                 student.email(), complete ? student.phone() : "", complete ? "010-9999-9999" : "",
                 20L, 30L, "2026학년도 여름학기", "컴퓨터·AI학부", "개별연구",
-                "기존", "CSE0000", 3, "김교수", status,
+                "기존", "CSE0000", "연구 내용", 3, "김교수", status,
                 complete ? "신청 사유" : "", complete ? "연구 목적" : "",
                 status == ApplicationStatus.SUBMITTED ? now : null, now, now
         );

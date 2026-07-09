@@ -35,6 +35,7 @@ class ApplicationDocumentServiceTest {
                 "개별연구 과제",
                 "개별연구",
                 "CSE0000",
+                "연구 내용입니다.",
                 3,
                 "김교수",
                 ApplicationStatus.DRAFT,
