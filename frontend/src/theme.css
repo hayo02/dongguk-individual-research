@@ -1,0 +1,50 @@
+:root {
+  --font-size: 16px;
+  --font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
+
+  --background: #fff9f4;
+  --foreground: #2f2f2f;
+  --card: #ffffff;
+  --card-foreground: #2f2f2f;
+  --primary: #f58220;
+  --primary-hover: #e85a24;
+  --primary-soft: #fff1e6;
+  --primary-foreground: #ffffff;
+  --secondary: #fff1e6;
+  --secondary-foreground: #2f2f2f;
+  --muted: #f5f0eb;
+  --muted-foreground: #6b6b6b;
+  --accent: #fff1e6;
+  --accent-foreground: #e85a24;
+  --destructive: #d4183d;
+  --destructive-soft: #fff0f3;
+  --success: #14804a;
+  --success-soft: #eefaf3;
+  --warning: #b7791f;
+  --warning-soft: #fff8e7;
+  --info: #2563eb;
+  --info-soft: #eff6ff;
+  --border: #e8e3de;
+  --input-background: #f5f0eb;
+  --ring: #f58220;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-sm: 0 1px 2px rgba(47, 47, 47, 0.06);
+  --shadow-md: 0 10px 28px rgba(47, 47, 47, 0.08);
+  --shadow-focus: 0 0 0 4px rgba(245, 130, 32, 0.18);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+}

@@ -1,7 +1,10 @@
+@import "./theme.css";
+
 :root {
-  color: #1f2933;
-  background: #f4f5f7;
-  font-family: Arial, "Noto Sans KR", sans-serif;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
 }
 
 * {
@@ -10,11 +13,42 @@
 
 body {
   margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top left, rgba(245, 130, 32, 0.08), transparent 32rem),
+    var(--background);
+  color: var(--foreground);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
 }
 
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
 }
 
 .login-shell {
@@ -41,7 +75,7 @@ input {
 }
 
 .brand-row.compact {
-  min-width: 280px;
+  min-width: 390px;
 }
 
 .brand-row h1,
@@ -69,17 +103,57 @@ input {
 .logo-box {
   display: grid;
   place-items: center;
-  width: 74px;
+  width: 144px;
   height: 42px;
-  border: 1px solid #111827;
-  background: #fff;
-  font-size: 13px;
-  font-weight: 800;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
 }
 
 .logo-box.small {
-  width: 56px;
-  height: 30px;
+  width: 144px;
+  height: 42px;
+}
+
+.logo-box img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brand-divider {
+  width: 1px;
+  height: 34px;
+  background: var(--border);
+}
+
+.brand-divider + div {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.brand-divider + div > * {
+  display: none;
+}
+
+.brand-divider + div::before {
+  content: "컴퓨터·AI학부";
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.18;
+}
+
+.brand-divider + div::after {
+  content: "개별연구 신청 통합 관리 시스템";
+  color: var(--foreground);
+  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .login-form {
@@ -981,5 +1055,352 @@ input {
 
   .detail-list {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Figma AI inspired visual system */
+.login-shell {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 249, 244, 0.92)),
+    var(--background);
+}
+
+.login-card,
+.metric-card,
+.status-panel,
+.recent-notice,
+.course-modal {
+  border-color: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: var(--shadow-sm);
+}
+
+.login-card,
+.course-modal {
+  box-shadow: var(--shadow-md);
+}
+
+.brand-row h1,
+.status-panel h1,
+.notice-overview h1,
+.notice-overview h2,
+.screen-title h1,
+.notice-detail h2,
+.course-modal h2,
+.application-summary h2,
+.completion-panel h2 {
+  color: var(--foreground);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+}
+
+.brand-row span,
+.eyebrow,
+.metric-card span,
+.status-panel dt,
+.transparent-info-table th,
+.recent-notice time,
+.muted,
+.notice-note,
+.detail-list dt,
+.data-table th {
+  color: var(--muted-foreground);
+}
+
+.eyebrow {
+  color: var(--accent-foreground);
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+}
+
+.logo-box {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom-color: var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px);
+}
+
+.app-header nav button,
+.user-actions button,
+.actions-row button:not(.primary-button),
+.button-link,
+.document-actions button,
+.step-actions button,
+.table-actions button,
+.modal-heading button,
+.file-replace-button {
+  min-height: 40px;
+  border-color: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--foreground);
+  font-weight: var(--font-weight-medium);
+  box-shadow: var(--shadow-sm);
+}
+
+.app-header nav button:hover,
+.user-actions button:hover,
+.actions-row button:not(.primary-button):hover,
+.button-link:hover,
+.document-actions button:hover,
+.step-actions button:hover,
+.table-actions button:hover,
+.modal-heading button:hover,
+.file-replace-button:hover {
+  border-color: rgba(245, 130, 32, 0.34);
+  background: var(--primary-soft);
+  color: var(--accent-foreground);
+}
+
+.app-header nav button.active,
+.primary-button,
+.table-actions .primary-button,
+.source-pill {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: var(--font-weight-bold);
+  box-shadow: 0 8px 18px rgba(245, 130, 32, 0.2);
+}
+
+.primary-button:hover:not(:disabled),
+.app-header nav button.active:hover,
+.table-actions .primary-button:hover:not(:disabled),
+.source-pill:hover {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+  color: var(--primary-foreground);
+  transform: translateY(-1px);
+}
+
+.primary-button:disabled {
+  border-color: #d8d2cc;
+  background: #d8d2cc;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.danger-button {
+  border-color: rgba(212, 24, 61, 0.32);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  color: var(--destructive);
+  font-weight: var(--font-weight-bold);
+}
+
+.danger-button:hover:not(:disabled) {
+  background: var(--destructive-soft);
+}
+
+.login-form input,
+.application-form input,
+.application-form textarea,
+.course-filter input,
+.file-upload-row input[type="file"] {
+  border-color: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--input-background);
+  color: var(--foreground);
+}
+
+.login-form input:hover,
+.application-form input:hover,
+.application-form textarea:hover,
+.course-filter input:hover {
+  border-color: rgba(245, 130, 32, 0.42);
+}
+
+.login-form input:focus,
+.application-form input:focus,
+.application-form textarea:focus,
+.course-filter input:focus {
+  border-color: var(--ring);
+  background: #ffffff;
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.application-form input:disabled,
+.application-form textarea:disabled {
+  border-color: var(--border);
+  background: #faf6f2;
+  color: var(--muted-foreground);
+}
+
+.login-help,
+.notice,
+.notice-note,
+.validation-summary {
+  border-color: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--muted);
+}
+
+.error-message {
+  border-color: rgba(212, 24, 61, 0.32);
+  border-radius: var(--radius-md);
+  background: var(--destructive-soft);
+  color: #a1122e;
+}
+
+.success-message {
+  border-color: rgba(20, 128, 74, 0.3);
+  border-radius: var(--radius-md);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.screen-title > span {
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 8px 18px rgba(245, 130, 32, 0.18);
+}
+
+.metric-card {
+  min-height: 120px;
+  padding: var(--space-5);
+}
+
+.metric-card:hover,
+.recent-notice:hover,
+.status-panel:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.metric-card strong {
+  color: var(--foreground);
+  font-weight: var(--font-weight-bold);
+}
+
+.metric-card.ready,
+.metric-card.success {
+  border-color: rgba(20, 128, 74, 0.24);
+  background: var(--success-soft);
+}
+
+.metric-card.pending {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: var(--info-soft);
+}
+
+.metric-card.warning {
+  border-color: rgba(245, 130, 32, 0.28);
+  background: var(--warning-soft);
+}
+
+.metric-card.danger {
+  border-color: rgba(212, 24, 61, 0.22);
+  background: var(--destructive-soft);
+}
+
+.status-panel.secondary,
+.data-table th,
+.application-summary dt,
+.completion-panel dt {
+  background: #fffaf6;
+}
+
+.status-badge {
+  border-color: rgba(245, 130, 32, 0.32);
+  background: var(--primary-soft);
+  color: var(--accent-foreground);
+}
+
+.application-step-bar li {
+  border-color: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--muted-foreground);
+}
+
+.application-step-bar li span {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.application-step-bar li.active {
+  border-color: rgba(245, 130, 32, 0.46);
+  background: var(--primary-soft);
+  color: var(--accent-foreground);
+}
+
+.application-step-bar li.active span {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.data-table th,
+.data-table td,
+.application-summary dt,
+.application-summary dd,
+.completion-panel dt,
+.completion-panel dd,
+.student-info-list dt,
+.student-info-list dd {
+  border-bottom-color: var(--border);
+}
+
+.data-table tbody tr:hover {
+  background: #fffaf6;
+}
+
+.text-link {
+  color: var(--accent-foreground);
+}
+
+.modal-backdrop {
+  background: rgba(47, 47, 47, 0.42);
+  backdrop-filter: blur(4px);
+}
+
+.course-overview-image {
+  border-color: var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 860px) {
+  .app-header {
+    position: static;
+  }
+
+  .brand-row,
+  .app-header .brand-row {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .brand-row.compact {
+    min-width: 0;
+  }
+
+  .brand-divider + div::after {
+    white-space: normal;
+  }
+
+  .dashboard-page {
+    width: min(100% - 28px, 1120px);
+    margin: 24px auto;
+  }
+
+  .status-panel,
+  .login-card,
+  .course-modal {
+    border-radius: var(--radius-md);
   }
 }
