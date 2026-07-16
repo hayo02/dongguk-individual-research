@@ -134,7 +134,10 @@ function LoginPage({ onLogin }) {
     <main className="login-shell">
       <section className="login-card" aria-labelledby="login-title">
         <div className="brand-row">
-          <div className="logo-box">LOGO</div>
+          <div className="logo-box">
+            <img src="/dongguk-logo.jpg" alt="Dongguk University" />
+          </div>
+          <div className="brand-divider" aria-hidden="true" />
           <div>
             <p className="eyebrow">개별연구 신청</p>
             <h1 id="login-title">개별연구 신청 시스템</h1>
@@ -244,7 +247,10 @@ function Dashboard({ user, accessToken, onLogout }) {
     <main className="app-shell">
       <header className="app-header">
         <div className="brand-row compact">
-          <div className="logo-box small">LOGO</div>
+          <div className="logo-box small">
+            <img src="/dongguk-logo.jpg" alt="Dongguk University" />
+          </div>
+          <div className="brand-divider" aria-hidden="true" />
           <div>
             <strong>
               {isStudent ? "개별연구 신청 시스템" : "개별연구 관리 시스템"}
