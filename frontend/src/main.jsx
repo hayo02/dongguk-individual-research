@@ -1530,11 +1530,9 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
           {flowStep === "documents" ? (
             <section className="status-panel">
               <h2>S4. 신청서 문서 생성 및 다운로드</h2>
-              <p className="muted">제출 전 확인용 PDF와 수강신청원 HWPX를 내려받아 내용을 확인하세요.</p>
+              <p className="muted">입력한 신청자 정보와 신청 내용을 담은 PDF 신청서를 내려받아 담당교수 서명과 날짜를 받은 뒤 제출 파일로 준비하세요.</p>
               <div className="document-actions">
                 <button onClick={handleDownloadPdf} disabled={isDownloading}>{isDownloading ? "다운로드 중" : "신청서 PDF 다운로드"}</button>
-                <button onClick={() => handleGenerate("application-hwpx")} disabled={isDownloading || !draftId}>수강신청원 HWPX 생성</button>
-                {generatedFiles["application-hwpx"] ? <button onClick={() => downloadGenerated(generatedFiles["application-hwpx"])}>생성된 HWPX 다운로드</button> : null}
               </div>
               <StepActions onPrevious={() => goStep("content")} onNext={() => goStep("signature-guide")} />
             </section>

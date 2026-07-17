@@ -21,8 +21,11 @@ public class ApplicationPdfService {
     private final TemplateEngine templates;
     private final Path font;
 
-    public ApplicationPdfService(ApplicationService applications, TemplateEngine templates,
-            @Value("${app.pdf.font-path:C:/Windows/Fonts/malgun.ttf}") String fontPath) {
+    public ApplicationPdfService(
+            ApplicationService applications,
+            TemplateEngine templates,
+            @Value("${app.pdf.font-path:C:/Windows/Fonts/malgun.ttf}") String fontPath
+    ) {
         this.applications = applications;
         this.templates = templates;
         this.font = Path.of(fontPath);
@@ -34,10 +37,6 @@ public class ApplicationPdfService {
         context.setVariable("application", application);
         context.setVariable("contact", contact(application));
         context.setVariable("researchTitle", application.courseName());
-        context.setVariable("researchContent", "");
-        context.setVariable("relatedExperience", "");
-        context.setVariable("researchPlan", "");
-        context.setVariable("interviewQuestions", "");
         context.setVariable("generatedAt", LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         String html = templates.process("application/application-preview", context).stripLeading();
@@ -46,6 +45,7 @@ public class ApplicationPdfService {
             throw new ApplicationFlowException("APPLICATION_PDF_GENERATION_FAILED",
                     "PDF 한글 폰트를 찾을 수 없습니다: " + font);
         }
+
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             PdfRendererBuilder builder = new PdfRendererBuilder();
             builder.useFastMode();
