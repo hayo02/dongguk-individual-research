@@ -120,6 +120,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                     course_id BIGINT,
                     status VARCHAR(30) NOT NULL,
                     contact VARCHAR(100),
+                    email VARCHAR(100),
                     application_reason TEXT,
                     research_purpose TEXT,
                     submitted_at TIMESTAMP,
@@ -129,6 +130,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                 """
         );
         ensureApplicationContactColumn();
+        ensureApplicationEmailColumn();
         jdbcTemplate.execute(
                 """
                 CREATE TABLE IF NOT EXISTS revoked_tokens (
@@ -230,6 +232,10 @@ public class DatabaseInitializer implements ApplicationRunner {
 
     private void ensureApplicationContactColumn() {
         addColumnIfMissing("applications", "contact", "contact VARCHAR(100)");
+    }
+
+    private void ensureApplicationEmailColumn() {
+        addColumnIfMissing("applications", "email", "email VARCHAR(100)");
     }
 
     private void addColumnIfMissing(String tableName, String columnName, String columnDefinition) {

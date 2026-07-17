@@ -22,11 +22,11 @@ public class ApplicationRepository {
                 """
                 SELECT a.id, a.student_id,
                        u.login_id AS student_login_id, u.name AS student_name, u.department AS student_department,
-                       u.email AS student_email, u.phone AS student_phone,
+                       COALESCE(a.email, u.email) AS student_email, u.phone AS student_phone,
                        a.course_id, c.notice_id, n.semester, c.department, c.course_name, c.course_type, c.course_code,
                        c.research_description,
                        c.weekly_hours, c.professor_name, a.status,
-                       a.contact, a.application_reason, a.research_purpose, a.submitted_at, a.created_at, a.updated_at
+                       a.contact, a.email, a.application_reason, a.research_purpose, a.submitted_at, a.created_at, a.updated_at
                 FROM applications a
                 JOIN users u ON u.id = a.student_id
                 LEFT JOIN courses c ON c.id = a.course_id
@@ -45,11 +45,11 @@ public class ApplicationRepository {
                 """
                 SELECT a.id, a.student_id,
                        u.login_id AS student_login_id, u.name AS student_name, u.department AS student_department,
-                       u.email AS student_email, u.phone AS student_phone,
+                       COALESCE(a.email, u.email) AS student_email, u.phone AS student_phone,
                        a.course_id, c.notice_id, n.semester, c.department, c.course_name, c.course_type, c.course_code,
                        c.research_description,
                        c.weekly_hours, c.professor_name, a.status,
-                       a.contact, a.application_reason, a.research_purpose, a.submitted_at, a.created_at, a.updated_at
+                       a.contact, a.email, a.application_reason, a.research_purpose, a.submitted_at, a.created_at, a.updated_at
                 FROM applications a
                 JOIN users u ON u.id = a.student_id
                 LEFT JOIN courses c ON c.id = a.course_id
@@ -78,17 +78,19 @@ public class ApplicationRepository {
         return id;
     }
 
-    public void updateCurrent(long applicationId, String contact, String applicationReason, String researchPurpose) {
+    public void updateCurrent(long applicationId, String contact, String email, String applicationReason, String researchPurpose) {
         jdbcTemplate.update(
                 """
                 UPDATE applications
                 SET contact = ?,
+                    email = ?,
                     application_reason = ?,
                     research_purpose = ?,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
                 """,
                 contact,
+                email,
                 applicationReason,
                 researchPurpose,
                 applicationId

@@ -51,6 +51,7 @@ public class ApplicationService {
         applicationRepository.updateCurrent(
                 current.id(),
                 normalize(request == null ? null : request.contact()),
+                normalize(request == null ? null : request.email()),
                 normalize(request == null ? null : request.applicationReason()),
                 normalize(request == null ? null : request.researchPurpose())
         );

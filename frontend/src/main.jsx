@@ -894,6 +894,7 @@ function TemplateManager({ accessToken }) {
 function CurrentApplication({ accessToken, onOpenCourses }) {
   const [application, setApplication] = useState(null);
   const [contact, setContact] = useState("");
+  const [email, setEmail] = useState("");
   const [applicationReason, setApplicationReason] = useState("");
   const [researchPurpose, setResearchPurpose] = useState("");
   const [relatedExperience, setRelatedExperience] = useState("");
@@ -948,6 +949,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
         if (isMounted) {
           setApplication(body.data);
           setContact(body.data.student?.contact ?? body.data.student?.phone ?? "");
+          setEmail(body.data.student?.email ?? "");
           setApplicationReason(body.data.applicationReason ?? "");
           setResearchPurpose(body.data.researchPurpose ?? "");
         }
@@ -1028,7 +1030,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       department: application?.student?.department ?? "",
       grade: "",
       phone: contact,
-      email: application?.student?.email ?? "",
+      email: email || application?.student?.email || "",
       professorName: application?.course?.professorName ?? "",
       researchTitle: application?.course?.courseName ?? "",
       researchContent: application?.course?.researchDescription ?? "",
@@ -1077,7 +1079,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       }
     }, 1000);
     return () => window.clearTimeout(timer);
-  }, [draftId, contact, applicationReason, researchPurpose, relatedExperience, researchPlan, interviewQuestions]);
+  }, [draftId, contact, email, applicationReason, researchPurpose, relatedExperience, researchPlan, interviewQuestions]);
 
   async function handleGenerate(kind) {
     if (!draftId) return;
@@ -1123,7 +1125,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ contact, applicationReason, researchPurpose }),
+        body: JSON.stringify({ contact, email, applicationReason, researchPurpose }),
       });
       const body = await response.json();
 
@@ -1133,6 +1135,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
 
       setApplication(body.data);
       setContact(body.data.student?.contact ?? body.data.student?.phone ?? "");
+      setEmail(body.data.student?.email ?? "");
       setApplicationReason(body.data.applicationReason ?? "");
       setResearchPurpose(body.data.researchPurpose ?? "");
       setSuccessMessage("신청서를 임시 저장했습니다.");
@@ -1265,6 +1268,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
 
       setApplication(null);
       setContact("");
+      setEmail("");
       setApplicationReason("");
       setResearchPurpose("");
       setSuccessMessage("임시저장 신청서를 삭제했습니다.");
@@ -1494,12 +1498,12 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <label>성명<input value={application.student?.name ?? ""} disabled /></label>
                 <label>학번<input value={application.student?.loginId ?? ""} disabled /></label>
                 <label>소속<input value={application.student?.department ?? ""} disabled /></label>
-                <label>이메일<input value={application.student?.email ?? ""} disabled /></label>
+                <label>이메일<input value={email} onChange={(event) => setEmail(event.target.value)} disabled={!canEdit || isSaving} /></label>
                 <label>학년도/학기<input value={application.course?.semester ?? ""} disabled /></label>
                 <label>학년<input value="-" disabled /></label>
               </div>
               <label>연락처<input value={contact} onChange={(event) => setContact(event.target.value)} disabled={!canEdit || isSaving} /></label>
-              <StepActions onPrevious={() => goStep("summary")} onNext={() => saveAndGo("content")} nextDisabled={!canEdit || !contact.trim() || isSaving} />
+              <StepActions onPrevious={() => goStep("summary")} onNext={() => saveAndGo("content")} nextDisabled={!canEdit || !contact.trim() || !email.trim() || isSaving} />
             </section>
           ) : null}
 
