@@ -1404,3 +1404,660 @@ select:focus-visible {
     border-radius: var(--radius-md);
   }
 }
+
+/* Login landing layout */
+.login-shell {
+  grid-template-columns: 1fr;
+  place-items: stretch;
+  align-items: start;
+  gap: 0;
+  padding: 0;
+  background: var(--background);
+}
+
+.login-shell::before {
+  content: none;
+  display: none;
+}
+
+.login-home {
+  display: grid;
+  gap: 28px;
+  min-height: 100vh;
+  padding: 28px clamp(24px, 5vw, 72px) 42px;
+}
+
+.login-home-header {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.login-hero {
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  padding: 34px 0 22px;
+  border-bottom: 1px solid var(--border);
+  background: #ffffff;
+  margin-inline: calc(clamp(24px, 5vw, 72px) * -1);
+  padding-inline: clamp(24px, 5vw, 72px);
+}
+
+.login-hero > div {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--accent-foreground);
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+}
+
+.home-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.figma-landing {
+  gap: 0;
+  padding-top: 0;
+}
+
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-height: 66px;
+  margin-inline: calc(clamp(24px, 5vw, 72px) * -1);
+  padding-inline: clamp(24px, 5vw, 72px);
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+}
+
+.landing-header nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.landing-header nav a {
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+}
+
+.landing-header nav a:hover,
+.landing-header nav a.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.landing-login-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-inline: calc(clamp(24px, 5vw, 72px) * -1);
+  padding: 12px clamp(24px, 5vw, 72px);
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
+.landing-login-banner p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+.landing-login-banner strong {
+  color: var(--foreground);
+}
+
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  gap: clamp(24px, 5vw, 64px);
+  align-items: center;
+  margin-inline: calc(clamp(24px, 5vw, 72px) * -1);
+  padding: clamp(42px, 7vw, 76px) clamp(24px, 5vw, 72px);
+  border-bottom: 1px solid var(--border);
+  background: #ffffff;
+}
+
+.landing-hero-copy {
+  display: grid;
+  gap: 20px;
+}
+
+.landing-pill {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--accent-foreground);
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+}
+
+.landing-hero h1 {
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(40px, 5.4vw, 66px);
+  font-weight: 800;
+  line-height: 1.06;
+}
+
+.landing-hero h1 span {
+  color: var(--primary);
+}
+
+.landing-hero p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 17px;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.landing-actions a,
+.landing-cta a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: var(--radius-lg);
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(245, 130, 32, 0.2);
+}
+
+.landing-actions a.secondary {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--foreground);
+  box-shadow: none;
+}
+
+.landing-side-card {
+  display: none;
+  gap: 14px;
+}
+
+.landing-side-card article {
+  display: grid;
+  gap: 4px;
+  padding: 18px;
+  border: 1px solid rgba(245, 130, 32, 0.28);
+  border-radius: var(--radius-xl);
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.landing-side-card span {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.landing-side-card strong {
+  color: var(--accent-foreground);
+  font-size: 20px;
+}
+
+.landing-login-panel {
+  width: min(420px, 100%);
+  align-self: center;
+  justify-self: end;
+}
+
+.login-hero h1 {
+  max-width: 680px;
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(38px, 5vw, 64px);
+  font-weight: 800;
+  line-height: 1.08;
+}
+
+.login-hero h1 span {
+  color: var(--primary);
+}
+
+.login-hero p {
+  max-width: 580px;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 17px;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.home-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.home-summary-grid article,
+.home-step-panel,
+.home-preview-grid section,
+.home-preview-grid article {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+
+.home-summary-grid article {
+  display: grid;
+  gap: 4px;
+  min-height: 132px;
+  padding: 18px;
+}
+
+.home-summary-grid article::before {
+  content: "";
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--primary-soft);
+}
+
+.home-summary-grid span,
+.home-summary-grid p,
+.home-step-panel p,
+.home-preview-grid article span {
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.home-summary-grid strong {
+  color: var(--foreground);
+  font-size: 25px;
+  line-height: 1.1;
+}
+
+.home-summary-grid p {
+  margin: 0;
+}
+
+.home-step-panel {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.home-step-panel h2,
+.home-preview-grid h2 {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 21px;
+}
+
+.home-step-panel p {
+  margin: 5px 0 0;
+}
+
+.home-step-panel ol {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-step-panel li {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: var(--radius-md);
+  color: var(--muted-foreground);
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+
+.home-step-panel li span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.home-step-panel li.done span,
+.home-step-panel li.current span {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.home-step-panel li.current {
+  background: var(--primary-soft);
+  color: var(--foreground);
+}
+
+.home-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.home-preview-grid section {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+}
+
+.home-preview-grid article {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+}
+
+.home-preview-grid article:hover {
+  border-color: rgba(245, 130, 32, 0.34);
+  box-shadow: var(--shadow-md);
+}
+
+.home-preview-grid article strong {
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-heading-row a {
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.preview-badge {
+  width: fit-content;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--accent-foreground) !important;
+  font-size: 11px !important;
+  font-weight: var(--font-weight-bold);
+}
+
+.landing-cta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin: 32px 0;
+  padding: 34px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.landing-cta::before,
+.landing-cta::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.landing-cta::before {
+  width: 220px;
+  height: 220px;
+  top: -90px;
+  right: -48px;
+}
+
+.landing-cta::after {
+  width: 150px;
+  height: 150px;
+  bottom: -70px;
+  left: -34px;
+}
+
+.landing-cta > * {
+  position: relative;
+  z-index: 1;
+}
+
+.landing-cta span {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+}
+
+.landing-cta h2 {
+  margin: 5px 0 8px;
+  color: #ffffff;
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.landing-cta p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.landing-cta a {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: var(--shadow-md);
+  white-space: nowrap;
+}
+
+.login-home-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  min-height: 86px;
+  margin: 10px calc(clamp(24px, 5vw, 72px) * -1) -42px;
+  padding: 20px clamp(24px, 5vw, 72px);
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.login-home-footer .logo-box.small {
+  width: 98px;
+  height: 30px;
+}
+
+.login-home-footer .brand-divider {
+  height: 24px;
+}
+
+.login-home-footer .brand-divider + div::before {
+  content: none;
+}
+
+.login-home-footer .brand-divider + div::after {
+  content: "컴퓨터·AI학부 개별연구 신청 통합 관리 시스템";
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+}
+
+.login-home-footer p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.login-home-footer .footer-author {
+  justify-self: center;
+  color: var(--foreground);
+  font-weight: var(--font-weight-medium);
+}
+
+.login-home-footer .footer-copy {
+  justify-self: end;
+}
+
+.landing-login-panel .login-card {
+  width: 100%;
+  margin: 0;
+}
+
+.login-card .brand-row {
+  margin-bottom: 4px;
+}
+
+.login-card .brand-row + .login-form::before {
+  content: "서비스 이용을 위해 로그인하세요.";
+  display: block;
+  margin: 0 0 4px;
+  color: var(--foreground);
+  font-size: 22px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.35;
+}
+
+.brand-divider + div::before {
+  content: "컴퓨터·AI학부";
+}
+
+.brand-divider + div::after {
+  content: "개별연구 신청 통합 관리 시스템";
+}
+
+@media (max-width: 980px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .login-home {
+    min-height: auto;
+    padding: 22px 20px;
+  }
+
+  .landing-header {
+    position: static;
+    margin-inline: -20px;
+    padding: 14px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .landing-header nav {
+    width: 100%;
+    margin-left: 0;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .landing-header nav a {
+    white-space: nowrap;
+  }
+
+  .landing-login-banner {
+    margin-inline: -20px;
+    padding: 12px 20px;
+  }
+
+  .landing-hero {
+    grid-template-columns: 1fr;
+    margin-inline: -20px;
+    padding: 34px 20px;
+  }
+
+  .landing-login-panel {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .landing-side-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .login-hero {
+    margin-inline: -20px;
+    padding-inline: 20px;
+  }
+
+  .home-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-step-panel ol,
+  .home-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .login-home-footer {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+    margin: 0 -20px -22px;
+    padding: 18px 20px;
+  }
+
+  .login-home-footer .footer-author,
+  .login-home-footer .footer-copy {
+    justify-self: start;
+  }
+
+  .login-home-footer p {
+    white-space: normal;
+  }
+
+  .landing-cta {
+    align-items: flex-start;
+    flex-direction: column;
+    margin: 24px 0;
+    padding: 26px;
+  }
+
+  .landing-login-panel .login-card {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
