@@ -1,6 +1,7 @@
 package kr.ac.dongguk.individualresearch.student;
 
 import java.util.List;
+import java.time.LocalDateTime;
 import kr.ac.dongguk.individualresearch.auth.PublicUser;
 import kr.ac.dongguk.individualresearch.notice.NoticeResponse;
 import kr.ac.dongguk.individualresearch.notice.NoticeSummary;
@@ -18,7 +19,8 @@ public record StudentDashboardResponse(
         List<DashboardPanel> dashboardPanels,
         List<NoticeSummary> recentNotices,
         List<String> processSummary,
-        List<DashboardStep> nextSteps
+        List<DashboardStep> nextSteps,
+        Notification notification
 ) {
     public record StudentSummary(
             String name,
@@ -48,6 +50,15 @@ public record StudentDashboardResponse(
     public record DashboardStep(
             String label,
             boolean completed
+    ) {
+    }
+
+    public record Notification(
+            String type,
+            String title,
+            String message,
+            LocalDateTime createdAt,
+            long applicationId
     ) {
     }
 }

@@ -9,6 +9,8 @@ import kr.ac.dongguk.individualresearch.student.StudentDashboardResponse.Dashboa
 import kr.ac.dongguk.individualresearch.student.StudentDashboardResponse.DashboardPanel;
 import kr.ac.dongguk.individualresearch.student.StudentDashboardResponse.DashboardStep;
 import kr.ac.dongguk.individualresearch.student.StudentDashboardResponse.StudentSummary;
+import kr.ac.dongguk.individualresearch.student.StudentDashboardResponse.Notification;
+import kr.ac.dongguk.individualresearch.application.ReviewHistoryRepository;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,10 +19,16 @@ public class StudentDashboardService {
 
     private final ApplicationRepository applicationRepository;
     private final NoticeService noticeService;
+    private final ReviewHistoryRepository reviewHistoryRepository;
 
-    public StudentDashboardService(ApplicationRepository applicationRepository, NoticeService noticeService) {
+    public StudentDashboardService(
+            ApplicationRepository applicationRepository,
+            NoticeService noticeService,
+            ReviewHistoryRepository reviewHistoryRepository
+    ) {
         this.applicationRepository = applicationRepository;
         this.noticeService = noticeService;
+        this.reviewHistoryRepository = reviewHistoryRepository;
     }
 
     public StudentDashboardResponse dashboard(PublicUser student) {
@@ -65,7 +73,17 @@ public class StudentDashboardService {
                 processSummary,
                 processSummary.stream()
                         .map(step -> new DashboardStep(step, isCompletedStep(status, step)))
-                        .toList()
+                        .toList(),
+                reviewHistoryRepository.findLatestByStudentId(student.id())
+                        .filter(history -> "REVISION_REQUESTED".equals(history.changedStatus()))
+                        .map(history -> new Notification(
+                                "REVISION_REQUESTED",
+                                "신청서 보완 요청이 도착했습니다.",
+                                history.comment(),
+                                history.reviewedAt(),
+                                history.applicationId()
+                        ))
+                        .orElse(null)
         );
     }
 

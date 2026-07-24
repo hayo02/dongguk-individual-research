@@ -111,6 +111,19 @@ public class ApplicationRepository {
         ) == 1;
     }
 
+    public boolean requestRevision(long applicationId) {
+        return jdbcTemplate.update(
+                """
+                UPDATE applications
+                SET status = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND status = ?
+                """,
+                ApplicationStatus.REVISION_REQUESTED.name(),
+                applicationId,
+                ApplicationStatus.SUBMITTED.name()
+        ) == 1;
+    }
+
     public void delete(long applicationId) {
         jdbcTemplate.update("DELETE FROM applications WHERE id = ?", applicationId);
     }

@@ -1259,6 +1259,10 @@ function StaffApplications({ accessToken }) {
   const [selected, setSelected] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showRevisionForm, setShowRevisionForm] = useState(false);
+  const [revisionReason, setRevisionReason] = useState("");
+  const [requireSignedApplication, setRequireSignedApplication] = useState(false);
+  const [isRequestingRevision, setIsRequestingRevision] = useState(false);
 
   useEffect(() => {
     const segments = window.location.pathname.split("/").filter(Boolean);
@@ -1344,6 +1348,39 @@ function StaffApplications({ accessToken }) {
     }
   }
 
+  async function requestRevision(event) {
+    event.preventDefault();
+    if (!selected || !revisionReason.trim()) return;
+    setIsRequestingRevision(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/staff/applications/${selected.id}/revision-request`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reason: revisionReason.trim(),
+            requireSignedApplication,
+          }),
+        },
+      );
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "보완 요청을 전송하지 못했습니다.");
+      setShowRevisionForm(false);
+      setRevisionReason("");
+      setRequireSignedApplication(false);
+      await loadDetail(selected.id);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "보완 요청을 전송하지 못했습니다.");
+    } finally {
+      setIsRequestingRevision(false);
+    }
+  }
+
   if (selected) {
     return (
       <section className="dashboard-page staff-application-page">
@@ -1414,9 +1451,44 @@ function StaffApplications({ accessToken }) {
             </table></div>
           ) : <p className="muted">아직 처리 기록이 없습니다.</p>}
         </section>
-        <div className="staff-review-notice">
-          승인·보완 요청·반려 처리는 다음 구현 단계에서 이 상세 화면에 연결됩니다.
-        </div>
+        {selected.status === "SUBMITTED" ? (
+          <div className="staff-review-actions">
+            <button className="primary-button" disabled>승인</button>
+            <button onClick={() => setShowRevisionForm(true)}>보완 요청</button>
+            <button className="danger-button" disabled>반려</button>
+          </div>
+        ) : null}
+        {showRevisionForm ? (
+          <div className="staff-review-modal-backdrop">
+            <form className="staff-review-modal" onSubmit={requestRevision}>
+              <p className="eyebrow">학생에게 보완 요청</p>
+              <h2>보완이 필요한 내용을 입력해 주세요.</h2>
+              <textarea
+                rows={7}
+                maxLength={2000}
+                value={revisionReason}
+                onChange={(event) => setRevisionReason(event.target.value)}
+                placeholder="예: 교수 서명란이 흐리게 촬영되었습니다. 식별 가능한 파일로 다시 제출해 주세요."
+                autoFocus
+              />
+              <label className="staff-review-check">
+                <input
+                  type="checkbox"
+                  checked={requireSignedApplication}
+                  onChange={(event) => setRequireSignedApplication(event.target.checked)}
+                />
+                교수 서명본 재업로드 필요
+              </label>
+              <p className="muted">{revisionReason.length} / 2,000자</p>
+              <div className="staff-review-modal-actions">
+                <button type="button" onClick={() => setShowRevisionForm(false)}>취소</button>
+                <button className="primary-button" disabled={!revisionReason.trim() || isRequestingRevision}>
+                  {isRequestingRevision ? "전송 중..." : "보완 요청 전송"}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
       </section>
     );
   }

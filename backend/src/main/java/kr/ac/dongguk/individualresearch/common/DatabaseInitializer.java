@@ -224,6 +224,19 @@ public class DatabaseInitializer implements ApplicationRunner {
                 )
                 """
         );
+        jdbcTemplate.execute(
+                """
+                CREATE TABLE IF NOT EXISTS application_review_history (
+                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    application_id BIGINT NOT NULL,
+                    previous_status VARCHAR(30) NOT NULL,
+                    changed_status VARCHAR(30) NOT NULL,
+                    comment TEXT NOT NULL,
+                    reviewer_id BIGINT NOT NULL,
+                    reviewed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+        );
     }
 
     private void ensureNoticeBodyTextColumn() {

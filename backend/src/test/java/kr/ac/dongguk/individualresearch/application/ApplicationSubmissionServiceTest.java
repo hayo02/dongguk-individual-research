@@ -109,7 +109,11 @@ class ApplicationSubmissionServiceTest {
     @Test
     void ownershipCheckDistinguishesForbiddenAndNotFound() {
         ApplicationRepository repository = mock(ApplicationRepository.class);
-        ApplicationService applications = new ApplicationService(repository, mock(ApplicationDocumentService.class));
+        ApplicationService applications = new ApplicationService(
+                repository,
+                mock(ApplicationDocumentService.class),
+                mock(ReviewHistoryRepository.class)
+        );
         ApplicationRecord anotherStudentsApplication = record(ApplicationStatus.DRAFT, true);
         when(repository.findById(1L)).thenReturn(Optional.of(anotherStudentsApplication));
         when(repository.findById(404L)).thenReturn(Optional.empty());

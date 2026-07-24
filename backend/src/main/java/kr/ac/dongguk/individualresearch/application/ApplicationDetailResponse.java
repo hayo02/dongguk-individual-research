@@ -44,6 +44,12 @@ public record ApplicationDetailResponse(
     public record FileSummary() {
     }
 
-    public record ReviewHistorySummary() {
+    public record ReviewHistorySummary(
+            String previousStatus,
+            String changedStatus,
+            String comment,
+            String reviewerName,
+            LocalDateTime reviewedAt
+    ) {
     }
 }

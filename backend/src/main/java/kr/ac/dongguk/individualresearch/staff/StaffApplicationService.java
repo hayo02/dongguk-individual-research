@@ -5,6 +5,7 @@ import java.util.List;
 import kr.ac.dongguk.individualresearch.application.ApplicationNotFoundException;
 import kr.ac.dongguk.individualresearch.application.ApplicationRecord;
 import kr.ac.dongguk.individualresearch.application.ApplicationRepository;
+import kr.ac.dongguk.individualresearch.application.ReviewHistoryRepository;
 import kr.ac.dongguk.individualresearch.application.file.ApplicationFileRecord;
 import kr.ac.dongguk.individualresearch.application.file.ApplicationFileRepository;
 import kr.ac.dongguk.individualresearch.staff.StaffApplicationDetailResponse.Application;
@@ -13,6 +14,8 @@ import kr.ac.dongguk.individualresearch.staff.StaffApplicationDetailResponse.Stu
 import kr.ac.dongguk.individualresearch.student.ApplicationStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import kr.ac.dongguk.individualresearch.auth.PublicUser;
 
 @Service
 public class StaffApplicationService {
@@ -21,15 +24,18 @@ public class StaffApplicationService {
     private final StaffApplicationRepository staffRepository;
     private final ApplicationRepository applicationRepository;
     private final ApplicationFileRepository fileRepository;
+    private final ReviewHistoryRepository reviewHistoryRepository;
 
     public StaffApplicationService(
             StaffApplicationRepository staffRepository,
             ApplicationRepository applicationRepository,
-            ApplicationFileRepository fileRepository
+            ApplicationFileRepository fileRepository,
+            ReviewHistoryRepository reviewHistoryRepository
     ) {
         this.staffRepository = staffRepository;
         this.applicationRepository = applicationRepository;
         this.fileRepository = fileRepository;
+        this.reviewHistoryRepository = reviewHistoryRepository;
     }
 
     public StaffApplicationListResponse list(
@@ -80,10 +86,52 @@ public class StaffApplicationService {
                         record.professorName(), record.researchDescription(), record.weeklyHours(),
                         record.applicationReason(), record.researchPurpose()),
                 files,
-                List.of(),
+                reviewHistoryRepository.findByApplicationId(applicationId).stream()
+                        .map(history -> new StaffApplicationDetailResponse.ReviewHistoryItem(
+                                history.previousStatus(), history.changedStatus(), history.comment(),
+                                history.reviewerName(), history.reviewedAt()))
+                        .toList(),
                 record.submittedAt(),
                 record.createdAt(),
                 record.updatedAt()
+        );
+    }
+
+    @Transactional
+    public RevisionRequestResponse requestRevision(
+            PublicUser reviewer,
+            long applicationId,
+            RevisionRequest request
+    ) {
+        if (request == null || !StringUtils.hasText(request.reason())) {
+            throw new IllegalArgumentException("보완 요청 사유를 입력해 주세요.");
+        }
+        String reason = request.reason().trim();
+        if (reason.length() > 2000) {
+            throw new IllegalArgumentException("보완 요청 사유는 2,000자 이하로 입력해 주세요.");
+        }
+        ApplicationRecord application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ApplicationNotFoundException("검토할 신청서를 찾을 수 없습니다."));
+        if (application.status() != ApplicationStatus.SUBMITTED) {
+            throw new IllegalArgumentException("제출 완료 상태의 신청서에만 보완을 요청할 수 있습니다.");
+        }
+        if (!applicationRepository.requestRevision(applicationId)) {
+            throw new IllegalArgumentException("신청 상태가 변경되어 보완 요청을 처리하지 못했습니다.");
+        }
+        String comment = request.requireSignedApplication()
+                ? "[서명본 재업로드 필요] " + reason
+                : reason;
+        reviewHistoryRepository.insert(
+                applicationId, ApplicationStatus.SUBMITTED.name(),
+                ApplicationStatus.REVISION_REQUESTED.name(), comment, reviewer.id());
+        var history = reviewHistoryRepository.findByApplicationId(applicationId).get(0);
+        return new RevisionRequestResponse(
+                applicationId,
+                ApplicationStatus.REVISION_REQUESTED.name(),
+                statusLabel(ApplicationStatus.REVISION_REQUESTED.name()),
+                reason,
+                request.requireSignedApplication(),
+                history.reviewedAt()
         );
     }
 

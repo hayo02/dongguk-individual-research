@@ -5,6 +5,7 @@ import kr.ac.dongguk.individualresearch.application.ApplicationAutofillResponse.
 import kr.ac.dongguk.individualresearch.application.ApplicationAutofillResponse.StudentAutofill;
 import kr.ac.dongguk.individualresearch.application.ApplicationDetailResponse.CourseSummary;
 import kr.ac.dongguk.individualresearch.application.ApplicationDetailResponse.StudentSummary;
+import kr.ac.dongguk.individualresearch.application.ApplicationDetailResponse.ReviewHistorySummary;
 import kr.ac.dongguk.individualresearch.student.ApplicationStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -13,10 +14,16 @@ import org.springframework.util.StringUtils;
 public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final ApplicationDocumentService applicationDocumentService;
+    private final ReviewHistoryRepository reviewHistoryRepository;
 
-    public ApplicationService(ApplicationRepository applicationRepository, ApplicationDocumentService applicationDocumentService) {
+    public ApplicationService(
+            ApplicationRepository applicationRepository,
+            ApplicationDocumentService applicationDocumentService,
+            ReviewHistoryRepository reviewHistoryRepository
+    ) {
         this.applicationRepository = applicationRepository;
         this.applicationDocumentService = applicationDocumentService;
+        this.reviewHistoryRepository = reviewHistoryRepository;
     }
 
     public ApplicationCreateResponse create(PublicUser student, ApplicationRequest request) {
@@ -128,7 +135,11 @@ public class ApplicationService {
                 record.applicationReason(),
                 record.researchPurpose(),
                 java.util.List.of(),
-                java.util.List.of(),
+                reviewHistoryRepository.findByApplicationId(record.id()).stream()
+                        .map(history -> new ReviewHistorySummary(
+                                history.previousStatus(), history.changedStatus(), history.comment(),
+                                history.reviewerName(), history.reviewedAt()))
+                        .toList(),
                 record.submittedAt(),
                 record.createdAt(),
                 record.updatedAt()

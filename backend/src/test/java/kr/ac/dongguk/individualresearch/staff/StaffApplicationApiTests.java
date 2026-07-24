@@ -59,6 +59,40 @@ class StaffApplicationApiTests {
         assertThat(((Map) detailData.get("student")).get("loginId")).isEqualTo("2026123456");
         assertThat(detailData.get("files")).isNotNull();
         assertThat(detailData.get("reviewHistories")).isNotNull();
+
+        ResponseEntity<Map> revision = restTemplate.exchange(
+                url("/api/staff/applications/" + applicationId + "/revision-request"),
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        Map.of("reason", "서명본을 선명하게 다시 제출해 주세요.", "requireSignedApplication", true),
+                        authHeaders(staffToken)
+                ),
+                Map.class
+        );
+        assertThat(revision.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(((Map) revision.getBody().get("data")).get("status"))
+                .isEqualTo("REVISION_REQUESTED");
+
+        ResponseEntity<Map> studentDashboard = restTemplate.exchange(
+                url("/api/student/dashboard"),
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(studentToken)),
+                Map.class
+        );
+        Map dashboardData = (Map) studentDashboard.getBody().get("data");
+        assertThat(dashboardData.get("applicationStatus")).isEqualTo("REVISION_REQUESTED");
+        Map notification = (Map) dashboardData.get("notification");
+        assertThat(notification.get("type")).isEqualTo("REVISION_REQUESTED");
+        assertThat((String) notification.get("message")).contains("서명본");
+
+        ResponseEntity<Map> studentApplication = restTemplate.exchange(
+                url("/api/applications/me/current"),
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(studentToken)),
+                Map.class
+        );
+        List histories = (List) ((Map) studentApplication.getBody().get("data")).get("reviewHistories");
+        assertThat(histories).hasSize(1);
     }
 
     @Test

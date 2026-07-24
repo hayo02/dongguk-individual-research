@@ -1992,6 +1992,59 @@ select:focus-visible {
   color: #785125;
 }
 
+.staff-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.staff-review-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(25, 29, 35, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.staff-review-modal {
+  width: min(560px, 100%);
+  padding: 28px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+}
+
+.staff-review-modal h2 {
+  margin: 5px 0 18px;
+}
+
+.staff-review-modal textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  font: inherit;
+  line-height: 1.6;
+}
+
+.staff-review-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.staff-review-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 20px;
+}
+
 @media (max-width: 960px) {
   .staff-filter-panel,
   .staff-detail-grid {

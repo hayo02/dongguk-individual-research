@@ -197,6 +197,7 @@ src/dongguk_notice/
 | `GET` | `/api/staff/dashboard` | Staff | 교직원 대시보드 조회 |
 | `GET` | `/api/staff/applications` | Staff | 작성 중을 제외한 전체 신청 목록, 검색·상태 필터·정렬·페이지 조회 |
 | `GET` | `/api/staff/applications/{applicationId}` | Staff | 학생·신청 내용·제출 파일·처리 기록 상세 조회 |
+| `POST` | `/api/staff/applications/{applicationId}/revision-request` | Staff | 보완 사유와 서명본 재업로드 여부를 기록하고 학생에게 알림 |
 | `GET` | `/api/staff/application-files/{fileId}/download` | Staff | 검토 대상 제출 파일 다운로드 |
 
 ### Course

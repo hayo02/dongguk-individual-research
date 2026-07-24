@@ -5,6 +5,7 @@ import kr.ac.dongguk.individualresearch.auth.PublicUser;
 import kr.ac.dongguk.individualresearch.auth.UserRole;
 import kr.ac.dongguk.individualresearch.common.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -60,5 +61,15 @@ public class StaffController {
     ) {
         authFacade.currentUser(authorization, UserRole.STAFF);
         return ApiResponse.ok(applicationService.detail(applicationId));
+    }
+
+    @PostMapping("/applications/{applicationId}/revision-request")
+    public ApiResponse<RevisionRequestResponse> requestRevision(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable long applicationId,
+            @org.springframework.web.bind.annotation.RequestBody RevisionRequest request
+    ) {
+        PublicUser staff = authFacade.currentUser(authorization, UserRole.STAFF);
+        return ApiResponse.ok(applicationService.requestRevision(staff, applicationId, request));
     }
 }
