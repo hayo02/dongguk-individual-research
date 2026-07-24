@@ -14,6 +14,10 @@ public class DraftService {
 
     public DraftResponse create(PublicUser user, DraftRequest request) {
         DraftRequest value = request == null ? empty(user) : request;
+        DraftResponse existing = repository.findLatest(user.id(), value.researchTopicId()).orElse(null);
+        if (existing != null) {
+            return existing;
+        }
         long id = repository.create(user.id(), value);
         return get(user, id);
     }

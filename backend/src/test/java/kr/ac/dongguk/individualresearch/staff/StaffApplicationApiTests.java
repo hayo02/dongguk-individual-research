@@ -64,7 +64,11 @@ class StaffApplicationApiTests {
                 url("/api/staff/applications/" + applicationId + "/revision-request"),
                 HttpMethod.POST,
                 new HttpEntity<>(
-                        Map.of("reason", "서명본을 선명하게 다시 제출해 주세요.", "requireSignedApplication", true),
+                        Map.of(
+                                "reason", "서명본을 선명하게 다시 제출해 주세요.",
+                                "requireSignedApplication", true,
+                                "revisionItems", List.of("SIGNED_APPLICATION")
+                        ),
                         authHeaders(staffToken)
                 ),
                 Map.class

@@ -1266,6 +1266,7 @@ function StaffApplications({ accessToken }) {
   const [showRevisionForm, setShowRevisionForm] = useState(false);
   const [revisionReason, setRevisionReason] = useState("");
   const [requireSignedApplication, setRequireSignedApplication] = useState(false);
+  const [revisionItems, setRevisionItems] = useState([]);
   const [isRequestingRevision, setIsRequestingRevision] = useState(false);
 
   useEffect(() => {
@@ -1369,6 +1370,7 @@ function StaffApplications({ accessToken }) {
           body: JSON.stringify({
             reason: revisionReason.trim(),
             requireSignedApplication,
+            revisionItems,
           }),
         },
       );
@@ -1377,12 +1379,19 @@ function StaffApplications({ accessToken }) {
       setShowRevisionForm(false);
       setRevisionReason("");
       setRequireSignedApplication(false);
+      setRevisionItems([]);
       await loadDetail(selected.id);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "보완 요청을 전송하지 못했습니다.");
     } finally {
       setIsRequestingRevision(false);
     }
+  }
+
+  function toggleRevisionItem(item) {
+    setRevisionItems((current) =>
+      current.includes(item) ? current.filter((value) => value !== item) : [...current, item],
+    );
   }
 
   if (selected) {
@@ -1475,18 +1484,44 @@ function StaffApplications({ accessToken }) {
                 placeholder="예: 교수 서명란이 흐리게 촬영되었습니다. 식별 가능한 파일로 다시 제출해 주세요."
                 autoFocus
               />
+              <fieldset className="revision-item-selector">
+                <legend>학생이 수정할 수 있는 항목</legend>
+                {[
+                  ["CONTACT", "연락처"],
+                  ["EMAIL", "이메일"],
+                  ["APPLICATION_REASON", "신청 사유"],
+                  ["RESEARCH_PURPOSE", "연구 목적"],
+                  ["RELATED_EXPERIENCE", "관련 경험"],
+                  ["RESEARCH_PLAN", "연구 수행 계획"],
+                  ["INTERVIEW_QUESTIONS", "면담 질문"],
+                ].map(([value, label]) => (
+                  <label key={value}>
+                    <input
+                      type="checkbox"
+                      checked={revisionItems.includes(value)}
+                      onChange={() => toggleRevisionItem(value)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
               <label className="staff-review-check">
                 <input
                   type="checkbox"
                   checked={requireSignedApplication}
-                  onChange={(event) => setRequireSignedApplication(event.target.checked)}
+                  onChange={(event) => {
+                    setRequireSignedApplication(event.target.checked);
+                    setRevisionItems((current) => event.target.checked
+                      ? [...new Set([...current, "SIGNED_APPLICATION"])]
+                      : current.filter((item) => item !== "SIGNED_APPLICATION"));
+                  }}
                 />
                 교수 서명본 재업로드 필요
               </label>
               <p className="muted">{revisionReason.length} / 2,000자</p>
               <div className="staff-review-modal-actions">
                 <button type="button" onClick={() => setShowRevisionForm(false)}>취소</button>
-                <button className="primary-button" disabled={!revisionReason.trim() || isRequestingRevision}>
+                <button className="primary-button" disabled={!revisionReason.trim() || !revisionItems.length || isRequestingRevision}>
                   {isRequestingRevision ? "전송 중..." : "보완 요청 전송"}
                 </button>
               </div>
@@ -1564,6 +1599,19 @@ function formatFileSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function revisionItemLabel(item) {
+  return {
+    CONTACT: "연락처",
+    EMAIL: "이메일",
+    APPLICATION_REASON: "신청 사유",
+    RESEARCH_PURPOSE: "연구 목적",
+    RELATED_EXPERIENCE: "관련 경험",
+    RESEARCH_PLAN: "연구 수행 계획",
+    INTERVIEW_QUESTIONS: "면담 질문",
+    SIGNED_APPLICATION: "교수 서명본",
+  }[item] ?? item;
 }
 
 function TemplateManager({ accessToken }) {
@@ -1799,6 +1847,9 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       .then(({ response, body }) => {
         if (!response.ok || !body.success) throw new Error(body.message);
         setDraftId(body.data.id);
+        setRelatedExperience(body.data.relatedExperience ?? "");
+        setResearchPlan(body.data.researchPlan ?? "");
+        setInterviewQuestions(body.data.interviewQuestions ?? "");
         setLastSavedAt(new Date(body.data.updatedAt).toLocaleTimeString());
       })
       .catch(() => setSaveState("저장 실패"));
@@ -2189,7 +2240,14 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
   const latestRevision = application?.reviewHistories?.find(
     (history) => history.changedStatus === "REVISION_REQUESTED",
   );
+  const requestedRevisionItems = latestRevision?.revisionItems ?? [];
   const requiresSignedApplication = latestRevision?.comment?.startsWith("[서명본 재업로드 필요]");
+  const canEditField = (field) =>
+    application?.status === "DRAFT" ||
+    (application?.status === "REVISION_REQUESTED" && requestedRevisionItems.includes(field));
+  const canEditFiles =
+    application?.status === "DRAFT" ||
+    (application?.status === "REVISION_REQUESTED" && requestedRevisionItems.includes("SIGNED_APPLICATION"));
 
   return (
     <section className="dashboard-page">
@@ -2226,6 +2284,9 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                   요청일 {formatStaffDate(latestRevision.reviewedAt)}
                   {requiresSignedApplication ? " · 교수 서명본 재업로드 필요" : ""}
                 </span>
+                {requestedRevisionItems.length ? (
+                  <small>수정 가능 항목: {requestedRevisionItems.map(revisionItemLabel).join(", ")}</small>
+                ) : null}
               </div>
               <button
                 className="primary-button"
@@ -2272,11 +2333,11 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <label>성명<input value={application.student?.name ?? ""} disabled /></label>
                 <label>학번<input value={application.student?.loginId ?? ""} disabled /></label>
                 <label>소속<input value={application.student?.department ?? ""} disabled /></label>
-                <label>이메일<input value={email} onChange={(event) => setEmail(event.target.value)} disabled={!canEdit || isSaving} /></label>
+                <label>이메일<input value={email} onChange={(event) => setEmail(event.target.value)} disabled={!canEditField("EMAIL") || isSaving} /></label>
                 <label>학년도/학기<input value={application.course?.semester ?? ""} disabled /></label>
                 <label>학년<input value="-" disabled /></label>
               </div>
-              <label>연락처<input value={contact} onChange={(event) => setContact(event.target.value)} disabled={!canEdit || isSaving} /></label>
+              <label>연락처<input value={contact} onChange={(event) => setContact(event.target.value)} disabled={!canEditField("CONTACT") || isSaving} /></label>
               <StepActions onPrevious={() => goStep("summary")} onNext={() => saveAndGo("content")} nextDisabled={!canEdit || !contact.trim() || !email.trim() || isSaving} />
             </section>
           ) : null}
@@ -2291,11 +2352,11 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <label>연구주제<input value={application.course?.courseName ?? ""} disabled /></label>
                 <label>연구내용<textarea value={application.course?.researchDescription ?? ""} disabled rows={3} /></label>
               </div>
-              <label>신청사유<textarea value={applicationReason} onChange={(event) => setApplicationReason(event.target.value)} disabled={!canEdit} rows={5} /></label>
-              <label>연구목적<textarea value={researchPurpose} onChange={(event) => setResearchPurpose(event.target.value)} disabled={!canEdit} rows={5} /></label>
-              <label>관련 경험<textarea value={relatedExperience} onChange={(event) => setRelatedExperience(event.target.value)} disabled={!canEdit} rows={3} /></label>
-              <label>연구 수행 계획<textarea value={researchPlan} onChange={(event) => setResearchPlan(event.target.value)} disabled={!canEdit} rows={3} /></label>
-              <label>면담 질문<textarea value={interviewQuestions} onChange={(event) => setInterviewQuestions(event.target.value)} disabled={!canEdit} rows={3} /></label>
+              <label>신청사유<textarea value={applicationReason} onChange={(event) => setApplicationReason(event.target.value)} disabled={!canEditField("APPLICATION_REASON")} rows={5} /></label>
+              <label>연구목적<textarea value={researchPurpose} onChange={(event) => setResearchPurpose(event.target.value)} disabled={!canEditField("RESEARCH_PURPOSE")} rows={5} /></label>
+              <label>관련 경험<textarea value={relatedExperience} onChange={(event) => setRelatedExperience(event.target.value)} disabled={!canEditField("RELATED_EXPERIENCE")} rows={3} /></label>
+              <label>연구 수행 계획<textarea value={researchPlan} onChange={(event) => setResearchPlan(event.target.value)} disabled={!canEditField("RESEARCH_PLAN")} rows={3} /></label>
+              <label>면담 질문<textarea value={interviewQuestions} onChange={(event) => setInterviewQuestions(event.target.value)} disabled={!canEditField("INTERVIEW_QUESTIONS")} rows={3} /></label>
               <StepActions onPrevious={() => goStep("applicant")} onNext={() => saveAndGo("documents")}
                            nextDisabled={!canEdit || !applicationReason.trim() || !researchPurpose.trim() || isSaving} />
             </section>
@@ -2329,7 +2390,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
           {flowStep === "files" ? (
             <section className="status-panel">
               <h2>S6. 제출 파일 업로드</h2>
-              {canEdit && !applicationFiles.some((file) => file.documentType === "SIGNED_APPLICATION") ? (
+              {canEditFiles && !applicationFiles.some((file) => file.documentType === "SIGNED_APPLICATION") ? (
                 <div className="file-upload-row">
                   <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(event) => setSelectedUpload(event.target.files?.[0] ?? null)} />
                   <button className="primary-button" onClick={uploadApplicationFile} disabled={!selectedUpload || isFileAction}>교수 서명본 업로드</button>
@@ -2346,8 +2407,8 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                     <td>{file.fileName}</td><td>{new Date(file.uploadedAt).toLocaleString()}</td>
                     <td className="actions-row">
                       <button onClick={() => downloadApplicationFile(file)} disabled={isFileAction}>다운로드</button>
-                      {canEdit ? <label className="file-replace-button">교체<input type="file" accept=".pdf,.jpg,.jpeg,.png" hidden onChange={(event) => replaceApplicationFile(file.id, event.target.files?.[0])} /></label> : null}
-                      {canEdit ? <button className="danger-button" onClick={() => deleteApplicationFile(file.id)} disabled={isFileAction}>삭제</button> : null}
+                      {canEditFiles ? <label className="file-replace-button">교체<input type="file" accept=".pdf,.jpg,.jpeg,.png" hidden onChange={(event) => replaceApplicationFile(file.id, event.target.files?.[0])} /></label> : null}
+                      {canEditFiles ? <button className="danger-button" onClick={() => deleteApplicationFile(file.id)} disabled={isFileAction}>삭제</button> : null}
                     </td>
                   </tr>)}</tbody>
                 </table></div>

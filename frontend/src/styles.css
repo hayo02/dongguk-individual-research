@@ -2038,6 +2038,27 @@ select:focus-visible {
   margin-top: 14px;
 }
 
+.revision-item-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 14px;
+  margin: 16px 0 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.revision-item-selector legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+.revision-item-selector label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
 .staff-review-modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -2071,6 +2092,12 @@ select:focus-visible {
 .revision-alert span {
   color: #7e6232;
   font-size: 13px;
+}
+
+.revision-alert small {
+  display: block;
+  margin-top: 7px;
+  color: #6e552b;
 }
 
 .student-notification {

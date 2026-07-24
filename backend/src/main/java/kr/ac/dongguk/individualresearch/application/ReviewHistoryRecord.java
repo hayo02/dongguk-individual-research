@@ -1,6 +1,7 @@
 package kr.ac.dongguk.individualresearch.application;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ReviewHistoryRecord(
         long id,
@@ -8,6 +9,7 @@ public record ReviewHistoryRecord(
         String previousStatus,
         String changedStatus,
         String comment,
+        List<String> revisionItems,
         long reviewerId,
         String reviewerName,
         LocalDateTime reviewedAt

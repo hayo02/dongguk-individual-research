@@ -20,6 +20,10 @@ import kr.ac.dongguk.individualresearch.auth.PublicUser;
 @Service
 public class StaffApplicationService {
     private static final int MAX_PAGE_SIZE = 100;
+    private static final java.util.Set<String> REVISION_ITEMS = java.util.Set.of(
+            "CONTACT", "EMAIL", "APPLICATION_REASON", "RESEARCH_PURPOSE",
+            "RELATED_EXPERIENCE", "RESEARCH_PLAN", "INTERVIEW_QUESTIONS", "SIGNED_APPLICATION"
+    );
 
     private final StaffApplicationRepository staffRepository;
     private final ApplicationRepository applicationRepository;
@@ -89,7 +93,7 @@ public class StaffApplicationService {
                 reviewHistoryRepository.findByApplicationId(applicationId).stream()
                         .map(history -> new StaffApplicationDetailResponse.ReviewHistoryItem(
                                 history.previousStatus(), history.changedStatus(), history.comment(),
-                                history.reviewerName(), history.reviewedAt()))
+                                history.revisionItems(), history.reviewerName(), history.reviewedAt()))
                         .toList(),
                 record.submittedAt(),
                 record.createdAt(),
@@ -110,6 +114,17 @@ public class StaffApplicationService {
         if (reason.length() > 2000) {
             throw new IllegalArgumentException("보완 요청 사유는 2,000자 이하로 입력해 주세요.");
         }
+        List<String> revisionItems = request.revisionItems() == null
+                ? List.of()
+                : request.revisionItems().stream().map(String::trim).map(String::toUpperCase)
+                        .filter(REVISION_ITEMS::contains).distinct().toList();
+        if (request.requireSignedApplication() && !revisionItems.contains("SIGNED_APPLICATION")) {
+            revisionItems = new java.util.ArrayList<>(revisionItems);
+            revisionItems.add("SIGNED_APPLICATION");
+        }
+        if (revisionItems.isEmpty()) {
+            throw new IllegalArgumentException("보완할 항목을 하나 이상 선택해 주세요.");
+        }
         ApplicationRecord application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ApplicationNotFoundException("검토할 신청서를 찾을 수 없습니다."));
         if (application.status() != ApplicationStatus.SUBMITTED) {
@@ -123,7 +138,7 @@ public class StaffApplicationService {
                 : reason;
         reviewHistoryRepository.insert(
                 applicationId, ApplicationStatus.SUBMITTED.name(),
-                ApplicationStatus.REVISION_REQUESTED.name(), comment, reviewer.id());
+                ApplicationStatus.REVISION_REQUESTED.name(), comment, revisionItems, reviewer.id());
         var history = reviewHistoryRepository.findByApplicationId(applicationId).get(0);
         return new RevisionRequestResponse(
                 applicationId,
@@ -131,6 +146,7 @@ public class StaffApplicationService {
                 statusLabel(ApplicationStatus.REVISION_REQUESTED.name()),
                 reason,
                 request.requireSignedApplication(),
+                revisionItems,
                 history.reviewedAt()
         );
     }

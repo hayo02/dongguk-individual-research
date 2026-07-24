@@ -53,6 +53,23 @@ public class DraftRepository {
         return jdbc.query("SELECT * FROM application_draft WHERE id=?", this::map, id).stream().findFirst();
     }
 
+    public Optional<DraftResponse> findLatest(long userId, Long researchTopicId) {
+        if (researchTopicId == null) {
+            return Optional.empty();
+        }
+        return jdbc.query(
+                """
+                SELECT * FROM application_draft
+                WHERE user_id=? AND research_topic_id=?
+                ORDER BY updated_at DESC, id DESC
+                LIMIT 1
+                """,
+                this::map,
+                userId,
+                researchTopicId
+        ).stream().findFirst();
+    }
+
     public void markGenerated(long id) {
         jdbc.update("UPDATE application_draft SET status='GENERATED', updated_at=CURRENT_TIMESTAMP WHERE id=?", id);
     }

@@ -232,10 +232,16 @@ public class DatabaseInitializer implements ApplicationRunner {
                     previous_status VARCHAR(30) NOT NULL,
                     changed_status VARCHAR(30) NOT NULL,
                     comment TEXT NOT NULL,
+                    revision_items TEXT,
                     reviewer_id BIGINT NOT NULL,
                     reviewed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
                 """
+        );
+        addColumnIfMissing(
+                "application_review_history",
+                "revision_items",
+                "revision_items TEXT"
         );
     }
 

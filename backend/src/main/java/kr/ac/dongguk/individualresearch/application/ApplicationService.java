@@ -138,7 +138,7 @@ public class ApplicationService {
                 reviewHistoryRepository.findByApplicationId(record.id()).stream()
                         .map(history -> new ReviewHistorySummary(
                                 history.previousStatus(), history.changedStatus(), history.comment(),
-                                history.reviewerName(), history.reviewedAt()))
+                                history.revisionItems(), history.reviewerName(), history.reviewedAt()))
                         .toList(),
                 record.submittedAt(),
                 record.createdAt(),

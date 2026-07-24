@@ -48,6 +48,7 @@ public record ApplicationDetailResponse(
             String previousStatus,
             String changedStatus,
             String comment,
+            List<String> revisionItems,
             String reviewerName,
             LocalDateTime reviewedAt
     ) {
