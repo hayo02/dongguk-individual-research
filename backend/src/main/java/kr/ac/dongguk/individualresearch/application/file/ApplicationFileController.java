@@ -75,6 +75,20 @@ public class ApplicationFileController {
                 .body(value.content());
     }
 
+    @GetMapping("/api/staff/application-files/{fileId}/download")
+    public ResponseEntity<byte[]> downloadForStaff(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable long fileId
+    ) {
+        auth.currentUser(authorization, UserRole.STAFF);
+        ApplicationFileService.Download value = files.downloadForStaff(fileId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(value.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(value.filename(), StandardCharsets.UTF_8).build().toString())
+                .body(value.content());
+    }
+
     private PublicUser student(String authorization) {
         return auth.currentUser(authorization, UserRole.STUDENT);
     }

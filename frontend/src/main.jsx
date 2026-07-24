@@ -603,9 +603,10 @@ function LegacyLoginHomeLanding({ children }) {
 
 function Dashboard({ user, accessToken, onLogout }) {
   const isStudent = user.role === "STUDENT";
-  const [activePage, setActivePage] = useState(() =>
-    window.location.pathname.startsWith("/applications") ? "application" : "dashboard",
-  );
+  const [activePage, setActivePage] = useState(() => {
+    if (window.location.pathname.startsWith("/staff/applications")) return "staff-applications";
+    return window.location.pathname.startsWith("/applications") ? "application" : "dashboard";
+  });
   const [dashboard, setDashboard] = useState(null);
   const [dashboardError, setDashboardError] = useState("");
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
@@ -708,7 +709,15 @@ function Dashboard({ user, accessToken, onLogout }) {
               >
                 대시보드
               </button>
-              <button>신청 목록</button>
+              <button
+                className={activePage === "staff-applications" ? "active" : ""}
+                onClick={() => {
+                  window.history.pushState({}, "", "/staff/applications");
+                  setActivePage("staff-applications");
+                }}
+              >
+                신청 목록
+              </button>
               <button>크롤링 결과</button>
               <button
                 className={activePage === "templates" ? "active" : ""}
@@ -727,6 +736,8 @@ function Dashboard({ user, accessToken, onLogout }) {
 
       {activePage === "templates" && !isStudent ? (
         <TemplateManager accessToken={accessToken} />
+      ) : activePage === "staff-applications" && !isStudent ? (
+        <StaffApplications accessToken={accessToken} />
       ) : activePage === "notice" && isStudent ? (
         <NoticeGuide
           accessToken={accessToken}
@@ -791,7 +802,13 @@ function Dashboard({ user, accessToken, onLogout }) {
                 {isStudent ? (
                   <StudentDashboardMain dashboard={dashboard} currentNotice={currentNotice} />
                 ) : (
-                  <StaffDashboardMain dashboard={dashboard} />
+                  <StaffDashboardMain
+                    dashboard={dashboard}
+                    onOpenApplications={() => {
+                      window.history.pushState({}, "", "/staff/applications");
+                      setActivePage("staff-applications");
+                    }}
+                  />
                 )}
               </article>
 
@@ -1234,6 +1251,251 @@ function CourseDetailModal({ course, isApplying, onApply, onClose }) {
       </section>
     </div>
   );
+}
+
+function StaffApplications({ accessToken }) {
+  const [filters, setFilters] = useState({
+    status: "",
+    studentName: "",
+    studentLoginId: "",
+    courseName: "",
+    professorName: "",
+    sort: "desc",
+  });
+  const [appliedFilters, setAppliedFilters] = useState(filters);
+  const [result, setResult] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const segments = window.location.pathname.split("/").filter(Boolean);
+    const id = segments.length === 3 ? Number(segments[2]) : null;
+    if (id) {
+      void loadDetail(id);
+    } else {
+      void loadList();
+    }
+  }, [appliedFilters]);
+
+  async function loadList(page = 0) {
+    setIsLoading(true);
+    setErrorMessage("");
+    setSelected(null);
+    try {
+      const params = new URLSearchParams({ page: String(page), size: "20", sort: appliedFilters.sort });
+      Object.entries(appliedFilters).forEach(([key, value]) => {
+        if (key !== "sort" && value) params.set(key, value);
+      });
+      const response = await fetch(`${API_BASE_URL}/api/staff/applications?${params}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "신청 목록을 불러오지 못했습니다.");
+      setResult(body.data);
+      window.history.replaceState({}, "", "/staff/applications");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "신청 목록을 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function loadDetail(id) {
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/staff/applications/${id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "신청 상세를 불러오지 못했습니다.");
+      setSelected(body.data);
+      window.history.pushState({}, "", `/staff/applications/${id}`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "신청 상세를 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function submitFilters(event) {
+    event.preventDefault();
+    setAppliedFilters({ ...filters });
+  }
+
+  function resetFilters() {
+    const empty = {
+      status: "", studentName: "", studentLoginId: "",
+      courseName: "", professorName: "", sort: "desc",
+    };
+    setFilters(empty);
+    setAppliedFilters(empty);
+  }
+
+  async function downloadFile(file) {
+    setErrorMessage("");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/staff/application-files/${file.id}/download`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!response.ok) throw new Error("제출 파일을 내려받지 못했습니다.");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = file.fileName;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "제출 파일을 내려받지 못했습니다.");
+    }
+  }
+
+  if (selected) {
+    return (
+      <section className="dashboard-page staff-application-page">
+        <div className="screen-title">
+          <span>A3</span>
+          <div><p className="eyebrow">교직원 검토</p><h1>신청 상세 및 검토</h1></div>
+        </div>
+        <div className="staff-page-toolbar">
+          <button className="secondary-button" onClick={() => {
+            setSelected(null);
+            window.history.pushState({}, "", "/staff/applications");
+            void loadList();
+          }}>← 신청 목록</button>
+          <span className={`review-status ${selected.status.toLowerCase()}`}>{selected.statusLabel}</span>
+        </div>
+        {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
+        <section className="staff-detail-grid">
+          <article className="status-panel">
+            <p className="eyebrow">학생 정보</p>
+            <h2>{selected.student.name}</h2>
+            <dl className="staff-detail-list">
+              <dt>학번</dt><dd>{selected.student.loginId}</dd>
+              <dt>소속</dt><dd>{selected.student.department || "-"}</dd>
+              <dt>이메일</dt><dd>{selected.student.email || "-"}</dd>
+              <dt>연락처</dt><dd>{selected.student.contact || selected.student.phone || "-"}</dd>
+            </dl>
+          </article>
+          <article className="status-panel">
+            <p className="eyebrow">신청 정보</p>
+            <h2>{selected.applicationNumber}</h2>
+            <dl className="staff-detail-list">
+              <dt>학기</dt><dd>{selected.application.semester || "-"}</dd>
+              <dt>신청 과목</dt><dd>{selected.application.courseName || "-"}</dd>
+              <dt>담당 교수</dt><dd>{selected.application.professorName || "-"}</dd>
+              <dt>학수강좌번호</dt><dd>{selected.application.courseCode || "-"}</dd>
+              <dt>제출 일시</dt><dd>{formatStaffDate(selected.submittedAt)}</dd>
+            </dl>
+          </article>
+          <article className="status-panel">
+            <p className="eyebrow">제출 파일</p>
+            <h2>{selected.files.length}개</h2>
+            {selected.files.length ? selected.files.map((file) => (
+              <div className="staff-file-row" key={file.id}>
+                <div>
+                  <strong>{file.documentType === "SIGNED_APPLICATION" ? "교수 서명 신청서" : "추가 자료"}</strong>
+                  <span>{file.fileName} · {formatFileSize(file.fileSize)}</span>
+                </div>
+                <button onClick={() => downloadFile(file)}>다운로드</button>
+              </div>
+            )) : <p className="muted">제출된 파일이 없습니다.</p>}
+          </article>
+        </section>
+        <section className="status-panel staff-application-content">
+          <h2>신청 내용</h2>
+          <div><strong>연구 내용</strong><p>{selected.application.researchDescription || "-"}</p></div>
+          <div><strong>신청 사유</strong><p>{selected.application.applicationReason || "-"}</p></div>
+          <div><strong>연구 목적</strong><p>{selected.application.researchPurpose || "-"}</p></div>
+        </section>
+        <section className="status-panel">
+          <h2>처리 기록</h2>
+          {selected.reviewHistories.length ? (
+            <div className="staff-table-scroll"><table className="staff-application-table">
+              <thead><tr><th>이전 상태</th><th>변경 상태</th><th>검토 의견</th><th>처리자</th><th>처리 일시</th></tr></thead>
+              <tbody>{selected.reviewHistories.map((history, index) => (
+                <tr key={`${history.reviewedAt}-${index}`}><td>{history.previousStatus}</td><td>{history.changedStatus}</td>
+                  <td>{history.comment}</td><td>{history.reviewerName}</td><td>{formatStaffDate(history.reviewedAt)}</td></tr>
+              ))}</tbody>
+            </table></div>
+          ) : <p className="muted">아직 처리 기록이 없습니다.</p>}
+        </section>
+        <div className="staff-review-notice">
+          승인·보완 요청·반려 처리는 다음 구현 단계에서 이 상세 화면에 연결됩니다.
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="dashboard-page staff-application-page">
+      <div className="screen-title">
+        <span>A2</span>
+        <div><p className="eyebrow">교직원 관리</p><h1>전체 신청 목록</h1></div>
+      </div>
+      <form className="status-panel staff-filter-panel" onSubmit={submitFilters}>
+        <select value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}>
+          <option value="">전체 상태</option><option value="SUBMITTED">제출 완료</option>
+          <option value="REVISION_REQUESTED">보완 요청</option><option value="APPROVED">승인</option>
+          <option value="REJECTED">반려</option>
+        </select>
+        <input placeholder="학생 이름" value={filters.studentName} onChange={(event) => setFilters({ ...filters, studentName: event.target.value })} />
+        <input placeholder="학번" value={filters.studentLoginId} onChange={(event) => setFilters({ ...filters, studentLoginId: event.target.value })} />
+        <input placeholder="신청 과목" value={filters.courseName} onChange={(event) => setFilters({ ...filters, courseName: event.target.value })} />
+        <input placeholder="담당 교수" value={filters.professorName} onChange={(event) => setFilters({ ...filters, professorName: event.target.value })} />
+        <select value={filters.sort} onChange={(event) => setFilters({ ...filters, sort: event.target.value })}>
+          <option value="desc">최근 제출순</option><option value="asc">오래된 제출순</option>
+        </select>
+        <div className="staff-filter-actions">
+          <button type="submit" className="primary-button">검색</button>
+          <button type="button" onClick={resetFilters}>초기화</button>
+        </div>
+      </form>
+      {isLoading ? <section className="status-panel"><p className="muted">신청 목록을 불러오는 중입니다.</p></section> : null}
+      {errorMessage ? <section className="status-panel"><p className="error-message">{errorMessage}</p></section> : null}
+      {!isLoading && !errorMessage ? (
+        <section className="status-panel staff-list-panel">
+          <div className="staff-list-heading">
+            <h2>신청 내역</h2><span>총 {result?.totalElements ?? 0}건 · 작성 중 제외</span>
+          </div>
+          {result?.applications?.length ? (
+            <div className="staff-table-scroll"><table className="staff-application-table">
+              <thead><tr><th>신청 번호</th><th>학생 이름</th><th>학번</th><th>신청 과목</th>
+                <th>담당 교수</th><th>최근 제출 일시</th><th>현재 상태</th><th>동작</th></tr></thead>
+              <tbody>{result.applications.map((application) => (
+                <tr key={application.id}>
+                  <td><strong>{application.applicationNumber}</strong></td><td>{application.studentName}</td>
+                  <td>{application.studentLoginId}</td><td>{application.courseName || "-"}</td>
+                  <td>{application.professorName || "-"}</td><td>{formatStaffDate(application.submittedAt || application.updatedAt)}</td>
+                  <td><span className={`review-status ${application.status.toLowerCase()}`}>{application.statusLabel}</span></td>
+                  <td><button onClick={() => loadDetail(application.id)}>상세보기</button></td>
+                </tr>
+              ))}</tbody>
+            </table></div>
+          ) : <div className="staff-empty-state"><strong>표시할 신청 내역이 없습니다.</strong><span>검색 조건을 변경해 보세요.</span></div>}
+          {result?.totalPages > 1 ? (
+            <div className="staff-pagination">
+              <button disabled={result.page === 0} onClick={() => loadList(result.page - 1)}>이전</button>
+              <span>{result.page + 1} / {result.totalPages}</span>
+              <button disabled={result.page + 1 >= result.totalPages} onClick={() => loadList(result.page + 1)}>다음</button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+    </section>
+  );
+}
+
+function formatStaffDate(value) {
+  return value ? new Date(value).toLocaleString("ko-KR") : "-";
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function TemplateManager({ accessToken }) {
@@ -2176,7 +2438,7 @@ function StudentDashboardSide({ dashboard, currentNotice }) {
   );
 }
 
-function StaffDashboardMain({ dashboard }) {
+function StaffDashboardMain({ dashboard, onOpenApplications }) {
   const firstPending = dashboard?.pendingApplications?.[0];
 
   return (
@@ -2195,7 +2457,9 @@ function StaffDashboardMain({ dashboard }) {
       ) : (
         <p className="muted">현재 검토 대기 중인 신청이 없습니다.</p>
       )}
-      <button className="primary-button">신청 상세보기</button>
+      <button className="primary-button" onClick={onOpenApplications}>
+        {firstPending ? "신청 상세보기" : "전체 신청 보기"}
+      </button>
     </>
   );
 }

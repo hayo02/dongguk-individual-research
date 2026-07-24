@@ -97,6 +97,14 @@ public class ApplicationFileService {
 
     public Download download(PublicUser student, long fileId) {
         ApplicationFileRecord file = ownedFile(student, fileId);
+        return download(file);
+    }
+
+    public Download downloadForStaff(long fileId) {
+        return download(required(fileId));
+    }
+
+    private Download download(ApplicationFileRecord file) {
         Path path = storage.readablePath(file.filePath());
         try {
             return new Download(file.originalFileName(), file.contentType(), Files.readAllBytes(path));

@@ -195,6 +195,9 @@ src/dongguk_notice/
 | --- | --- | --- | --- |
 | `GET` | `/api/student/dashboard` | Student | 학생 대시보드 조회 |
 | `GET` | `/api/staff/dashboard` | Staff | 교직원 대시보드 조회 |
+| `GET` | `/api/staff/applications` | Staff | 작성 중을 제외한 전체 신청 목록, 검색·상태 필터·정렬·페이지 조회 |
+| `GET` | `/api/staff/applications/{applicationId}` | Staff | 학생·신청 내용·제출 파일·처리 기록 상세 조회 |
+| `GET` | `/api/staff/application-files/{fileId}/download` | Staff | 검토 대상 제출 파일 다운로드 |
 
 ### Course
 
@@ -510,10 +513,10 @@ python -m unittest discover -s tests -v
 | --- | --- | --- |
 | 인증 | 진행 완료 | 로그인, 내 정보 조회, 로그아웃, 토큰 무효화 |
 | 공지 | 진행 완료 | 현재 공지 조회, 원문 공지 URL 조회, 신청 안내 화면 연결 |
-| 대시보드 | 진행 중 | 학생 대시보드 구현, 교직원 대시보드 기본 구조 |
+| 대시보드 | 진행 중 | 학생 대시보드와 교직원 대시보드 기본 구조 |
 | 개설 과목 | 진행 완료 | 목록, 검색, 상세 조회 API와 화면 연결 |
 | 신청서 작성 | 진행 완료 | 상세 항목 입력, 연락처/이메일 수정, debounce 자동저장, PDF 생성 |
-| 교직원 검토 | 예정 | 신청 목록, 상세 검토, 승인/보완 요청/반려 |
+| 교직원 검토 | 진행 중 | 신청 목록·검색·필터·상세 검토 구현, 승인/보완 요청/반려 예정 |
 | HWPX 템플릿 | 진행 완료 | 업로드, 구조·placeholder 검증, 활성화, 다운로드 |
 | 생성 문서 | 진행 완료 | 신청서 PDF 생성, 메타데이터 저장, 권한 기반 다운로드 |
 
@@ -524,5 +527,5 @@ python -m unittest discover -s tests -v
 - 제출 자료 업로드
 - 공식 신청서 PDF 양식 적용
 - 교수 서명본 업로드 및 제출 검증 연결
-- 교직원 신청 목록/상세 검토
 - 보완 요청 및 학생 재제출 흐름
+- 교직원 승인/보완 요청/반려 처리
