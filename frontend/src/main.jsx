@@ -719,12 +719,6 @@ function Dashboard({ user, accessToken, onLogout }) {
                 신청 목록
               </button>
               <button>크롤링 결과</button>
-              <button
-                className={activePage === "templates" ? "active" : ""}
-                onClick={() => setActivePage("templates")}
-              >
-                HWPX 템플릿
-              </button>
             </>
           )}
         </nav>
@@ -734,9 +728,7 @@ function Dashboard({ user, accessToken, onLogout }) {
         </div>
       </header>
 
-      {activePage === "templates" && !isStudent ? (
-        <TemplateManager accessToken={accessToken} />
-      ) : activePage === "staff-applications" && !isStudent ? (
+      {activePage === "staff-applications" && !isStudent ? (
         <StaffApplications accessToken={accessToken} />
       ) : activePage === "notice" && isStudent ? (
         <NoticeGuide
