@@ -2045,10 +2045,67 @@ select:focus-visible {
   margin-top: 20px;
 }
 
+.revision-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  border: 1px solid #edc67e;
+  border-left: 5px solid #e89a18;
+  border-radius: 14px;
+  background: #fff8e9;
+  box-shadow: 0 8px 24px rgba(126, 85, 17, 0.08);
+}
+
+.revision-alert h2 {
+  margin: 3px 0 8px;
+}
+
+.revision-alert p {
+  margin: 0 0 8px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.revision-alert span {
+  color: #7e6232;
+  font-size: 13px;
+}
+
+.student-notification {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #edc67e;
+  border-radius: 12px;
+  background: #fff8e9;
+}
+
+.student-notification strong,
+.student-notification p,
+.student-notification time {
+  display: block;
+}
+
+.student-notification p {
+  margin: 7px 0;
+  line-height: 1.6;
+}
+
+.student-notification time {
+  color: #7e6232;
+  font-size: 12px;
+}
+
 @media (max-width: 960px) {
   .staff-filter-panel,
   .staff-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .revision-alert {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

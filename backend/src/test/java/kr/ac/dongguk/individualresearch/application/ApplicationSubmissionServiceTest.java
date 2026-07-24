@@ -61,10 +61,41 @@ class ApplicationSubmissionServiceTest {
         when(repository.submit(1L)).thenReturn(true);
 
         ApplicationSubmitResponse result =
-                new ApplicationSubmitService(applications, repository, validation).submit(student, 1L);
+                new ApplicationSubmitService(
+                        applications, repository, validation, mock(ReviewHistoryRepository.class)
+                ).submit(student, 1L);
 
         assertThat(result.status()).isEqualTo("SUBMITTED");
         verify(repository).submit(1L);
+    }
+
+    @Test
+    void revisionRequestedApplicationCanBeResubmittedAndRecordsHistory() {
+        ApplicationService applications = mock(ApplicationService.class);
+        ApplicationRepository repository = mock(ApplicationRepository.class);
+        ReviewHistoryRepository histories = mock(ReviewHistoryRepository.class);
+        ApplicationFileRepository files = mock(ApplicationFileRepository.class);
+        when(files.existsByType(1L, ApplicationFileDocumentType.SIGNED_APPLICATION)).thenReturn(true);
+        ApplicationValidationService validation = new ApplicationValidationService(applications, files);
+        when(applications.findOwnedApplication(student, 1L))
+                .thenReturn(
+                        record(ApplicationStatus.REVISION_REQUESTED, true),
+                        record(ApplicationStatus.SUBMITTED, true)
+                );
+        when(repository.submit(1L)).thenReturn(true);
+
+        ApplicationSubmitResponse result =
+                new ApplicationSubmitService(applications, repository, validation, histories)
+                        .submit(student, 1L);
+
+        assertThat(result.status()).isEqualTo("SUBMITTED");
+        verify(histories).insert(
+                1L,
+                "REVISION_REQUESTED",
+                "SUBMITTED",
+                "학생이 보완 내용을 반영하여 신청서를 다시 제출했습니다.",
+                student.id()
+        );
     }
 
     @Test
@@ -75,7 +106,9 @@ class ApplicationSubmissionServiceTest {
         ApplicationValidationService validation = new ApplicationValidationService(applications, files);
         when(applications.findOwnedApplication(student, 1L)).thenReturn(record(ApplicationStatus.DRAFT, false));
         when(applications.findOwnedApplication(student, 2L)).thenReturn(record(ApplicationStatus.SUBMITTED, true));
-        ApplicationSubmitService service = new ApplicationSubmitService(applications, repository, validation);
+        ApplicationSubmitService service = new ApplicationSubmitService(
+                applications, repository, validation, mock(ReviewHistoryRepository.class)
+        );
 
         assertThatThrownBy(() -> service.submit(student, 1L))
                 .isInstanceOf(ApplicationFlowException.class)

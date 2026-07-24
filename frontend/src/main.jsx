@@ -792,7 +792,11 @@ function Dashboard({ user, accessToken, onLogout }) {
                 </div>
 
                 {isStudent ? (
-                  <StudentDashboardMain dashboard={dashboard} currentNotice={currentNotice} />
+                  <StudentDashboardMain
+                    dashboard={dashboard}
+                    currentNotice={currentNotice}
+                    onOpenApplication={() => setActivePage("application")}
+                  />
                 ) : (
                   <StaffDashboardMain
                     dashboard={dashboard}
@@ -2154,6 +2158,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
 
   async function handleSubmitApplication() {
     if (!application) return;
+    const isResubmission = application.status === "REVISION_REQUESTED";
     const result = await validateApplication();
     if (!result?.valid) return;
     if (!window.confirm("제출 후에는 수정할 수 없습니다. 최종 제출하시겠습니까?")) return;
@@ -2171,7 +2176,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
         status: body.data.status,
         submittedAt: body.data.submittedAt,
       }));
-      setSuccessMessage("신청서 제출이 완료되었습니다.");
+      setSuccessMessage(isResubmission ? "보완 신청서가 다시 제출되었습니다." : "신청서 제출이 완료되었습니다.");
       goStep("complete");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "신청서를 제출하지 못했습니다.");
@@ -2181,6 +2186,10 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
   }
 
   const canEdit = application?.status === "DRAFT" || application?.status === "REVISION_REQUESTED";
+  const latestRevision = application?.reviewHistories?.find(
+    (history) => history.changedStatus === "REVISION_REQUESTED",
+  );
+  const requiresSignedApplication = latestRevision?.comment?.startsWith("[서명본 재업로드 필요]");
 
   return (
     <section className="dashboard-page">
@@ -2207,6 +2216,25 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       ) : (
         <>
           {successMessage ? <p className="success-message">{successMessage}</p> : null}
+          {application.status === "REVISION_REQUESTED" && latestRevision ? (
+            <section className="revision-alert" role="alert">
+              <div>
+                <p className="eyebrow">교직원 보완 요청</p>
+                <h2>신청서 보완이 필요합니다.</h2>
+                <p>{latestRevision.comment.replace("[서명본 재업로드 필요] ", "")}</p>
+                <span>
+                  요청일 {formatStaffDate(latestRevision.reviewedAt)}
+                  {requiresSignedApplication ? " · 교수 서명본 재업로드 필요" : ""}
+                </span>
+              </div>
+              <button
+                className="primary-button"
+                onClick={() => goStep(requiresSignedApplication ? "files" : "content")}
+              >
+                보완 시작하기
+              </button>
+            </section>
+          ) : null}
           <ApplicationStepBar current={flowStep} submitted={application.status === "SUBMITTED"} />
 
           {flowStep === "summary" ? (
@@ -2223,10 +2251,16 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <dt>업로드 파일</dt><dd>{isFileLoading ? "확인 중" : `${applicationFiles.length}개`}</dd>
               </dl>
               <div className="actions-row">
-                <button className="primary-button" onClick={() => goStep(application.status === "SUBMITTED" ? "complete" : applicationFiles.length ? "review" : "applicant")}>
-                  {application.status === "SUBMITTED" ? "제출 완료 상세보기" : "이어 작성하기"}
+                <button className="primary-button" onClick={() => goStep(
+                  application.status === "SUBMITTED" ? "complete"
+                    : application.status === "REVISION_REQUESTED"
+                      ? (requiresSignedApplication ? "files" : "content")
+                      : applicationFiles.length ? "review" : "applicant"
+                )}>
+                  {application.status === "SUBMITTED" ? "제출 완료 상세보기"
+                    : application.status === "REVISION_REQUESTED" ? "보완 내용 수정하기" : "이어 작성하기"}
                 </button>
-                {canEdit ? <button className="danger-button" onClick={handleDelete} disabled={isDeleting}>{isDeleting ? "삭제 중" : "임시저장 삭제"}</button> : null}
+                {application.status === "DRAFT" ? <button className="danger-button" onClick={handleDelete} disabled={isDeleting}>{isDeleting ? "삭제 중" : "임시저장 삭제"}</button> : null}
               </div>
             </section>
           ) : null}
@@ -2337,7 +2371,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
               <div className="step-actions">
                 <button onClick={() => goStep("files")}>이전</button>
                 <button className="primary-button" onClick={handleSubmitApplication} disabled={isSubmitting || isValidating || application.status === "SUBMITTED"}>
-                  {isSubmitting ? "제출 중" : "최종 제출"}
+                  {isSubmitting ? "제출 중" : application.status === "REVISION_REQUESTED" ? "보완 신청서 다시 제출" : "최종 제출"}
                 </button>
               </div>
             </section>
@@ -2441,7 +2475,7 @@ function displayRequiredDocuments(documents = []) {
     .filter((document, index, values) => values.indexOf(document) === index);
 }
 
-function StudentDashboardMain({ dashboard, currentNotice }) {
+function StudentDashboardMain({ dashboard, currentNotice, onOpenApplication }) {
   return (
     <>
       <dl className="student-info-list">
@@ -2456,7 +2490,14 @@ function StudentDashboardMain({ dashboard, currentNotice }) {
         <dt>기간</dt>
         <dd>{dashboard?.studentSummary?.applicationPeriod}</dd>
       </dl>
-      <button className="primary-button">{dashboard?.primaryAction}</button>
+      {dashboard?.notification ? (
+        <div className="student-notification" role="alert">
+          <strong>{dashboard.notification.title}</strong>
+          <p>{dashboard.notification.message.replace("[서명본 재업로드 필요] ", "")}</p>
+          <time>{formatStaffDate(dashboard.notification.createdAt)}</time>
+        </div>
+      ) : null}
+      <button className="primary-button" onClick={onOpenApplication}>{dashboard?.primaryAction}</button>
     </>
   );
 }
