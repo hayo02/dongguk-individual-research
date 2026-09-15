@@ -1,6 +1,7 @@
 /* Research portal: warm paper, deep ink, and Dongguk orange. */
 :root {
-  --background: #f7f8fa;
+  --background: #fff8f1;
+  --brand-orange: #f58220;
   --foreground: #222d3d;
   --card-foreground: #222d3d;
   --primary: #ce4b17;
@@ -21,7 +22,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
 h1, h2, h3, p { word-break: keep-all; overflow-wrap: anywhere; }
-.login-shell { display: block; padding: 0; background: #fcfaf7; }
+.login-shell { display: block; padding: 0; background: #fff9f2; border-top: 5px solid var(--brand-orange); }
 .research-landing { max-width: 1440px; margin: auto; padding: 0 64px; overflow-x: clip; }
 .research-header { min-height: 100px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e9e5df; gap: 24px; }
 .research-brand { display: flex; align-items: center; gap: 17px; color: var(--foreground); text-decoration: none; }
@@ -149,6 +150,28 @@ input, select, textarea { border-radius: 10px; border-color: #e3e7ec; background
 .staff-review-modal { border-radius: 22px; box-shadow: 0 30px 100px #18263730; }
 .application-step-bar { border-color: var(--border); }
 .research-landing a:focus-visible { outline: 2px solid var(--primary); outline-offset: 5px; }
+/* Give the university orange a larger presence while keeping text readable. */
+.research-header { border-bottom-color: #f4d7b8; }
+.research-header nav .nav-login { background: #ffead5; border-color: #f6c694; color: #9f3a0c; }
+.ako-orbit { background: #ffbd78; }
+.ako-orbit::after { border-color: #ed9b45; }
+.ako-spark { color: #ed7415; }
+.ako-caption { border: 1px solid #f7cfa7; }
+.research-login .login-card { border-top: 5px solid var(--brand-orange); }
+.research-feature-grid article { border-color: #f4d6b9; border-top: 3px solid #f7a34f; }
+.feature-top > span { color: #d46616; }
+.feature-top small { background: #fff0df; color: #9e4a13; }
+.research-journey li > span:first-child { color: #cf5b12; }
+.app-header { border-top: 4px solid var(--brand-orange); border-bottom-color: #f4d7b8; }
+.research-welcome, .staff-welcome { background: #ffe0bb; border-color: #f6ba7a; border-left: 6px solid var(--brand-orange); }
+.research-welcome::after, .staff-welcome::after { background: #ffba70; }
+.research-welcome .research-kicker { color: #9c4b16; }
+.research-welcome h2 { color: #6a3619; }
+.research-welcome p:not(.research-kicker) { color: #805233; }
+.welcome-semester { color: #934515; background: #fff7e9; }
+.metric-card { border-top: 3px solid #f7ad60; }
+.metric-card.ready,.metric-card.success,.metric-card.pending,.metric-card.warning,.metric-card.danger { border-top-color: #f7ad60; }
+.app-header nav button.active { background: #ffe2c5; color: #96380a; }
 @media (min-width: 1600px) { .research-hero { gap: 110px; } }
 @media (max-width: 1100px) {
   .research-landing { padding: 0 35px; }
