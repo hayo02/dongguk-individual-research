@@ -173,6 +173,7 @@ function LoginPage({ onLogin }) {
         <details className="login-help">
           <summary>개발용 테스트 계정</summary>
           <span>학생 2026123456 / 1234</span>
+          <span>학생 2 2027123456 / 1234</span>
           <span>교직원 2025123456 / 5678</span>
         </details>
 

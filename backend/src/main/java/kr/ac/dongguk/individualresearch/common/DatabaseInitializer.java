@@ -280,6 +280,17 @@ public class DatabaseInitializer implements ApplicationRunner {
                     "010-1234-5678"
             );
         }
+        if (!userRepository.existsByLoginId("2027123456")) {
+            userRepository.insert(
+                    "2027123456",
+                    authService.hashPassword("1234"),
+                    "테스트 학생 2",
+                    UserRole.STUDENT,
+                    "컴퓨터·AI학부",
+                    "student2@example.com",
+                    ""
+            );
+        }
         if (!userRepository.existsByLoginId("2025123456")) {
             userRepository.insert(
                     "2025123456",
