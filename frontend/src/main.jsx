@@ -1268,6 +1268,7 @@ function StaffApplications({ accessToken }) {
   const [requireSignedApplication, setRequireSignedApplication] = useState(false);
   const [revisionItems, setRevisionItems] = useState([]);
   const [isRequestingRevision, setIsRequestingRevision] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
 
   useEffect(() => {
     const segments = window.location.pathname.split("/").filter(Boolean);
@@ -1353,9 +1354,29 @@ function StaffApplications({ accessToken }) {
     }
   }
 
+  async function approveApplication() {
+    if (!selected || selected.status !== "SUBMITTED" || isApproving || isRequestingRevision) return;
+    setIsApproving(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/staff/applications/${selected.id}/approve`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message ?? "신청을 승인하지 못했습니다.");
+      setSelected(body.data);
+      setShowRevisionForm(false);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "신청을 승인하지 못했습니다.");
+    } finally {
+      setIsApproving(false);
+    }
+  }
+
   async function requestRevision(event) {
     event.preventDefault();
-    if (!selected || !revisionReason.trim()) return;
+    if (!selected || !revisionReason.trim() || isApproving || isRequestingRevision) return;
     setIsRequestingRevision(true);
     setErrorMessage("");
     try {
@@ -1402,7 +1423,7 @@ function StaffApplications({ accessToken }) {
           <div><p className="eyebrow">교직원 검토</p><h1>신청 상세 및 검토</h1></div>
         </div>
         <div className="staff-page-toolbar">
-          <button className="secondary-button" onClick={() => {
+          <button className="secondary-button" disabled={isApproving || isRequestingRevision} onClick={() => {
             setSelected(null);
             window.history.pushState({}, "", "/staff/applications");
             void loadList();
@@ -1466,8 +1487,10 @@ function StaffApplications({ accessToken }) {
         </section>
         {selected.status === "SUBMITTED" ? (
           <div className="staff-review-actions">
-            <button className="primary-button" disabled>승인</button>
-            <button onClick={() => setShowRevisionForm(true)}>보완 요청</button>
+            <button className="primary-button" onClick={approveApplication} disabled={isApproving || isRequestingRevision}>
+              {isApproving ? "승인 중..." : "승인"}
+            </button>
+            <button onClick={() => setShowRevisionForm(true)} disabled={isApproving || isRequestingRevision}>보완 요청</button>
             <button className="danger-button" disabled>반려</button>
           </div>
         ) : null}

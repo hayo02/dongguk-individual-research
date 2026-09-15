@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -28,6 +29,13 @@ class StaffApplicationApiTests {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void configureHttpClient() {
+        // Read 401 POST responses directly instead of HttpURLConnection's streaming retry.
+        restTemplate.getRestTemplate().setRequestFactory(
+                new org.springframework.http.client.JdkClientHttpRequestFactory());
+    }
 
     @Test
     void staffCanFilterApplicationsAndReadDetail() {
@@ -109,6 +117,62 @@ class StaffApplicationApiTests {
                 Map.class
         );
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void approvalUpdatesHistoryAndStudentStatusAndRejectsDuplicate() {
+        String studentToken = login("2026123456", "1234");
+        String staffToken = login("2025123456", "5678");
+        long id = createSubmittedApplication(studentToken, staffToken);
+        var submittedAt = jdbcTemplate.queryForObject(
+                "SELECT submitted_at FROM applications WHERE id=?", java.sql.Timestamp.class, id);
+
+        ResponseEntity<Map> response = approve(id, staffToken);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map data = (Map) response.getBody().get("data");
+        assertThat(data.get("status")).isEqualTo("APPROVED");
+        List histories = (List) data.get("reviewHistories");
+        assertThat(histories).hasSize(1);
+        Map history = (Map) histories.get(0);
+        assertThat(history.get("previousStatus")).isEqualTo("SUBMITTED");
+        assertThat(history.get("changedStatus")).isEqualTo("APPROVED");
+        assertThat(history.get("reviewedAt")).isNotNull();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT reviewer_id FROM application_review_history WHERE application_id=?", Long.class, id))
+                .isEqualTo(jdbcTemplate.queryForObject("SELECT id FROM users WHERE login_id='2025123456'", Long.class));
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT submitted_at FROM applications WHERE id=?", java.sql.Timestamp.class, id)).isEqualTo(submittedAt);
+
+        ResponseEntity<Map> dashboard = restTemplate.exchange(url("/api/student/dashboard"), HttpMethod.GET,
+                new HttpEntity<>(authHeaders(studentToken)), Map.class);
+        assertThat(((Map) dashboard.getBody().get("data")).get("applicationStatus")).isEqualTo("APPROVED");
+        assertThat(approve(id, staffToken).getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM application_review_history WHERE application_id=?", Integer.class, id)).isEqualTo(1);
+    }
+
+    @Test
+    void approvalRequiresStaffAndExistingSubmittedApplication() {
+        String studentToken = login("2026123456", "1234");
+        String staffToken = login("2025123456", "5678");
+        long id = createSubmittedApplication(studentToken, staffToken);
+        assertThat(approve(id, studentToken).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(restTemplate.postForEntity(url("/api/staff/applications/" + id + "/approve"), null, Map.class)
+                .getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(approve(Long.MAX_VALUE, staffToken).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        for (String status : List.of("DRAFT", "REVISION_REQUESTED", "REJECTED")) {
+            jdbcTemplate.update("UPDATE applications SET status=? WHERE id=?", status, id);
+            assertThat(approve(id, staffToken).getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(jdbcTemplate.queryForObject("SELECT status FROM applications WHERE id=?", String.class, id))
+                    .isEqualTo(status);
+        }
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM application_review_history WHERE application_id=?", Integer.class, id)).isZero();
+    }
+
+    private ResponseEntity<Map> approve(long id, String token) {
+        return restTemplate.exchange(url("/api/staff/applications/" + id + "/approve"), HttpMethod.POST,
+                new HttpEntity<>(authHeaders(token)), Map.class);
     }
 
     private long createSubmittedApplication(String studentToken, String staffToken) {

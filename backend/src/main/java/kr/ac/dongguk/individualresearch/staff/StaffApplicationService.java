@@ -3,6 +3,7 @@ package kr.ac.dongguk.individualresearch.staff;
 import java.util.Arrays;
 import java.util.List;
 import kr.ac.dongguk.individualresearch.application.ApplicationNotFoundException;
+import kr.ac.dongguk.individualresearch.application.ApplicationConflictException;
 import kr.ac.dongguk.individualresearch.application.ApplicationRecord;
 import kr.ac.dongguk.individualresearch.application.ApplicationRepository;
 import kr.ac.dongguk.individualresearch.application.ReviewHistoryRepository;
@@ -99,6 +100,22 @@ public class StaffApplicationService {
                 record.createdAt(),
                 record.updatedAt()
         );
+    }
+
+    @Transactional
+    public StaffApplicationDetailResponse approve(PublicUser reviewer, long applicationId) {
+        ApplicationRecord application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ApplicationNotFoundException("검토할 신청서를 찾을 수 없습니다."));
+        if (application.status() != ApplicationStatus.SUBMITTED) {
+            throw new ApplicationConflictException("제출 완료 상태의 신청서만 승인할 수 있습니다.");
+        }
+        if (!applicationRepository.approve(applicationId)) {
+            throw new ApplicationConflictException("신청 상태가 변경되었습니다. 새로고침 후 확인해 주세요.");
+        }
+        reviewHistoryRepository.insert(
+                applicationId, ApplicationStatus.SUBMITTED.name(), ApplicationStatus.APPROVED.name(),
+                "신청이 승인되었습니다.", reviewer.id());
+        return detail(applicationId);
     }
 
     @Transactional

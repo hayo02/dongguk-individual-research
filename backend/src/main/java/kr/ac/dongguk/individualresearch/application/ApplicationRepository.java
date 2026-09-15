@@ -111,6 +111,17 @@ public class ApplicationRepository {
         ) == 1;
     }
 
+    public boolean approve(long applicationId) {
+        return jdbcTemplate.update(
+                """
+                UPDATE applications
+                SET status = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND status = ?
+                """,
+                ApplicationStatus.APPROVED.name(), applicationId, ApplicationStatus.SUBMITTED.name()
+        ) == 1;
+    }
+
     public boolean requestRevision(long applicationId) {
         return jdbcTemplate.update(
                 """

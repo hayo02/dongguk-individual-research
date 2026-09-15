@@ -198,6 +198,7 @@ src/dongguk_notice/
 | `GET` | `/api/staff/dashboard` | Staff | 교직원 대시보드 조회 |
 | `GET` | `/api/staff/applications` | Staff | 작성 중을 제외한 전체 신청 목록, 검색·상태 필터·정렬·페이지 조회 |
 | `GET` | `/api/staff/applications/{applicationId}` | Staff | 학생·신청 내용·제출 파일·처리 기록 상세 조회 |
+| `POST` | `/api/staff/applications/{applicationId}/approve` | Staff | 제출 완료 신청 승인 및 승인자·처리 시간 기록, 갱신된 상세 반환 |
 | `POST` | `/api/staff/applications/{applicationId}/revision-request` | Staff | 보완 사유·수정 허용 항목을 기록하고 학생에게 알림 |
 | `GET` | `/api/staff/application-files/{fileId}/download` | Staff | 검토 대상 제출 파일 다운로드 |
 
@@ -223,6 +224,10 @@ src/dongguk_notice/
 | `POST` | `/api/applications/{applicationId}/submit` | Student/본인 | 서버 검증 후 신청서를 최종 제출 |
 | `GET` | `/api/applications/{applicationId}/document.hwp` | Student | 기존 HWP 자동채움 파일 다운로드(레거시) |
 | `GET` | `/api/applications/{applicationId}/interview.png` | Student | 기존 면담자료 PNG 다운로드(레거시) |
+
+승인 API는 요청 본문 없이 호출하며 `SUBMITTED` 상태를 `APPROVED`로 변경합니다.
+상태 변경과 처리 기록 저장은 하나의 트랜잭션으로 수행합니다. 이미 승인되었거나
+제출 완료 상태가 아닌 신청서는 `409`, 없는 신청서는 `404`를 반환합니다.
 
 검증 응답:
 
@@ -540,7 +545,7 @@ python -m unittest discover -s tests -v
 | 대시보드 | 진행 완료 | 학생 신청 상태·알림과 교직원 신청 통계·최근 신청 연결 |
 | 개설 과목 | 진행 완료 | 목록, 검색, 상세 조회 API와 화면 연결 |
 | 신청서 작성 | 진행 완료 | 상세 항목 입력, 연락처/이메일 수정, debounce 자동저장, PDF 생성 |
-| 교직원 검토 | 진행 중 | 신청 목록·검색·필터·상세 검토·보완 요청 구현, 승인/반려 예정 |
+| 교직원 검토 | 진행 중 | 신청 목록·검색·필터·상세 검토·보완 요청·승인 구현, 반려 예정 |
 | 보완 및 재제출 | 진행 완료 | 기존값 유지, 수정 항목 제한, 학생 알림, 재검증·재제출 |
 | HWPX 템플릿 | 사용 중단 | 교직원 메뉴 제거, 레거시 백엔드 코드만 보존 |
 | 생성 문서 | 진행 완료 | 신청서 PDF 생성, 메타데이터 저장, 권한 기반 다운로드 |
@@ -550,6 +555,6 @@ python -m unittest discover -s tests -v
 ## 다음 구현 예정
 
 - 공식 신청서 PDF 양식 적용
-- 교직원 승인/반려 처리
+- 교직원 반려 처리
 - 신청·검토 전체 흐름 E2E 테스트
 - 운영 환경 인증·보안 및 배포 구성

@@ -63,6 +63,15 @@ public class StaffController {
         return ApiResponse.ok(applicationService.detail(applicationId));
     }
 
+    @PostMapping("/applications/{applicationId}/approve")
+    public ApiResponse<StaffApplicationDetailResponse> approve(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable long applicationId
+    ) {
+        PublicUser staff = authFacade.currentUser(authorization, UserRole.STAFF);
+        return ApiResponse.ok(applicationService.approve(staff, applicationId));
+    }
+
     @PostMapping("/applications/{applicationId}/revision-request")
     public ApiResponse<RevisionRequestResponse> requestRevision(
             @RequestHeader(value = "Authorization", required = false) String authorization,
