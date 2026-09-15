@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
+import "./research-design.css";
+import ResearchLanding from "./ResearchLanding";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 const ACCESS_TOKEN_KEY = "individualResearchAccessToken";
@@ -132,17 +134,12 @@ function LoginPage({ onLogin }) {
 
   return (
     <main className="login-shell">
-      <LoginHomeLanding>
+      <ResearchLanding>
         <section className="login-card" aria-labelledby="login-title">
-        <div className="brand-row">
-          <div className="logo-box">
-            <img src="/dongguk-logo.jpg" alt="Dongguk University" />
-          </div>
-          <div className="brand-divider" aria-hidden="true" />
-          <div>
-            <p className="eyebrow">개별연구 신청</p>
-            <h1 id="login-title">개별연구 신청 시스템</h1>
-          </div>
+        <div className="research-login-heading">
+          <span className="login-welcome">WELCOME BACK</span>
+          <h2 id="login-title">반가워요, 연구자님.</h2>
+          <p>로그인하고 나의 연구 여정을 이어가세요.</p>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
@@ -173,431 +170,19 @@ function LoginPage({ onLogin }) {
           </button>
         </form>
 
-        <div className="login-help">
-          <strong>테스트 계정</strong>
+        <details className="login-help">
+          <summary>개발용 테스트 계정</summary>
           <span>학생 2026123456 / 1234</span>
           <span>교직원 2025123456 / 5678</span>
-        </div>
+        </details>
 
         <p className="notice">
           본 시스템은 동국대학교 포털과 연동되지 않습니다. 포털 비밀번호가 아닌
           웹서비스 전용 비밀번호를 입력해 주세요.
         </p>
         </section>
-      </LoginHomeLanding>
+      </ResearchLanding>
     </main>
-  );
-}
-
-function LoginHomeContent() {
-  const summaryCards = [
-    ["신청 기간", "~ 07.30", "2026 여름학기"],
-    ["현재 공지", "신청 안내", "최신 공지 기반"],
-    ["연구 주제", "개설 과목", "담당교수 확인"],
-    ["신청 상태", "PDF 제출", "서명본 업로드"],
-  ];
-  const steps = ["공지 확인", "주제 선택", "신청서 작성", "교수 서명", "최종 제출"];
-  const notices = ["2026학년도 여름학기 개별연구 신청 안내", "신청서 PDF 생성 및 교수 서명본 제출", "개설 과목 및 연구 주제 확인"];
-  const topics = ["AI 모델 최적화 연구", "의료 영상 분석 연구", "분산 시스템 데이터 처리"];
-
-  return (
-    <section className="login-home" aria-labelledby="login-home-title">
-      <div className="login-home-header">
-        <div className="brand-row">
-          <div className="logo-box">
-            <img src="/dongguk-logo.jpg" alt="Dongguk University" />
-          </div>
-          <div className="brand-divider" aria-hidden="true" />
-          <div>
-            <span className="brand-kicker">컴퓨터·AI학부</span>
-            <strong>개별연구 신청 통합 관리 시스템</strong>
-          </div>
-        </div>
-      </div>
-
-      <div className="login-hero">
-        <div>
-          <span className="home-status-dot" />
-          지금 신청 기간입니다
-        </div>
-        <h1 id="login-home-title">
-          개별연구 신청,
-          <br />
-          <span>쉽고 한눈에</span>
-        </h1>
-        <p>
-          공지 확인부터 연구 주제 탐색, 신청서 작성, 교수 서명본 제출까지
-          모든 과정을 한 화면 흐름으로 관리합니다.
-        </p>
-      </div>
-
-      <div className="home-summary-grid" aria-label="요약 정보">
-        {summaryCards.map(([label, value, description]) => (
-          <article key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-            <p>{description}</p>
-          </article>
-        ))}
-      </div>
-
-      <section className="home-step-panel" aria-label="신청 진행 단계">
-        <div>
-          <h2>신청 진행 현황</h2>
-          <p>현재 단계에 맞춰 필요한 작업을 순서대로 진행하세요.</p>
-        </div>
-        <ol>
-          {steps.map((step, index) => (
-            <li className={index < 2 ? "done" : index === 2 ? "current" : ""} key={step}>
-              <span>{index + 1}</span>
-              {step}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <div className="home-preview-grid">
-        <section>
-          <h2>최근 공지</h2>
-          {notices.map((notice) => (
-            <article key={notice}>
-              <strong>{notice}</strong>
-              <span>자세히 보기</span>
-            </article>
-          ))}
-        </section>
-        <section>
-          <h2>연구 주제 미리보기</h2>
-          {topics.map((topic) => (
-            <article key={topic}>
-              <strong>{topic}</strong>
-              <span>모집 정보 확인</span>
-            </article>
-          ))}
-        </section>
-      </div>
-
-      <footer className="login-home-footer">
-        <div className="brand-row">
-          <div className="logo-box small">
-            <img src="/dongguk-logo.jpg" alt="Dongguk University" />
-          </div>
-          <div className="brand-divider" aria-hidden="true" />
-          <div>
-            <span className="brand-kicker">컴퓨터·AI학부</span>
-            <strong>개별연구 신청 통합 관리 시스템</strong>
-          </div>
-        </div>
-        <p className="footer-author">컴퓨터공학전공 2023112246 최하영</p>
-        <p className="footer-copy">© 2026 Dongguk University.</p>
-      </footer>
-    </section>
-  );
-}
-
-function LoginHomeLanding({ children }) {
-  const summaryCards = [
-    ["신청 기간", "~ 08.22", "2026 여름학기"],
-    ["현재 공지", "3건", "이번 학기 공지"],
-    ["연구 주제", "4개", "신청 가능한 주제"],
-    ["진행 상태", "확인 가능", "로그인 후 조회"],
-  ];
-  const steps = ["공지 확인", "주제 선택", "교수 상담", "신청서 작성", "서명본 제출", "결과 확인"];
-  const notices = [
-    ["모집중", "2026학년도 여름학기 개별연구 신청 안내", "2026.07.20 ~ 2026.08.22"],
-    ["안내", "개별연구 신청 절차 및 유의사항 공지", "2026.07.15"],
-    ["마감", "개별연구 결과 및 성적 처리 안내", "2026.06.20"],
-  ];
-  const topics = [
-    ["AI", "대규모 언어 모델 추론 효율화 연구", "컴퓨터공학전공"],
-    ["CV", "의료 영상 분석을 위한 컴퓨터 비전 연구", "컴퓨터공학전공"],
-    ["Data", "분산 시스템 기반 실시간 데이터 처리", "컴퓨터공학전공"],
-  ];
-
-  return (
-    <section className="login-home figma-landing" aria-labelledby="landing-title">
-      <header className="landing-header">
-        <div className="brand-row">
-          <div className="logo-box">
-            <img src="/dongguk-logo.jpg" alt="Dongguk University" />
-          </div>
-          <div className="brand-divider" aria-hidden="true" />
-          <div>
-            <span className="brand-kicker">컴퓨터·AI학부</span>
-            <strong>개별연구 신청 통합 관리 시스템</strong>
-          </div>
-        </div>
-        <nav aria-label="주요 메뉴">
-          <a className="active" href="#">홈</a>
-          <a href="#">개별연구 공지</a>
-          <a href="#">연구 주제</a>
-          <a href="#login-title">개별연구 신청</a>
-          <a href="#login-title">신청 현황</a>
-        </nav>
-      </header>
-
-      <div className="landing-login-banner">
-        <span className="home-status-dot" />
-        <p><strong>로그인</strong>하면 개별연구 신청과 진행 현황을 확인할 수 있습니다.</p>
-      </div>
-
-      <section className="landing-hero">
-        <div className="landing-hero-copy">
-          <div className="landing-pill">
-            <span className="home-status-dot" />
-            지금 신청 기간입니다
-          </div>
-          <h1 id="landing-title">
-            개별연구 신청,
-            <br />
-            <span>한 화면에서 간편하게</span>
-          </h1>
-          <p>
-            공지 확인부터 연구 주제 탐색, 신청서 작성과 제출 상태 관리까지 개별연구 신청 과정을 한 곳에서 진행하세요.
-          </p>
-          <div className="landing-actions">
-            <a href="#login-title">신청 시작하기</a>
-            <a className="secondary" href="#">연구 주제 보기</a>
-          </div>
-        </div>
-
-        <div className="landing-login-panel">{children}</div>
-      </section>
-
-      <section className="home-summary-grid" aria-label="요약 정보">
-        {summaryCards.map(([label, value, description]) => (
-          <article key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-            <p>{description}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="home-step-panel" aria-label="신청 진행 단계">
-        <div>
-          <h2>신청 진행 흐름</h2>
-          <p>현재 <strong>3단계 · 교수 상담</strong> 이후 신청서를 작성할 수 있습니다.</p>
-        </div>
-        <ol>
-          {steps.map((step, index) => (
-            <li className={index < 2 ? "done" : index === 2 ? "current" : ""} key={step}>
-              <span>{index + 1}</span>
-              {step}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="home-preview-grid">
-        <section>
-          <div className="section-heading-row">
-            <h2>최근 공지</h2>
-            <a href="#">전체 보기</a>
-          </div>
-          {notices.map(([status, title, period]) => (
-            <article key={title}>
-              <span className="preview-badge">{status}</span>
-              <strong>{title}</strong>
-              <span>{period}</span>
-            </article>
-          ))}
-        </section>
-
-        <section>
-          <div className="section-heading-row">
-            <h2>추천 연구 주제</h2>
-            <a href="#">주제 보기</a>
-          </div>
-          {topics.map(([tag, title, meta]) => (
-            <article key={title}>
-              <span className="preview-badge">{tag}</span>
-              <strong>{title}</strong>
-              <span>{meta}</span>
-            </article>
-          ))}
-        </section>
-      </section>
-
-      <section className="landing-cta">
-        <div>
-          <span className="preview-badge">Dongguk University</span>
-          <h2>개별연구 신청 준비가 끝났다면 로그인하세요.</h2>
-        </div>
-        <a href="#login-title">로그인으로 이동</a>
-      </section>
-
-      <footer className="login-home-footer">
-        <div className="brand-row compact">
-          <div className="logo-box small">
-            <img src="/dongguk-logo.jpg" alt="Dongguk University" />
-          </div>
-          <div className="brand-divider" aria-hidden="true" />
-          <p>컴퓨터·AI학부 개별연구 신청 통합 관리 시스템</p>
-        </div>
-        <p className="footer-author">컴퓨터공학전공 2023112246 최하영</p>
-        <p className="footer-copy">© 2026 Dongguk University.</p>
-      </footer>
-    </section>
-  );
-}
-
-function LegacyLoginHomeLanding({ children }) {
-  const summaryCards = [
-    ["신청 기간", "~ 08.22", "2026 여름학기"],
-    ["현재 공지", "3건", "이번 학기 공지"],
-    ["관심 연구 주제", "4개", "내가 찜한 주제"],
-    ["내 신청 상태", "진행중", "교수 면담 단계"],
-  ];
-  const steps = ["공지 확인", "주제 선택", "교수 면담", "신청서 작성", "서명본 제출", "결과 확인"];
-  const notices = [
-    ["모집중", "2026학년도 여름학기 개별연구 신청 안내", "2026.07.20 ~ 2026.08.22"],
-    ["마감임박", "개별연구 신청 절차 및 유의사항 공지", "2026.07.15 ~ 2026.08.22"],
-    ["마감", "개별연구 결과 및 성적 처리 안내", "2026.06.10 ~ 2026.06.20"],
-  ];
-  const topics = [
-    ["NLP", "대규모 언어 모델 추론 효율화 연구", "김민지 교수 · AI학과"],
-    ["CV", "의료 영상 분석을 위한 컴퓨터 비전 연구", "박성준 교수 · 컴퓨터공학전공"],
-    ["Kafka", "분산 시스템 기반 실시간 데이터 처리", "이상훈 교수 · 컴퓨터공학전공"],
-  ];
-
-  return (
-    <section className="login-home figma-landing" aria-labelledby="landing-title">
-      <header className="landing-header">
-        <div className="brand-row">
-          <div className="logo-box">
-            <img src="/dongguk-logo.jpg" alt="Dongguk University" />
-          </div>
-          <div className="brand-divider" aria-hidden="true" />
-          <div>
-            <span className="brand-kicker">컴퓨터·AI학부</span>
-            <strong>개별연구 신청 통합 관리 시스템</strong>
-          </div>
-        </div>
-        <nav aria-label="홈 메뉴">
-          <a className="active" href="#">홈</a>
-          <a href="#">개별연구 공지</a>
-          <a href="#">연구 주제</a>
-          <a href="#">개별연구 신청</a>
-          <a href="#">내 신청 현황</a>
-        </nav>
-      </header>
-
-      <div className="landing-login-banner">
-        <span className="home-status-dot" />
-        <p><strong>로그인 후</strong> 개별연구 신청 및 진행 상황을 확인할 수 있습니다.</p>
-      </div>
-
-      <section className="landing-hero">
-        <div className="landing-hero-copy">
-          <div className="landing-pill">
-            <span className="home-status-dot" />
-            지금 신청 기간입니다
-          </div>
-          <h1 id="landing-title">
-            개별연구 신청,
-            <br />
-            <span>쉽고 한눈에</span>
-          </h1>
-          <p>
-            공지 확인부터 연구 주제 탐색, 신청 진행 관리까지 모든 과정을 한 화면에서 간편하게 완료하세요.
-          </p>
-          <div className="landing-actions">
-            <a href="#login-title">신청 시작하기</a>
-            <a className="secondary" href="#">연구 주제 보기</a>
-          </div>
-        </div>
-
-        <aside className="landing-side-card" aria-label="신청 요약">
-          <article>
-            <span>신청 마감까지</span>
-            <strong>D-3</strong>
-          </article>
-          <article>
-            <span>현재 단계</span>
-            <strong>교수 면담 진행 중</strong>
-          </article>
-        </aside>
-      </section>
-
-      <section className="home-summary-grid" aria-label="요약 정보">
-        {summaryCards.map(([label, value, description]) => (
-          <article key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-            <p>{description}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="home-step-panel" aria-label="신청 진행 단계">
-        <div>
-          <h2>신청 진행 현황</h2>
-          <p>현재 <strong>3단계 · 교수 면담</strong>을 진행 중입니다.</p>
-        </div>
-        <ol>
-          {steps.map((step, index) => (
-            <li className={index < 2 ? "done" : index === 2 ? "current" : ""} key={step}>
-              <span>{index + 1}</span>
-              {step}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="home-preview-grid">
-        <section>
-          <div className="section-heading-row">
-            <h2>최근 공지</h2>
-            <a href="#">전체 보기</a>
-          </div>
-          {notices.map(([status, title, period]) => (
-            <article key={title}>
-              <span className="preview-badge">{status}</span>
-              <strong>{title}</strong>
-              <span>{period}</span>
-            </article>
-          ))}
-        </section>
-        <section>
-          <div className="section-heading-row">
-            <h2>연구 주제 미리보기</h2>
-            <a href="#">더 보기</a>
-          </div>
-          {topics.map(([tag, title, meta]) => (
-            <article key={title}>
-              <span className="preview-badge">{tag}</span>
-              <strong>{title}</strong>
-              <span>{meta}</span>
-            </article>
-          ))}
-        </section>
-      </section>
-
-      <section className="landing-cta">
-        <div>
-          <span>2026 여름학기</span>
-          <h2>지금 개별연구 신청을 시작해보세요</h2>
-          <p>신청 마감일은 2026년 8월 22일입니다.</p>
-        </div>
-        <a href="#login-title">신청 시작하기</a>
-      </section>
-
-      <footer className="login-home-footer">
-        <div className="brand-row">
-          <div className="logo-box small">
-            <img src="/dongguk-logo.jpg" alt="Dongguk University" />
-          </div>
-          <div className="brand-divider" aria-hidden="true" />
-          <div>
-            <span className="brand-kicker">컴퓨터·AI학부</span>
-            <strong>개별연구 신청 통합 관리 시스템</strong>
-          </div>
-        </div>
-        <p className="footer-author">컴퓨터공학전공 2023112246 최하영</p>
-        <p className="footer-copy">© 2026 Dongguk University.</p>
-      </footer>
-    </section>
   );
 }
 
@@ -749,7 +334,7 @@ function Dashboard({ user, accessToken, onLogout }) {
           <span>{dashboard?.pageCode ?? (isStudent ? "S1" : "A1")}</span>
           <div>
             <p className="eyebrow">{isStudent ? "학생 홈" : "교직원 홈"}</p>
-            <h1>{dashboard?.screenName ?? (isStudent ? "학생 대시보드" : "교직원 대시보드")}</h1>
+            <h1>{isStudent ? "나의 연구 공간" : "연구 신청 관리"}</h1>
           </div>
         </div>
 
@@ -763,6 +348,15 @@ function Dashboard({ user, accessToken, onLogout }) {
           </section>
         ) : (
           <>
+            <section className={`research-welcome ${isStudent ? "" : "staff-welcome"}`}>
+              <div>
+                <p className="research-kicker">{isStudent ? "MY RESEARCH JOURNEY" : "RESEARCH MANAGEMENT"}</p>
+                <h2>{isStudent ? `${user.name}님, 오늘도 한 걸음 더.` : "새로운 연구의 시작을 함께해요."}</h2>
+                <p>{isStudent ? dashboard?.applicationStatus === "APPROVED" ? "신청이 승인되었어요. 아코가 당신의 새로운 연구를 응원합니다!" : "관심 있는 주제부터 신청 결과까지, 여기서 차근차근 준비하세요." : "학생들의 신청을 확인하고, 검토가 필요한 내용을 처리하세요."}</p>
+                <span className="welcome-semester">{currentNotice?.semester ?? "동국대학교 컴퓨터·AI학부"}</span>
+              </div>
+              <img src="/ako-graduate.png" alt="연구의 시작을 응원하는 아코" />
+            </section>
             <section className="metric-row">
               {metrics.map((metric) => (
                 <article className={`metric-card ${metric.tone ?? "neutral"}`} key={metric.label}>
