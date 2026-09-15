@@ -652,7 +652,7 @@ function Dashboard({ user, accessToken, onLogout }) {
     return () => {
       isMounted = false;
     };
-  }, [accessToken, isStudent]);
+  }, [accessToken, isStudent, activePage]);
 
   const currentNotice = dashboard?.currentNotice;
   const metrics = dashboard?.statusCards ?? dashboard?.metrics ?? [];
@@ -2260,6 +2260,15 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
   }
 
   const canEdit = application?.status === "DRAFT" || application?.status === "REVISION_REQUESTED";
+  const isApproved = application?.status === "APPROVED";
+  const hasSubmitted = ["SUBMITTED", "APPROVED", "REJECTED"].includes(application?.status);
+  const applicationStatusLabel = {
+    DRAFT: "작성 중", SUBMITTED: "제출 완료", REVISION_REQUESTED: "보완 요청",
+    APPROVED: "승인 완료", REJECTED: "반려",
+  }[application?.status] ?? application?.status;
+  const approvalHistory = application?.reviewHistories?.find(
+    (history) => history.changedStatus === "APPROVED",
+  );
   const latestRevision = application?.reviewHistories?.find(
     (history) => history.changedStatus === "REVISION_REQUESTED",
   );
@@ -2297,6 +2306,15 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       ) : (
         <>
           {successMessage ? <p className="success-message">{successMessage}</p> : null}
+          {isApproved ? (
+            <section className="student-notification approved" role="status">
+              <h2>개별연구 신청이 승인되었습니다.</h2>
+              <p>{application.course?.courseName} 신청에 대한 교직원 검토가 완료되었습니다.</p>
+              {approvalHistory ? (
+                <time>승인 일시: {formatStaffDate(approvalHistory.reviewedAt)}</time>
+              ) : null}
+            </section>
+          ) : null}
           {application.status === "REVISION_REQUESTED" && latestRevision ? (
             <section className="revision-alert" role="alert">
               <div>
@@ -2319,7 +2337,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
               </button>
             </section>
           ) : null}
-          <ApplicationStepBar current={flowStep} submitted={application.status === "SUBMITTED"} />
+          <ApplicationStepBar current={flowStep} submitted={hasSubmitted} />
 
           {flowStep === "summary" ? (
             <section className="status-panel application-summary">
@@ -2329,19 +2347,20 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <dt>학년도/학기</dt><dd>{application.course?.semester ?? "-"}</dd>
                 <dt>담당교수</dt><dd>{application.course?.professorName ?? "-"}</dd>
                 <dt>연구주제/교과목명</dt><dd>{application.course?.courseName ?? "-"}</dd>
-                <dt>현재 상태</dt><dd>{application.status}</dd>
-                <dt>현재 진행 단계</dt><dd>{application.status === "SUBMITTED" ? "S8 제출 완료" : applicationFiles.length ? "S7 제출 전 검증" : "S2 신청자 정보"}</dd>
+                <dt>현재 상태</dt><dd>{applicationStatusLabel}</dd>
+                <dt>현재 진행 단계</dt><dd>{isApproved ? "교직원 승인 완료" : hasSubmitted ? "제출 완료 · 검토 결과 확인" : application.status === "REVISION_REQUESTED" ? "보완 및 재제출" : applicationFiles.length ? "S7 제출 전 검증" : "S2 신청자 정보"}</dd>
+                {isApproved && approvalHistory ? <><dt>승인 일시</dt><dd>{formatStaffDate(approvalHistory.reviewedAt)}</dd></> : null}
                 <dt>제출일시</dt><dd>{application.submittedAt ? new Date(application.submittedAt).toLocaleString() : "-"}</dd>
                 <dt>업로드 파일</dt><dd>{isFileLoading ? "확인 중" : `${applicationFiles.length}개`}</dd>
               </dl>
               <div className="actions-row">
                 <button className="primary-button" onClick={() => goStep(
-                  application.status === "SUBMITTED" ? "complete"
+                  hasSubmitted ? "complete"
                     : application.status === "REVISION_REQUESTED"
                       ? (requiresSignedApplication ? "files" : "content")
                       : applicationFiles.length ? "review" : "applicant"
                 )}>
-                  {application.status === "SUBMITTED" ? "제출 완료 상세보기"
+                  {isApproved ? "승인 결과 확인" : hasSubmitted ? "제출 및 검토 결과 확인"
                     : application.status === "REVISION_REQUESTED" ? "보완 내용 수정하기" : "이어 작성하기"}
                 </button>
                 {application.status === "DRAFT" ? <button className="danger-button" onClick={handleDelete} disabled={isDeleting}>{isDeleting ? "삭제 중" : "임시저장 삭제"}</button> : null}
@@ -2418,7 +2437,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                   <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(event) => setSelectedUpload(event.target.files?.[0] ?? null)} />
                   <button className="primary-button" onClick={uploadApplicationFile} disabled={!selectedUpload || isFileAction}>교수 서명본 업로드</button>
                 </div>
-              ) : application.status === "SUBMITTED" ? (
+              ) : hasSubmitted ? (
                 <p className="muted">제출 완료 후에는 파일을 변경할 수 없습니다.</p>
               ) : (
                 <p className="muted">교수 서명본이 등록되어 있습니다. 새 파일은 기존 파일의 교체 버튼을 사용하세요.</p>
@@ -2454,7 +2473,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
               ) : null}
               <div className="step-actions">
                 <button onClick={() => goStep("files")}>이전</button>
-                <button className="primary-button" onClick={handleSubmitApplication} disabled={isSubmitting || isValidating || application.status === "SUBMITTED"}>
+                <button className="primary-button" onClick={handleSubmitApplication} disabled={isSubmitting || isValidating || !canEdit}>
                   {isSubmitting ? "제출 중" : application.status === "REVISION_REQUESTED" ? "보완 신청서 다시 제출" : "최종 제출"}
                 </button>
               </div>
@@ -2463,9 +2482,11 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
 
           {flowStep === "complete" ? (
             <section className="status-panel completion-panel">
-              <h2>S8. 제출 완료</h2>
-              <p className="success-message">개별연구 신청서가 제출되었습니다.</p>
-              <dl><dt>상태</dt><dd>{application.status}</dd><dt>제출일시</dt><dd>{application.submittedAt ? new Date(application.submittedAt).toLocaleString() : "-"}</dd><dt>제출 파일</dt><dd>{applicationFiles.length}개</dd></dl>
+              <h2>{isApproved ? "승인 결과" : "S8. 제출 완료"}</h2>
+              <p className="success-message">{isApproved ? "교직원 검토가 완료되어 신청이 승인되었습니다." : "개별연구 신청서가 제출되었습니다."}</p>
+              <dl><dt>상태</dt><dd>{applicationStatusLabel}</dd><dt>제출일시</dt><dd>{application.submittedAt ? new Date(application.submittedAt).toLocaleString() : "-"}</dd><dt>제출 파일</dt><dd>{applicationFiles.length}개</dd>
+                {isApproved && approvalHistory ? <><dt>승인 일시</dt><dd>{formatStaffDate(approvalHistory.reviewedAt)}</dd><dt>처리자</dt><dd>{approvalHistory.reviewerName}</dd></> : null}
+              </dl>
               <button onClick={() => goStep("summary")}>내 신청 현황으로</button>
             </section>
           ) : null}
@@ -2575,7 +2596,7 @@ function StudentDashboardMain({ dashboard, currentNotice, onOpenApplication }) {
         <dd>{dashboard?.studentSummary?.applicationPeriod}</dd>
       </dl>
       {dashboard?.notification ? (
-        <div className="student-notification" role="alert">
+        <div className={`student-notification ${dashboard.notification.type === "APPROVED" ? "approved" : ""}`} role="status">
           <strong>{dashboard.notification.title}</strong>
           <p>{dashboard.notification.message.replace("[서명본 재업로드 필요] ", "")}</p>
           <time>{formatStaffDate(dashboard.notification.createdAt)}</time>

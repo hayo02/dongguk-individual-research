@@ -75,10 +75,14 @@ public class StudentDashboardService {
                         .map(step -> new DashboardStep(step, isCompletedStep(status, step)))
                         .toList(),
                 reviewHistoryRepository.findLatestByStudentId(student.id())
-                        .filter(history -> "REVISION_REQUESTED".equals(history.changedStatus()))
+                        .filter(history -> history.changedStatus().equals(status.name()))
+                        .filter(history -> "REVISION_REQUESTED".equals(history.changedStatus())
+                                || "APPROVED".equals(history.changedStatus()))
                         .map(history -> new Notification(
-                                "REVISION_REQUESTED",
-                                "신청서 보완 요청이 도착했습니다.",
+                                history.changedStatus(),
+                                "APPROVED".equals(history.changedStatus())
+                                        ? "개별연구 신청이 승인되었습니다."
+                                        : "신청서 보완 요청이 도착했습니다.",
                                 history.comment(),
                                 history.reviewedAt(),
                                 history.applicationId()

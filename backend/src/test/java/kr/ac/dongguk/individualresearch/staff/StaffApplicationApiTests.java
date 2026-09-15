@@ -146,6 +146,16 @@ class StaffApplicationApiTests {
         ResponseEntity<Map> dashboard = restTemplate.exchange(url("/api/student/dashboard"), HttpMethod.GET,
                 new HttpEntity<>(authHeaders(studentToken)), Map.class);
         assertThat(((Map) dashboard.getBody().get("data")).get("applicationStatus")).isEqualTo("APPROVED");
+        Map notification = (Map) ((Map) dashboard.getBody().get("data")).get("notification");
+        assertThat(notification.get("type")).isEqualTo("APPROVED");
+        assertThat((String) notification.get("title")).contains("승인");
+        assertThat(notification.get("createdAt")).isNotNull();
+        ResponseEntity<Map> studentDetail = restTemplate.exchange(url("/api/applications/me/current"), HttpMethod.GET,
+                new HttpEntity<>(authHeaders(studentToken)), Map.class);
+        Map studentData = (Map) studentDetail.getBody().get("data");
+        assertThat(studentData.get("status")).isEqualTo("APPROVED");
+        assertThat(((Map) ((List) studentData.get("reviewHistories")).get(0)).get("changedStatus"))
+                .isEqualTo("APPROVED");
         assertThat(approve(id, staffToken).getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM application_review_history WHERE application_id=?", Integer.class, id)).isEqualTo(1);

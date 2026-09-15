@@ -2114,6 +2114,16 @@ select:focus-visible {
   display: block;
 }
 
+.student-notification.approved {
+  border-color: #9ac9ad;
+  background: #edf8f0;
+  color: #205c39;
+}
+
+.student-notification.approved time {
+  color: #38684b;
+}
+
 .student-notification p {
   margin: 7px 0;
   line-height: 1.6;
