@@ -1484,7 +1484,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       studentName: application?.student?.name ?? "",
       studentNumber: application?.student?.loginId ?? "",
       department: application?.student?.department ?? "",
-      grade: "",
+      grade: application?.student?.grade ?? "",
       phone: contact,
       email: email || application?.student?.email || "",
       professorName: application?.course?.professorName ?? "",
@@ -2037,7 +2037,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <label>소속<input value={application.student?.department ?? ""} disabled /></label>
                 <label>이메일<input id="revision-EMAIL" value={email} onChange={(event) => setEmail(event.target.value)} disabled={!canEditField("EMAIL") || isSaving} /></label>
                 <label>학년도/학기<input value={application.course?.semester ?? ""} disabled /></label>
-                <label>학년<input value="-" disabled /></label>
+                <label>학년<input value={application.student?.grade ? `${application.student.grade}학년` : "등록 정보 없음 · 행정실 문의"} disabled /></label>
               </div>
               <label>연락처<input id="revision-CONTACT" value={contact} onChange={(event) => setContact(event.target.value)} disabled={!canEditField("CONTACT") || isSaving} /></label>
               <StepActions onPrevious={() => goStep("summary")} onNext={() => saveAndGo("content")} nextDisabled={!canEdit || !contact.trim() || !email.trim() || isSaving} />

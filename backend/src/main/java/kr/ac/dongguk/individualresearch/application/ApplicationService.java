@@ -118,7 +118,8 @@ public class ApplicationService {
                         record.studentDepartment(),
                         record.studentEmail(),
                         record.studentPhone(),
-                        contact(record)
+                        contact(record),
+                        applicationRepository.studentGrade(record.studentId())
                 ),
                 new CourseSummary(
                         record.courseId(),

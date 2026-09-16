@@ -44,7 +44,10 @@ public class DatabaseInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         createTables();
         seedUsers();
+        jdbcTemplate.update("UPDATE users SET grade='3' WHERE login_id='2026123456' AND grade IS NULL");
+        jdbcTemplate.update("UPDATE users SET grade='4' WHERE login_id='2027123456' AND grade IS NULL");
         importLatestNotice();
+        repairOrphanedApplications();
     }
 
     private void createTables() {
@@ -64,6 +67,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                 )
                 """
         );
+        addColumnIfMissing("users", "grade", "grade VARCHAR(30)");
         jdbcTemplate.execute(
                 """
                 CREATE TABLE IF NOT EXISTS notices (
@@ -447,7 +451,6 @@ public class DatabaseInitializer implements ApplicationRunner {
         if (!researchItems.isArray()) {
             return;
         }
-        jdbcTemplate.update("DELETE FROM courses WHERE notice_id = ?", noticeId);
         for (JsonNode item : researchItems) {
             jdbcTemplate.update(
                     """
@@ -458,6 +461,13 @@ public class DatabaseInitializer implements ApplicationRunner {
                         closed_to_additional_applications
                     )
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE department=VALUES(department), professor_name=VALUES(professor_name),
+                        course_name=VALUES(course_name), course_type=VALUES(course_type), course_code=VALUES(course_code),
+                        research_description=VALUES(research_description), capacity=VALUES(capacity),
+                        interview_schedule=VALUES(interview_schedule), weekly_hours=VALUES(weekly_hours),
+                        qualification=VALUES(qualification), professor_emails=VALUES(professor_emails),
+                        required_skills=VALUES(required_skills), mentioned_technologies=VALUES(mentioned_technologies),
+                        closed_to_additional_applications=VALUES(closed_to_additional_applications)
                     """,
                     noticeId,
                     integer(item.path("순번"), 0),
@@ -476,6 +486,27 @@ public class DatabaseInitializer implements ApplicationRunner {
                     writeJson(valueArray(item.path("mentioned_technologies"))),
                     item.path("derived").path("추가 신청 불가 여부").asBoolean(false)
             );
+        }
+    }
+
+    private void repairOrphanedApplications() {
+        var orphaned = jdbcTemplate.queryForList("""
+                SELECT a.id, a.student_id, a.course_id FROM applications a
+                LEFT JOIN courses c ON c.id=a.course_id WHERE c.id IS NULL
+                """);
+        for (var application : orphaned) {
+            var matches = jdbcTemplate.queryForList("""
+                    SELECT DISTINCT c.id FROM application_draft d JOIN courses c
+                      ON c.notice_id=d.notice_id AND c.professor_name=d.professor_name
+                      AND c.course_name=d.course_name
+                    WHERE d.user_id=? AND d.research_topic_id=?
+                    """, Long.class, application.get("student_id"), application.get("course_id"));
+            // Ambiguous or missing evidence must never reassign an application to a guessed course.
+            if (matches.size() != 1) continue;
+            jdbcTemplate.update("UPDATE applications SET course_id=? WHERE id=? AND course_id=?",
+                    matches.get(0), application.get("id"), application.get("course_id"));
+            jdbcTemplate.update("UPDATE application_draft SET research_topic_id=? WHERE user_id=? AND research_topic_id=?",
+                    matches.get(0), application.get("student_id"), application.get("course_id"));
         }
     }
 

@@ -23,7 +23,8 @@ public record ApplicationDetailResponse(
             String department,
             String email,
             String phone,
-            String contact
+            String contact,
+            String grade
     ) {
     }
 

@@ -17,6 +17,10 @@ public class ApplicationRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public String studentGrade(long studentId) {
+        return jdbcTemplate.queryForObject("SELECT grade FROM users WHERE id=?", String.class, studentId);
+    }
+
     public Optional<ApplicationRecord> findCurrentByStudentId(long studentId) {
         return jdbcTemplate.query(
                 """
