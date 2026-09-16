@@ -1104,7 +1104,6 @@ function StaffApplications({ accessToken }) {
               {isApproving ? "승인 중..." : "승인"}
             </button>
             <button onClick={() => setShowRevisionForm(true)} disabled={isApproving || isRequestingRevision}>보완 요청</button>
-            <button className="danger-button" disabled>반려</button>
           </div>
         ) : null}
         {showRevisionForm ? (
@@ -1178,7 +1177,6 @@ function StaffApplications({ accessToken }) {
         <select value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}>
           <option value="">전체 상태</option><option value="SUBMITTED">제출 완료</option>
           <option value="REVISION_REQUESTED">보완 요청</option><option value="APPROVED">승인</option>
-          <option value="REJECTED">반려</option>
         </select>
         <input placeholder="학생 이름" value={filters.studentName} onChange={(event) => setFilters({ ...filters, studentName: event.target.value })} />
         <input placeholder="학번" value={filters.studentLoginId} onChange={(event) => setFilters({ ...filters, studentLoginId: event.target.value })} />

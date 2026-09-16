@@ -30,7 +30,6 @@ public class StaffDashboardService {
         long submittedCount = countByStatus(ApplicationStatus.SUBMITTED);
         long revisionRequestedCount = countByStatus(ApplicationStatus.REVISION_REQUESTED);
         long approvedCount = countByStatus(ApplicationStatus.APPROVED);
-        long rejectedCount = countByStatus(ApplicationStatus.REJECTED);
         long totalVisibleCount = countVisibleApplications();
         List<ApplicationSummary> pendingApplications = findApplicationsByStatus(ApplicationStatus.SUBMITTED, 3);
         List<ApplicationSummary> recentApplications = findRecentApplications(3);
@@ -43,7 +42,6 @@ public class StaffDashboardService {
                         new DashboardMetric("제출 완료", submittedCount, "검토 대기 신청", "pending"),
                         new DashboardMetric("보완 요청", revisionRequestedCount, "학생 재제출 대기", "warning"),
                         new DashboardMetric("승인", approvedCount, "최종 승인 신청", "success"),
-                        new DashboardMetric("반려", rejectedCount, "반려 처리 신청", "danger"),
                         new DashboardMetric("전체 신청", totalVisibleCount, "작성 중 제외", "neutral")
                 ),
                 List.of(
