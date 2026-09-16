@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 import "./research-design.css";
 import ResearchLanding from "./ResearchLanding";
+import CrawlingResults from "./CrawlingResults";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 const ACCESS_TOKEN_KEY = "individualResearchAccessToken";
@@ -190,12 +191,26 @@ function LoginPage({ onLogin }) {
 function Dashboard({ user, accessToken, onLogout }) {
   const isStudent = user.role === "STUDENT";
   const [activePage, setActivePage] = useState(() => {
+    if (window.location.pathname === "/staff/crawling") return "staff-crawling";
     if (window.location.pathname.startsWith("/staff/applications")) return "staff-applications";
     return window.location.pathname.startsWith("/applications") ? "application" : "dashboard";
   });
   const [dashboard, setDashboard] = useState(null);
   const [dashboardError, setDashboardError] = useState("");
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
+
+  function openStaffPage(page) {
+    window.history.pushState({}, "", page === "staff-crawling" ? "/staff/crawling" : "/");
+    setActivePage(page);
+  }
+
+  useEffect(() => {
+    if (isStudent) return;
+    const onPopState = () => setActivePage(window.location.pathname === "/staff/crawling"
+      ? "staff-crawling" : window.location.pathname.startsWith("/staff/applications") ? "staff-applications" : "dashboard");
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [isStudent]);
 
   useEffect(() => {
     let isMounted = true;
@@ -264,7 +279,7 @@ function Dashboard({ user, accessToken, onLogout }) {
             <>
               <button
                 className={activePage === "dashboard" ? "active" : ""}
-                onClick={() => setActivePage("dashboard")}
+                onClick={() => isStudent ? setActivePage("dashboard") : openStaffPage("dashboard")}
               >
                 대시보드
               </button>
@@ -291,7 +306,7 @@ function Dashboard({ user, accessToken, onLogout }) {
             <>
               <button
                 className={activePage === "dashboard" ? "active" : ""}
-                onClick={() => setActivePage("dashboard")}
+                onClick={() => isStudent ? setActivePage("dashboard") : openStaffPage("dashboard")}
               >
                 대시보드
               </button>
@@ -304,7 +319,8 @@ function Dashboard({ user, accessToken, onLogout }) {
               >
                 신청 목록
               </button>
-              <button>크롤링 결과</button>
+              <button className={activePage === "staff-crawling" ? "active" : ""}
+                onClick={() => openStaffPage("staff-crawling")}>크롤링 결과</button>
             </>
           )}
         </nav>
@@ -314,7 +330,9 @@ function Dashboard({ user, accessToken, onLogout }) {
         </div>
       </header>
 
-      {activePage === "staff-applications" && !isStudent ? (
+      {activePage === "staff-crawling" && !isStudent ? (
+        <CrawlingResults accessToken={accessToken} onBack={() => openStaffPage("dashboard")} />
+      ) : activePage === "staff-applications" && !isStudent ? (
         <StaffApplications accessToken={accessToken} />
       ) : activePage === "notice" && isStudent ? (
         <NoticeGuide
@@ -407,7 +425,7 @@ function Dashboard({ user, accessToken, onLogout }) {
                 {isStudent ? (
                   <StudentDashboardSide dashboard={dashboard} currentNotice={currentNotice} />
                 ) : (
-                  <StaffDashboardSide dashboard={dashboard} />
+                  <StaffDashboardSide dashboard={dashboard} onOpenCrawling={() => openStaffPage("staff-crawling")} />
                 )}
               </article>
             </section>
@@ -2269,7 +2287,7 @@ function StaffDashboardMain({ dashboard, onOpenApplications }) {
   );
 }
 
-function StaffDashboardSide({ dashboard }) {
+function StaffDashboardSide({ dashboard, onOpenCrawling }) {
   return (
     <>
       <h2>최근 제출 및 크롤링 분석</h2>
@@ -2294,6 +2312,7 @@ function StaffDashboardSide({ dashboard }) {
           검토 필요 {dashboard?.crawlerSummary?.needsReviewCount ?? 0}건 / 마감일{" "}
           {dashboard?.crawlerSummary?.deadline ?? "-"}
         </p>
+        <button className="primary-button" onClick={onOpenCrawling}>크롤링 결과 확인</button>
       </section>
     </>
   );

@@ -196,6 +196,7 @@ src/dongguk_notice/
 | --- | --- | --- | --- |
 | `GET` | `/api/student/dashboard` | Student | 학생 대시보드 조회 |
 | `GET` | `/api/staff/dashboard` | Staff | 교직원 대시보드 조회 |
+| `GET` | `/api/staff/crawling/latest` | Staff | 최근 저장된 크롤링 결과·경고·오류·첨부파일 분석·연구 주제 조회 |
 | `GET` | `/api/staff/applications` | Staff | 작성 중을 제외한 전체 신청 목록, 검색·상태 필터·정렬·페이지 조회 |
 | `GET` | `/api/staff/applications/{applicationId}` | Staff | 학생·신청 내용·제출 파일·처리 기록 상세 조회 |
 | `POST` | `/api/staff/applications/{applicationId}/approve` | Staff | 제출 완료 신청 승인 및 승인자·처리 시간 기록, 갱신된 상세 반환 |
@@ -554,6 +555,13 @@ python -m unittest discover -s tests -v
 | 생성 문서 | 진행 완료 | 신청서 PDF 생성, 메타데이터 저장, 권한 기반 다운로드 |
 
 ---
+
+## 교직원 크롤링 결과 조회
+
+교직원 크롤링 결과 화면은 `/staff/crawling`에서 확인합니다. `app.notice.snapshot-path`에
+지정된 최신 스냅샷을 매 요청마다 조회하며, 원문 공지·추출 일정과 근거·제출 안내·첨부파일
+분석 상태·연구 주제 검색을 제공합니다. 파일 부재와 손상 상태를 구분합니다.
+결과 새로고침은 저장된 파일 조회이며, 크롤러 실행이나 개설 과목 DB 재적재를 수행하지 않습니다.
 
 ## 다음 구현 예정
 

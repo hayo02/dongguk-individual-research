@@ -150,6 +150,41 @@ input, select, textarea { border-radius: 10px; border-color: #e3e7ec; background
 .staff-review-modal { border-radius: 22px; box-shadow: 0 30px 100px #18263730; }
 .application-step-bar { border-color: var(--border); }
 .research-landing a:focus-visible { outline: 2px solid var(--primary); outline-offset: 5px; }
+.crawl-page-heading, .crawl-summary { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; }
+.crawl-intro { margin: 0; font-size: 13px; color: #777; }
+.crawl-summary > div { flex: 1; min-width: 220px; }
+.crawl-summary h2 { margin-top: 15px; }
+.crawl-summary p { color: #727985; }
+.crawl-evidence { margin: 0; }
+.crawl-evidence > div { padding: 15px 0; border-bottom: 1px solid var(--border); }
+.crawl-evidence dt { color: #727985; margin-bottom: 6px; }
+.crawl-evidence dd { margin: 0; }
+.crawling-page details { margin-top: 8px; font-size: 12px; }
+.crawling-page summary { cursor: pointer; color: var(--primary); }
+.crawling-page details p, .crawl-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.crawl-warning { color: #ad4c17; display: block; font-size: 11px; margin: 5px 0; }
+.crawl-issues { list-style: none; padding: 0; display: grid; gap: 10px; }
+.crawl-issues li { border-left: 3px solid #f58220; padding: 12px 16px; background: #fff8ef; border-radius: 8px; }
+.crawl-issues strong, .crawl-issues small { display: block; font-size: 13px; }
+.crawl-issues small { font-size: 11px; margin-top: 5px; color: #777; }
+.crawl-issue-context { margin-top: 12px; padding: 12px 16px; background: #fff; border: 1px solid #f4dfc8; border-radius: 8px; overflow-wrap: anywhere; font-size: 13px; }
+.crawl-issue-context p { margin: 6px 0 12px; white-space: pre-wrap; }
+.crawl-issue-context dl { margin: 8px 0; }
+.crawl-issue-context dt { font-weight: 600; margin-top: 8px; }
+.crawl-issue-context dd { margin: 4px 0 12px; white-space: pre-wrap; }
+.crawl-issue-context mark { background: #fff0cf; color: #8b4309; padding: 2px 4px; border-radius: 3px; }
+.crawl-files { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 16px; }
+.crawl-files article { padding: 18px; border: 1px solid var(--border); border-radius: 12px; overflow-wrap: anywhere; }
+.crawl-files strong { font-size: 13px; }
+.crawl-files a { color: var(--primary); font-size: 12px; }
+.crawl-table { min-width: 760px; }
+.crawl-table small { display: block; margin-top: 5px; color: #777; }
+.crawl-table td:last-child { min-width: 230px; max-width: 400px; }
+.crawl-page-heading input { max-width: 100%; width: 310px; padding: 11px; }
+.crawl-page-heading select { margin-left: 6px; padding: 8px; }
+.crawl-page-heading h2 small { font-size: 12px; color: #777; margin-left: 8px; }
+.crawling-page > *, .crawling-page .dashboard-grid > * { min-width: 0; }
+
 /* Give the university orange a larger presence while keeping text readable. */
 .research-header { border-bottom-color: #f4d7b8; }
 .research-header nav .nav-login { background: #ffead5; border-color: #f6c694; color: #9f3a0c; }

@@ -180,6 +180,21 @@ class StaffApplicationApiTests {
                 "SELECT COUNT(*) FROM application_review_history WHERE application_id=?", Integer.class, id)).isZero();
     }
 
+    @Test
+    void crawlingResultsRequireStaffAuthentication() {
+        String staffToken = login("2025123456", "5678");
+        String studentToken = login("2026123456", "1234");
+        var allowed = restTemplate.exchange(url("/api/staff/crawling/latest"), HttpMethod.GET,
+                new HttpEntity<>(authHeaders(staffToken)), Map.class);
+        assertThat(allowed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(((Map) allowed.getBody().get("data")).get("available")).isInstanceOf(Boolean.class);
+        var denied = restTemplate.exchange(url("/api/staff/crawling/latest"), HttpMethod.GET,
+                new HttpEntity<>(authHeaders(studentToken)), Map.class);
+        assertThat(denied.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(restTemplate.getForEntity(url("/api/staff/crawling/latest"), Map.class).getStatusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
     private ResponseEntity<Map> approve(long id, String token) {
         return restTemplate.exchange(url("/api/staff/applications/" + id + "/approve"), HttpMethod.POST,
                 new HttpEntity<>(authHeaders(token)), Map.class);
