@@ -1250,6 +1250,11 @@ function revisionItemLabel(item) {
   }[item] ?? item;
 }
 
+function revisionStep(item) {
+  if (["CONTACT", "EMAIL"].includes(item)) return "applicant";
+  return item === "SIGNED_APPLICATION" ? "files" : "content";
+}
+
 function TemplateManager({ accessToken }) {
   const [templates, setTemplates] = useState([]);
   const [file, setFile] = useState(null);
@@ -1342,6 +1347,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
   const [flowStep, setFlowStep] = useState("summary");
+  const [revisionFocus, setRevisionFocus] = useState(null);
   const [applicationFiles, setApplicationFiles] = useState([]);
   const [selectedUpload, setSelectedUpload] = useState(null);
   const [isFileLoading, setIsFileLoading] = useState(false);
@@ -1419,8 +1425,30 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
     if (!application) return;
     const segment = window.location.pathname.split("/").filter(Boolean).at(-1);
     const known = new Set(["applicant", "content", "documents", "signature-guide", "files", "review", "complete"]);
-    if (known.has(segment)) setFlowStep(segment);
+    const revision = application.reviewHistories?.find(history => history.changedStatus === "REVISION_REQUESTED");
+    const firstItem = revision?.revisionItems?.[0];
+    if (application.status === "REVISION_REQUESTED" && firstItem && (!known.has(segment) || segment === "complete")) {
+      const step = revisionStep(firstItem);
+      setFlowStep(step);
+      setRevisionFocus(firstItem);
+      window.history.replaceState({}, "", `/applications/${application.id}/${step}`);
+    } else if (known.has(segment)) setFlowStep(segment);
   }, [application?.id]);
+
+  useEffect(() => {
+    if (!revisionFocus || isLoading) return;
+    const target = document.getElementById(`revision-${revisionFocus}`);
+    if (!target || target.disabled) return;
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ block: "center", behavior: "smooth" });
+    setRevisionFocus(null);
+  }, [revisionFocus, flowStep, isLoading, isSaving]);
+
+  async function openRevisionItem(item) {
+    if (["applicant", "content"].includes(flowStep) && !(await handleSave())) return;
+    goStep(revisionStep(item));
+    setRevisionFocus(item);
+  }
 
   async function loadApplicationFiles(applicationId = application?.id, apply = true) {
     if (!applicationId) return;
@@ -1550,6 +1578,15 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
     setIsSaving(true);
 
     try {
+      if (draftId) {
+        const draftResponse = await fetch(`${API_BASE_URL}/api/drafts/${draftId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify(draftPayload()),
+        });
+        const draftBody = await draftResponse.json();
+        if (!draftResponse.ok || !draftBody.success) throw new Error(draftBody.message ?? "신청 내용을 저장하지 못했습니다.");
+      }
       const response = await fetch(`${API_BASE_URL}/api/applications/me/current`, {
         method: "PATCH",
         headers: {
@@ -1939,18 +1976,22 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                   {requiresSignedApplication ? " · 교수 서명본 재업로드 필요" : ""}
                 </span>
                 {requestedRevisionItems.length ? (
-                  <small>수정 가능 항목: {requestedRevisionItems.map(revisionItemLabel).join(", ")}</small>
+                  <div className="actions-row revision-jump-links">{requestedRevisionItems.map(item => <button key={item} disabled={isSaving} onClick={() => openRevisionItem(item)}>{revisionItemLabel(item)} 수정하기 →</button>)}</div>
                 ) : null}
               </div>
               <button
                 className="primary-button"
-                onClick={() => goStep(requiresSignedApplication ? "files" : "content")}
+                disabled={isSaving}
+                onClick={() => openRevisionItem(requestedRevisionItems[0] ?? "APPLICATION_REASON")}
               >
                 보완 시작하기
               </button>
             </section>
           ) : null}
           <ApplicationStepBar current={flowStep} submitted={hasSubmitted} />
+          {application.status === "REVISION_REQUESTED" && ["applicant", "content"].includes(flowStep) ? (
+            <div className="actions-row"><button className="primary-button" disabled={isSaving || !draftId} onClick={() => saveAndGo("review")}>{isSaving ? "저장 중…" : "보완 내용 저장 후 제출 확인"}</button></div>
+          ) : null}
 
           {flowStep === "summary" ? (
             <section className="status-panel application-summary">
@@ -1970,7 +2011,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <button className="primary-button" onClick={() => goStep(
                   hasSubmitted ? "complete"
                     : application.status === "REVISION_REQUESTED"
-                      ? (requiresSignedApplication ? "files" : "content")
+                      ? revisionStep(requestedRevisionItems[0])
                       : applicationFiles.length ? "review" : "applicant"
                 )}>
                   {isApproved ? "승인 결과 확인" : hasSubmitted ? "제출 및 검토 결과 확인"
@@ -1988,11 +2029,11 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <label>성명<input value={application.student?.name ?? ""} disabled /></label>
                 <label>학번<input value={application.student?.loginId ?? ""} disabled /></label>
                 <label>소속<input value={application.student?.department ?? ""} disabled /></label>
-                <label>이메일<input value={email} onChange={(event) => setEmail(event.target.value)} disabled={!canEditField("EMAIL") || isSaving} /></label>
+                <label>이메일<input id="revision-EMAIL" value={email} onChange={(event) => setEmail(event.target.value)} disabled={!canEditField("EMAIL") || isSaving} /></label>
                 <label>학년도/학기<input value={application.course?.semester ?? ""} disabled /></label>
                 <label>학년<input value="-" disabled /></label>
               </div>
-              <label>연락처<input value={contact} onChange={(event) => setContact(event.target.value)} disabled={!canEditField("CONTACT") || isSaving} /></label>
+              <label>연락처<input id="revision-CONTACT" value={contact} onChange={(event) => setContact(event.target.value)} disabled={!canEditField("CONTACT") || isSaving} /></label>
               <StepActions onPrevious={() => goStep("summary")} onNext={() => saveAndGo("content")} nextDisabled={!canEdit || !contact.trim() || !email.trim() || isSaving} />
             </section>
           ) : null}
@@ -2007,11 +2048,11 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
                 <label>연구주제<input value={application.course?.courseName ?? ""} disabled /></label>
                 <label>연구내용<textarea value={application.course?.researchDescription ?? ""} disabled rows={3} /></label>
               </div>
-              <label>신청사유<textarea value={applicationReason} onChange={(event) => setApplicationReason(event.target.value)} disabled={!canEditField("APPLICATION_REASON")} rows={5} /></label>
-              <label>연구목적<textarea value={researchPurpose} onChange={(event) => setResearchPurpose(event.target.value)} disabled={!canEditField("RESEARCH_PURPOSE")} rows={5} /></label>
-              <label>관련 경험<textarea value={relatedExperience} onChange={(event) => setRelatedExperience(event.target.value)} disabled={!canEditField("RELATED_EXPERIENCE")} rows={3} /></label>
-              <label>연구 수행 계획<textarea value={researchPlan} onChange={(event) => setResearchPlan(event.target.value)} disabled={!canEditField("RESEARCH_PLAN")} rows={3} /></label>
-              <label>면담 질문<textarea value={interviewQuestions} onChange={(event) => setInterviewQuestions(event.target.value)} disabled={!canEditField("INTERVIEW_QUESTIONS")} rows={3} /></label>
+              <label>신청사유<textarea id="revision-APPLICATION_REASON" value={applicationReason} onChange={(event) => setApplicationReason(event.target.value)} disabled={!canEditField("APPLICATION_REASON")} rows={5} /></label>
+              <label>연구목적<textarea id="revision-RESEARCH_PURPOSE" value={researchPurpose} onChange={(event) => setResearchPurpose(event.target.value)} disabled={!canEditField("RESEARCH_PURPOSE")} rows={5} /></label>
+              <label>관련 경험<textarea id="revision-RELATED_EXPERIENCE" value={relatedExperience} onChange={(event) => setRelatedExperience(event.target.value)} disabled={!canEditField("RELATED_EXPERIENCE")} rows={3} /></label>
+              <label>연구 수행 계획<textarea id="revision-RESEARCH_PLAN" value={researchPlan} onChange={(event) => setResearchPlan(event.target.value)} disabled={!canEditField("RESEARCH_PLAN")} rows={3} /></label>
+              <label>면담 질문<textarea id="revision-INTERVIEW_QUESTIONS" value={interviewQuestions} onChange={(event) => setInterviewQuestions(event.target.value)} disabled={!canEditField("INTERVIEW_QUESTIONS")} rows={3} /></label>
               <StepActions onPrevious={() => goStep("applicant")} onNext={() => saveAndGo("documents")}
                            nextDisabled={!canEdit || !applicationReason.trim() || !researchPurpose.trim() || isSaving} />
             </section>
@@ -2044,8 +2085,8 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
 
           {flowStep === "files" ? (
             <section className="status-panel">
-              <h2>S6. 제출 파일 업로드</h2>
-              {canEditFiles && !applicationFiles.some((file) => file.documentType === "SIGNED_APPLICATION") ? (
+              <h2 id="revision-SIGNED_APPLICATION" tabIndex={-1}>S6. 제출 파일 업로드</h2>
+              {canEditFiles && !applicationFiles.some(file => file.documentType === "SIGNED_APPLICATION") ? (
                 <div className="file-upload-row">
                   <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(event) => setSelectedUpload(event.target.files?.[0] ?? null)} />
                   <button className="primary-button" onClick={uploadApplicationFile} disabled={!selectedUpload || isFileAction}>교수 서명본 업로드</button>

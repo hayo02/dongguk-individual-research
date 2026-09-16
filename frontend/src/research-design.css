@@ -173,6 +173,8 @@ input, select, textarea { border-radius: 10px; border-color: #e3e7ec; background
 .crawl-issue-context dt { font-weight: 600; margin-top: 8px; }
 .crawl-issue-context dd { margin: 4px 0 12px; white-space: pre-wrap; }
 .crawl-issue-context mark { background: #fff0cf; color: #8b4309; padding: 2px 4px; border-radius: 3px; }
+.revision-jump-links { margin-top: 14px; flex-wrap: wrap; }
+[id^="revision-"]:focus { outline: 3px solid #f58220; outline-offset: 4px; scroll-margin-top: 110px; }
 .crawl-files { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 16px; }
 .crawl-files article { padding: 18px; border: 1px solid var(--border); border-radius: 12px; overflow-wrap: anywhere; }
 .crawl-files strong { font-size: 13px; }
