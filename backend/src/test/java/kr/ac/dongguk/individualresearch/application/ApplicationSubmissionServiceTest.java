@@ -120,7 +120,7 @@ class ApplicationSubmissionServiceTest {
     }
 
     @Test
-    void pdfContainsValidPdfHeader() {
+    void pdfContainsValidPdfHeader() throws Exception {
         ApplicationService applications = mock(ApplicationService.class);
         when(applications.findOwnedApplication(student, 1L)).thenReturn(record(ApplicationStatus.DRAFT, true));
         ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
@@ -137,6 +137,11 @@ class ApplicationSubmissionServiceTest {
 
         assertThat(pdf.contentType()).isEqualTo("application/pdf");
         assertThat(pdf.content()).startsWith("%PDF".getBytes(StandardCharsets.US_ASCII));
+        try (var document = org.apache.pdfbox.pdmodel.PDDocument.load(pdf.content())) {
+            assertThat(document.getNumberOfPages()).isEqualTo(1);
+            assertThat(new org.apache.pdfbox.text.PDFTextStripper().getText(document))
+                    .contains("개별연구 수강신청원", "담당교수 확인", "서명 또는 인");
+        }
     }
 
     @Test
