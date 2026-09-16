@@ -1626,6 +1626,8 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
 
   async function uploadApplicationFile() {
     if (!application || !selectedUpload) return;
+    const existing = applicationFiles.find(file => file.documentType === "SIGNED_APPLICATION");
+    if (existing) return replaceApplicationFile(existing.id, selectedUpload);
     setIsFileAction(true);
     setErrorMessage("");
     const form = new FormData();
@@ -1652,6 +1654,8 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
   async function replaceApplicationFile(fileId, file) {
     if (!file) return;
     setIsFileAction(true);
+    setErrorMessage("");
+    setSuccessMessage("");
     const form = new FormData();
     form.append("file", file);
     try {
@@ -1662,6 +1666,8 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
       });
       const body = await response.json();
       if (!response.ok || !body.success) throw new Error(body.message ?? "파일을 교체하지 못했습니다.");
+      setSelectedUpload(null);
+      setValidationResult(null);
       setSuccessMessage("제출 파일을 교체했습니다.");
       await loadApplicationFiles(application.id);
     } catch (error) {
@@ -1929,7 +1935,7 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
     (application?.status === "REVISION_REQUESTED" && requestedRevisionItems.includes(field));
   const canEditFiles =
     application?.status === "DRAFT" ||
-    (application?.status === "REVISION_REQUESTED" && requestedRevisionItems.includes("SIGNED_APPLICATION"));
+    application?.status === "REVISION_REQUESTED";
 
   return (
     <section className="dashboard-page">
@@ -2088,8 +2094,8 @@ function CurrentApplication({ accessToken, onOpenCourses }) {
               <h2 id="revision-SIGNED_APPLICATION" tabIndex={-1}>S6. 제출 파일 업로드</h2>
               {canEditFiles && !applicationFiles.some(file => file.documentType === "SIGNED_APPLICATION") ? (
                 <div className="file-upload-row">
-                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(event) => setSelectedUpload(event.target.files?.[0] ?? null)} />
-                  <button className="primary-button" onClick={uploadApplicationFile} disabled={!selectedUpload || isFileAction}>교수 서명본 업로드</button>
+                  <input aria-label="교수 서명본 파일 선택" type="file" accept=".pdf,.jpg,.jpeg,.png" disabled={isFileAction || isFileLoading} onChange={(event) => setSelectedUpload(event.target.files?.[0] ?? null)} />
+                  <button className="primary-button" onClick={uploadApplicationFile} disabled={!selectedUpload || isFileAction || isFileLoading}>{isFileAction ? "업로드 중…" : "교수 서명본 업로드"}</button>
                 </div>
               ) : hasSubmitted ? (
                 <p className="muted">제출 완료 후에는 파일을 변경할 수 없습니다.</p>
