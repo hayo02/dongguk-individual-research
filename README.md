@@ -1,453 +1,152 @@
+<div align="center">
+
+<img src="frontend/public/dongguk-logo.jpg" alt="Dongguk University" width="180" />
+
 # 동국대학교 개별연구 신청 시스템
 
-<p>
-  동국대학교 컴퓨터·AI학부 개별연구 신청 공지와 개설 과목 정보를 기반으로<br/>
-  학생 신청, 교직원 검토, 보완 요청 흐름을 웹 시스템으로 구현하는 프로젝트입니다.
-</p>
+**작은 호기심이, 나의 연구가 되는 곳.**
 
-> 현재는 로컬 개발 단계입니다. 로그인, 공지/신청 안내, 개설 과목 조회, 학생/교직원 대시보드 API와 React 화면을 연결해 구현하고 있습니다.
+공지 확인부터 신청서 작성, 교수 서명본 제출, 보완 및 승인까지.<br />
+학생과 교직원의 개별연구 신청 과정을 하나의 웹서비스로 연결합니다.
 
----
+[주요 기능](#주요-기능) · [화면 둘러보기](#화면-둘러보기) · [시작하기](#시작하기) · [API 안내](docs/API.md)
 
-## Tech Stack
+![React](https://img.shields.io/badge/React-18-149ECA?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?logo=springboot&logoColor=white)
+![Java](https://img.shields.io/badge/Java-17-ED8B00)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
 
-### Frontend
+<img src="docs/images/landing.png" alt="아코와 함께하는 개별연구 서비스 소개 및 로그인 화면" width="960" />
 
-<p>
-  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=React&logoColor=61DAFB"/>
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=JavaScript&logoColor=111111"/>
-  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=HTML5&logoColor=white"/>
-  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=CSS3&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=Vite&logoColor=white"/>
-  <img src="https://img.shields.io/badge/VS_Code-007ACC?style=for-the-badge&logo=VisualStudioCode&logoColor=white"/>
-</p>
+</div>
 
-### Backend
+## 프로젝트 소개
 
-<p>
-  <img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=OpenJDK&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=SpringBoot&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Gradle_Groovy-02303A?style=for-the-badge&logo=Gradle&logoColor=white"/>
-  <img src="https://img.shields.io/badge/IntelliJ_IDEA-000000?style=for-the-badge&logo=IntelliJIDEA&logoColor=white"/>
-</p>
+동국대학교 컴퓨터·AI학부 개별연구 신청 업무를 지원하는 개인 연구 프로젝트입니다. 학교 공지와 첨부파일에서 신청 일정·제출 요건·개설 과목을 수집하고, 학생의 신청서 작성과 교직원의 검토를 연결합니다.
 
-### Crawler
-
-<p>
-  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=Python&logoColor=white"/>
-  <img src="https://img.shields.io/badge/lxml-0B5F7A?style=for-the-badge"/>
-  <img src="https://img.shields.io/badge/XLSX-217346?style=for-the-badge&logo=MicrosoftExcel&logoColor=white"/>
-  <img src="https://img.shields.io/badge/HWP-1F4E79?style=for-the-badge"/>
-</p>
-
-### Database
-
-<p>
-  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white"/>
-</p>
-
-### Dev
-
-<p>
-  <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=Git&logoColor=white"/>
-  <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=GitHub&logoColor=white"/>
-</p>
-
----
+동국대학교의 주황색과 아코 마스코트를 활용했으며, 학생과 교직원에게 역할별 화면을 제공합니다. **학교 포털과 연동되지 않는 독립적인 로컬 웹서비스**입니다.
 
 ## 주요 기능
 
-- **공통 인증**: 학생/교직원 로그인, 로그인 정보 조회, 로그아웃 및 토큰 무효화
-- **공지 기반 신청 안내**: 크롤링 결과 JSON에서 현재 개별연구 공지, 일정, 제출 방식, 제출 자료를 조회
-- **원문 공지 연결**: 공지 원문 URL을 백엔드 API로 조회한 뒤 프론트에서 새 탭으로 이동
-- **학생 대시보드**: 로그인 사용자 정보와 신청 학기 정보를 표시
-- **개설 과목 조회**: 개별연구 개설 과목 목록, 검색, 상세 모달 제공
-- **신청서 작성**: 학교 기본 정보 자동 입력, 연락처와 이메일 수정, 신청 내용 임시 저장
-- **신청서 PDF 다운로드**: 신청자 정보, 신청 내용, 교수 서명란, 날짜란을 포함한 PDF 신청서 제공
-- **메인 랜딩 화면**: Figma 디자인 레퍼런스를 반영한 첫 화면과 오른쪽 로그인 패널 제공
-- **교직원 검토**: 전체 신청 목록·검색·상태 필터, 신청 상세, 제출 파일 확인, 선택적 보완 요청
-- **보완 및 재제출**: 기존 작성값을 유지한 상태에서 지정된 항목만 수정하고 재검증 후 다시 제출
-- **와이어프레임 보드**: 신청 흐름, 보완 요청/재제출 흐름, 교직원 검토 흐름을 구현 기준용 HTML로 정리
+### 학생
 
----
+- **공지·연구 주제 탐색** — 신청 일정과 제출 요건 확인, 교수·과목 검색, 연구 내용 상세 조회
+- **신청서 작성** — 등록된 학생 정보와 학년, 신청 과목의 학년도·학기 자동채움
+- **초안 저장** — 신청사유·연구목적·관련 경험·연구 계획·면담 질문 작성 및 초안 복원
+- **수강신청원 PDF** — 작은 본문 글씨, 주황색 포인트, 날짜·교수 서명란을 담은 A4 양식
+- **제출 파일 관리** — 교수 서명본 업로드, 다운로드·교체·삭제, 제출 전 필수값 검증
+- **보완 및 재제출** — 요청받은 입력칸으로 바로 이동해 수정하고 저장 후 재제출; 보완 중 제출 파일 교체 가능
+- **승인 결과 확인** — 대시보드 알림과 신청 현황에서 승인 상태·처리 일시 확인
 
-## 시스템 구조
+### 교직원
 
-### 전체 구조
+- **신청 현황 관리** — 제출 완료·보완 요청·승인 통계와 최근 신청 확인
+- **신청서 검토** — 학생 이름·학번 검색, 상태 필터, 신청 상세 및 제출 파일 확인
+- **선택적 보완 요청** — 수정할 항목과 사유 지정, 기존 신청 내용 유지
+- **최종 승인** — 제출 완료 신청 승인, 처리자·처리 시각 기록
+- **크롤링 결과 확인** — 원문 공지, 추출 근거, 첨부파일 분석 상태, 연구 주제 검색
+- **경고 상세 확인** — 문제가 된 교수·과목·실제 값 표시, 누락값 강조, 중복 연구 항목 비교
 
-```text
-dongguk-individual-research/
-├── backend/                 # Spring Boot API 서버
-├── frontend/                # React + Vite 구현용 UI
-├── src/dongguk_notice/      # 동국대 공지 크롤러/파서
-├── data/                    # 크롤링 결과, 첨부파일, 스냅샷
-├── design-preview/          # HTML 와이어프레임 및 User Flow
-├── tests/                   # Python 크롤러/파서 테스트
-└── README.md
+### 수집·데이터 처리
+
+- Python Crawler로 공지와 XLSX·HWP 첨부파일을 수집하고 JSON Snapshot 저장
+- 일정·제출 방식·연구 주제를 추출하고 누락·중복 항목을 경고로 분류
+- Backend 시작 시 공지·과목 적재, 같은 공지·순번의 과목 ID 유지
+- 기존 신청서의 과목 연결이 끊어진 경우, 저장된 초안이 하나의 과목을 명확히 식별할 때만 복구
+
+## 화면 둘러보기
+
+아래 이미지는 개발용 테스트 계정으로 실행한 실제 화면입니다. 신청 건수와 상태는 촬영 시점의 데이터입니다.
+
+| 학생 대시보드 | 개설 과목 상세 |
+| :---: | :---: |
+| ![학생 대시보드](docs/images/student-dashboard.png) | ![개설 과목 상세](docs/images/courses.png) |
+| 신청 상태와 승인 알림 | 연구 주제 검색과 상세 확인 |
+
+| 교직원 대시보드 | 크롤링 결과 |
+| :---: | :---: |
+| ![교직원 대시보드](docs/images/staff-dashboard.png) | ![크롤링 결과 조회](docs/images/crawling-results.png) |
+| 신청 통계와 검토 대상 확인 | 수집 현황과 검토 경고 확인 |
+
+## 신청과 검토 흐름
+
+```mermaid
+flowchart LR
+    A[공지·과목 확인] --> B[신청서 작성]
+    B --> C[PDF 다운로드·교수 서명]
+    C --> D[서명본 업로드·제출 검증]
+    D --> E[교직원 검토]
+    E --> F[승인]
+    E --> G[항목별 보완 요청]
+    G --> H[내용 수정·파일 교체]
+    H --> D
 ```
 
-### 서비스 구성
-
-| 구분 | 기술 | 로컬 주소/포트 | 역할 |
-| --- | --- | --- | --- |
-| Frontend | React 18, JavaScript, Vite | `http://127.0.0.1:5173` | 사용자 화면, API 연결 |
-| Backend | Spring Boot 3.3, Java 17, Gradle | `http://127.0.0.1:8000` | 인증, 공지, 대시보드, 과목 API |
-| Database | MySQL | `127.0.0.1:3307` | 사용자, 공지, 과목, 신청, 무효화 토큰 저장 |
-| Crawler | Python 3.10+, lxml | CLI | 공지/첨부파일 수집 및 `latest.json` 생성 |
-
-### 데이터 흐름
-
-```text
-동국대학교 공지 페이지
-        ↓
-Python crawler/parser
-        ↓
-data/snapshots/individual-research/latest.json
-        ↓
-Spring Boot startup importer
-        ↓
-MySQL notices / courses
-        ↓
-REST API
-        ↓
-React frontend
-```
-
----
-
-## 코드 구조
-
-### Backend
-
-```text
-backend/src/main/java/kr/ac/dongguk/individualresearch/
-├── auth/        # 로그인, 사용자 조회, 로그아웃, 토큰 무효화
-├── common/      # 공통 응답, 예외 처리, CORS, DB 초기 적재
-├── course/      # 개설 과목 목록/검색/상세 조회
-├── notice/      # 현재 공지, 원문 공지 URL 조회
-├── staff/       # 교직원 대시보드
-└── student/     # 학생 대시보드, 신청 상태
-```
-
-### Frontend
-
-```text
-frontend/
-├── public/
-│   ├── course-overview.png
-│   └── dongguk-logo.jpg
-└── src/
-    ├── main.jsx      # 화면 상태, API 호출, 페이지 렌더링
-    └── styles.css    # 공통 UI 스타일, 랜딩/로그인 레이아웃
-```
-
-### Crawler
-
-```text
-src/dongguk_notice/
-├── cli.py        # CLI 진입점
-├── crawler.py    # 공지 수집 흐름
-├── website.py    # 공지 페이지 조회/파싱
-├── downloads.py  # 첨부파일 다운로드
-├── excel.py      # 개설 과목 Excel 분석
-├── hwp.py        # 신청서 HWP 분석
-└── snapshot.py   # latest.json 스냅샷 저장
-```
-
----
-
-## 구현된 API
-
-### 공통 규칙
-
-- 인증이 필요한 API는 `Authorization: Bearer {accessToken}` 헤더를 사용합니다.
-- JSON API의 공통 응답 형식은 다음과 같습니다.
-
-```json
-{
-  "success": true,
-  "errorCode": null,
-  "message": null,
-  "data": {}
-}
-```
-
-오류 응답에서는 `success`가 `false`이고 `errorCode`와 `message`가 제공됩니다.
-파일 다운로드 API는 공통 JSON 형식 대신 파일 본문과 `Content-Disposition` 헤더를 반환합니다.
-
-### Auth
-
-| Method | URL | 권한 | 설명 |
-| --- | --- | --- | --- |
-| `POST` | `/api/auth/login` | Public | 로그인 후 access token 발급 |
-| `GET` | `/api/auth/me` | 로그인 | 현재 로그인 사용자 정보 조회 |
-| `POST` | `/api/auth/logout` | 로그인 | 현재 토큰 무효화 후 로그아웃 |
-
-### Notice
-
-| Method | URL | 권한 | 설명 |
-| --- | --- | --- | --- |
-| `GET` | `/api/notices/current` | 로그인 | 현재 개별연구 신청 안내 공지 조회 |
-| `GET` | `/api/notices/{noticeId}/source` | 로그인 | 원문 공지 URL 조회 |
-
-### Dashboard
-
-| Method | URL | 권한 | 설명 |
-| --- | --- | --- | --- |
-| `GET` | `/api/student/dashboard` | Student | 학생 대시보드 조회 |
-| `GET` | `/api/staff/dashboard` | Staff | 교직원 대시보드 조회 |
-| `GET` | `/api/staff/crawling/latest` | Staff | 최근 저장된 크롤링 결과·경고·오류·첨부파일 분석·연구 주제 조회 |
-| `GET` | `/api/staff/applications` | Staff | 작성 중을 제외한 전체 신청 목록, 검색·상태 필터·정렬·페이지 조회 |
-| `GET` | `/api/staff/applications/{applicationId}` | Staff | 학생·신청 내용·제출 파일·처리 기록 상세 조회 |
-| `POST` | `/api/staff/applications/{applicationId}/approve` | Staff | 제출 완료 신청 승인 및 승인자·처리 시간 기록, 갱신된 상세 반환 |
-| `POST` | `/api/staff/applications/{applicationId}/revision-request` | Staff | 보완 사유·수정 허용 항목을 기록하고 학생에게 알림 |
-| `GET` | `/api/staff/application-files/{fileId}/download` | Staff | 검토 대상 제출 파일 다운로드 |
-
-### Course
-
-| Method | URL | 권한 | 설명 |
-| --- | --- | --- | --- |
-| `GET` | `/api/courses` | 로그인 | 개설 과목 목록 조회 |
-| `GET` | `/api/courses?keyword={keyword}` | 로그인 | 개설 과목 검색 |
-| `GET` | `/api/courses/{courseId}` | 로그인 | 개설 과목 상세 조회 |
-
-### Application
-
-| Method | URL | 권한 | 설명 |
-| --- | --- | --- | --- |
-| `POST` | `/api/applications` | Student | 신청 과목 선택 및 DRAFT 신청서 생성 |
-| `GET` | `/api/applications/me/current` | Student | 내 최신 신청서 조회 |
-| `PATCH` | `/api/applications/me/current` | Student | 내 최신 신청서의 기본 항목 임시 저장 |
-| `DELETE` | `/api/applications/me/current` | Student | DRAFT 상태의 내 임시저장 신청서 삭제 |
-| `GET` | `/api/applications/{applicationId}/autofill` | Student | 신청서 자동채움 데이터 조회 |
-| `GET` | `/api/applications/{applicationId}/document.pdf` | Student/본인 | 제출 전 확인용 신청서 PDF 다운로드 |
-| `POST` | `/api/applications/{applicationId}/validate` | Student/본인 | 제출 필수값 및 필수 파일 검증 |
-| `POST` | `/api/applications/{applicationId}/submit` | Student/본인 | 서버 검증 후 신청서를 최종 제출 |
-| `GET` | `/api/applications/{applicationId}/document.hwp` | Student | 기존 HWP 자동채움 파일 다운로드(레거시) |
-| `GET` | `/api/applications/{applicationId}/interview.png` | Student | 기존 면담자료 PNG 다운로드(레거시) |
-
-승인 API는 요청 본문 없이 호출하며 `SUBMITTED` 상태를 `APPROVED`로 변경합니다.
-상태 변경과 처리 기록 저장은 하나의 트랜잭션으로 수행합니다. 이미 승인되었거나
-제출 완료 상태가 아닌 신청서는 `409`, 없는 신청서는 `404`를 반환합니다.
-학생 로그인 후 대시보드에는 승인 알림이 표시되며, 내 신청 현황과 승인 결과 화면에서
-승인 완료 상태와 승인 일시를 확인할 수 있습니다. 승인된 신청서는 다시 제출할 수 없습니다.
-
-검증 응답:
-
-```json
-{
-  "success": true,
-  "errorCode": null,
-  "message": null,
-  "data": {
-    "valid": false,
-    "missingFields": ["applicationReason", "researchPurpose"],
-    "missingFiles": []
-  }
-}
-```
-
-최종 제출 응답:
-
-```json
-{
-  "success": true,
-  "errorCode": null,
-  "message": null,
-  "data": {
-    "id": 1,
-    "status": "SUBMITTED",
-    "submittedAt": "2026-07-09T13:25:31"
-  }
-}
-```
-
-최종 제출은 `DRAFT` 또는 `REVISION_REQUESTED` 상태에서만 가능하며, 서버가 검증을
-다시 수행합니다. `SUBMITTED` 이후에는 기존 신청서 PATCH가 거부됩니다. 현재 필수 파일
-`SIGNED_APPLICATION`이 없으면 `missingFiles`에 해당 값이 반환됩니다.
-
-보완 요청은 기존 신청서와 자동저장 초안을 초기화하지 않습니다. 교직원이 선택한
-`revisionItems`만 학생 화면에서 수정할 수 있으며, 기존 입력값과 제출 파일은 그대로
-유지됩니다.
-
-```json
-{
-  "reason": "연구 목적을 구체화하고 서명본을 다시 제출해 주세요.",
-  "requireSignedApplication": true,
-  "revisionItems": ["RESEARCH_PURPOSE", "SIGNED_APPLICATION"]
-}
-```
-
-선택 가능한 값은 `CONTACT`, `EMAIL`, `APPLICATION_REASON`, `RESEARCH_PURPOSE`,
-`RELATED_EXPERIENCE`, `RESEARCH_PLAN`, `INTERVIEW_QUESTIONS`,
-`SIGNED_APPLICATION`입니다.
-
-### 단계별 신청 화면
-
-기존 단일 `내 신청 현황` 화면을 다음 단계로 분리했습니다. React의 현재 화면 상태와
-History API를 사용하며 URL은 `/applications/{applicationId}/{step}` 형태입니다.
-
-| 단계 | URL suffix | 역할 |
+| 상태 | 의미 | 가능한 작업 |
 | --- | --- | --- |
-| S2 | `/applicant` | 신청자 정보 확인, 연락처 및 이메일 수정 |
-| S3 | `/content` | 신청사유·연구목적·상세 작성 |
-| S4 | `/documents` | 교수 서명란과 날짜란이 포함된 신청서 PDF 다운로드 |
-| S5 | `/signature-guide` | 교수 서명본 준비 안내 |
-| S6 | `/files` | 제출 파일 업로드·교체·삭제·다운로드 |
-| S7 | `/review` | 제출 전 입력값·서명본 검증 및 최종 제출 |
-| S8 | `/complete` | 제출 상태와 제출일시 확인 |
-| S9 | `/applications/{id}` | 상태·진행 단계·파일 수를 보여주는 요약 화면 |
+| `DRAFT` | 작성 중 | 입력값 수정, 파일 관리, 임시 신청서 삭제, 제출 |
+| `SUBMITTED` | 제출 완료 | 학생은 결과 확인, 교직원은 검토·보완 요청·승인 |
+| `REVISION_REQUESTED` | 보완 요청 | 지정 입력칸 수정, 제출 파일 교체·삭제, 재검증·재제출 |
+| `APPROVED` | 승인 완료 | 승인 결과와 일시 확인 |
 
-### Application Files
+교직원 검토 화면에는 작성 중인 신청서를 표시하지 않습니다. 현재 업무 흐름은 **승인 또는 보완 요청**으로 구성됩니다.
 
-| Method | URL | 권한 | 설명 |
-| --- | --- | --- | --- |
-| `GET` | `/api/applications/{applicationId}/files` | Student/본인 | 제출 파일 목록 |
-| `POST` | `/api/applications/{applicationId}/files` | Student/본인 | 제출 파일 업로드 |
-| `PUT` | `/api/application-files/{fileId}` | Student/본인 | 기존 제출 파일 교체 |
-| `DELETE` | `/api/application-files/{fileId}` | Student/본인 | 제출 파일 삭제 |
-| `GET` | `/api/application-files/{fileId}/download` | Student/본인 | 제출 파일 다운로드 |
+## 기술 구성
 
-업로드는 `multipart/form-data`로 `documentType`과 `file`을 전송합니다. 문서 종류는
-`SIGNED_APPLICATION`, `ADDITIONAL_FILE`이며 PDF/JPG/JPEG/PNG, 최대 10MB만 허용합니다.
-`SIGNED_APPLICATION`은 신청서당 1개만 등록할 수 있고 이후에는 교체 API를 사용합니다.
-실제 파일은 `storage/uploads/applications/{applicationId}`에 UUID 파일명으로 저장하며,
-DB에는 원본명, 저장명, 경로, MIME type, 크기, SHA-256 해시만 저장합니다.
+| 영역 | 기술·도구 | 역할 |
+| --- | --- | --- |
+| Frontend | React 18, JavaScript, Vite 6, HTML, CSS | 역할별 화면, API 연동, 신청 단계 및 입력 상태 관리 |
+| Backend | Java 17, Spring Boot 3.3, Spring JDBC, Gradle | 인증, 신청·검토, 파일 관리, 데이터 적재 |
+| Database | MySQL | 사용자, 공지, 과목, 신청서, 처리 기록, 파일 메타데이터 |
+| Crawler | Python 3.10+, lxml | 공지 수집, XLSX·HWP 분석, JSON Snapshot 생성 |
+| PDF | Thymeleaf, OpenHTMLToPDF, PDFBox | HTML 기반 한글 PDF 출력 및 검증 |
+| Test | JUnit 5, Spring Boot Test, Mockito, H2, unittest | API·서비스·파일·문서·파서 테스트 |
+| Development | Git, GitHub, npm, Gradle Wrapper | 버전 관리와 의존성·빌드 관리 |
 
-`SUBMITTED`, `APPROVED`, `REJECTED` 상태에서는 업로드·교체·삭제가 거부되지만 다운로드는
-가능합니다.
-
-### Application Draft
-
-학생·연구주제 기준의 최신 초안을 재사용합니다. 화면을 다시 열거나 보완 요청을 받은
-뒤에도 관련 경험, 연구 수행 계획, 면담 질문을 포함한 기존 자동저장 값이 복원됩니다.
-
-상세 작성 내용과 문서 생성을 위한 초안 API입니다. 초안 상태는 `DRAFT`, `READY`,
-`GENERATED` 중 하나입니다.
-
-| Method | URL | 권한 | 설명 |
-| --- | --- | --- | --- |
-| `POST` | `/api/drafts` | Student | 신청 초안 생성 |
-| `GET` | `/api/drafts/{draftId}` | Student/본인 | 신청 초안 조회 |
-| `PATCH` | `/api/drafts/{draftId}` | Student/본인 | 신청 초안 전체 항목 임시저장 |
-
-`POST`, `PATCH` JSON 필드:
-
-```json
-{
-  "noticeId": 1,
-  "researchTopicId": 10,
-  "semester": "2026학년도 여름학기",
-  "studentName": "홍길동",
-  "studentNumber": "2026123456",
-  "department": "컴퓨터·AI학부",
-  "grade": "3",
-  "phone": "010-1234-5678",
-  "email": "student@dongguk.edu",
-  "professorName": "김교수",
-  "researchTitle": "생성형 AI 연구",
-  "researchContent": "연구 내용",
-  "courseName": "개별연구",
-  "applicationReason": "신청 사유",
-  "researchPurpose": "연구 목적",
-  "relatedExperience": "관련 경험",
-  "researchPlan": "연구 수행 계획",
-  "interviewQuestions": "면담 질문",
-  "status": "DRAFT"
-}
+```mermaid
+flowchart LR
+    W[학교 공지·첨부파일] --> P[Python Crawler]
+    P --> J[JSON Snapshot]
+    J --> I[Spring Boot 시작 시 적재]
+    I --> DB[(MySQL)]
+    DB <--> API[Spring Boot REST API]
+    J --> R[크롤링 결과 조회 API]
+    R --> UI[React]
+    API <--> UI
+    API --> PDF[수강신청원 PDF]
+    API <--> FS[로컬 파일 저장소]
 ```
 
-### HWPX Template
+## 시작하기
 
-> HWPX 템플릿 기능은 현재 사용자 흐름에서 사용하지 않습니다. 교직원 내비게이션에서는
-> 제거했으며, 기존 백엔드 API와 레거시 구현만 보존하고 있습니다.
+### 준비 사항
 
-모든 API는 Staff 권한이 필요합니다.
+- JDK 17, Node.js 20+, npm, Python 3.10+, MySQL
+- PDF 출력용 한글 TTF Font
+- 아래 명령은 Windows PowerShell 기준입니다. 각 서버는 별도 터미널에서 실행합니다.
 
-| Method | URL | 설명 |
-| --- | --- | --- |
-| `POST` | `/api/staff/document-templates` | HWPX 검사 후 템플릿 등록 |
-| `GET` | `/api/staff/document-templates` | 등록 템플릿 목록 조회 |
-| `PATCH` | `/api/staff/document-templates/{templateId}/activate` | 해당 공지의 활성 템플릿 변경 |
-| `DELETE` | `/api/staff/document-templates/{templateId}` | 템플릿 비활성화 |
-| `GET` | `/api/staff/document-templates/{templateId}/download` | 원본 HWPX 템플릿 다운로드 |
+### 1. 저장소 받기
 
-등록 API는 `multipart/form-data`를 사용합니다.
-
-| 필드 | 필수 | 설명 |
-| --- | --- | --- |
-| `file` | Y | `.hwpx` 파일 |
-| `templateName` | Y | 템플릿 표시 이름 |
-| `noticeId` | N | 연결할 공지 ID |
-| `semester` | N | 적용 학기 |
-| `templateVersion` | N | 생략 시 공지별 자동 증가 |
-| `active` | N | 즉시 활성화 여부, 기본값 `false` |
-
-검증 항목은 확장자, ZIP 구조, `Contents/section*.xml`, 필수 placeholder,
-SHA-256 중복 여부입니다.
-
-### Generated Document
-
-| Method | URL | 권한 | 설명 |
-| --- | --- | --- | --- |
-| `POST` | `/api/drafts/{draftId}/documents/application-hwpx` | Student/본인 | 활성 템플릿으로 수강신청원 HWPX 생성 |
-| `POST` | `/api/drafts/{draftId}/documents/interview-pdf` | Student/본인 | 인터뷰 자료 PDF 생성 |
-| `GET` | `/api/documents/{documentId}/download` | Student/본인 | 생성 파일 다운로드 |
-
-문서 생성 응답 예시:
-
-```json
-{
-  "success": true,
-  "errorCode": null,
-  "message": null,
-  "data": {
-    "documentId": 12,
-    "documentType": "INTERVIEW_PDF",
-    "filename": "개별연구_인터뷰자료_홍길동.pdf",
-    "downloadUrl": "/api/documents/12/download"
-  }
-}
+```powershell
+git clone https://github.com/hayo02/dongguk-individual-research.git
+cd dongguk-individual-research
 ```
 
-### 주요 오류 코드
+### 2. 공지 데이터 수집
 
-| HTTP | errorCode | 상황 |
-| --- | --- | --- |
-| `400` | `UNSUPPORTED_FILE_TYPE` | HWPX 이외의 파일 업로드 |
-| `400` | `INVALID_HWPX` | ZIP 또는 HWPX 내부 구조 오류 |
-| `400` | `REQUIRED_PLACEHOLDER_MISSING` | 필수 placeholder 누락 |
-| `400` | `HWPX_GENERATION_FAILED` | HWPX 치환·생성 실패 |
-| `400` | `PDF_FONT_NOT_FOUND` | 설정한 한글 폰트 파일 없음 |
-| `400` | `PDF_GENERATION_FAILED` | PDF 렌더링 실패 |
-| `400` | `FILE_STORAGE_FAILED` | 파일 저장 또는 읽기 실패 |
-| `400` | `APPLICATION_INVALID` | 제출 필수값 누락 또는 제출 불가능 상태 |
-| `400` | `APPLICATION_ALREADY_SUBMITTED` | 이미 제출된 신청서 재제출 |
-| `400` | `APPLICATION_PDF_GENERATION_FAILED` | 확인용 신청서 PDF 생성 실패 |
-| `400` | `APPLICATION_SUBMIT_FAILED` | 상태 변경 중 제출 실패 |
-| `400` | `APPLICATION_INVALID_STATUS` | 제출 완료 상태에서 파일 변경 |
-| `400` | `APPLICATION_FILE_INVALID_TYPE` | 허용하지 않는 파일 형식 |
-| `400` | `APPLICATION_FILE_TOO_LARGE` | 10MB 초과 파일 |
-| `400` | `APPLICATION_FILE_DUPLICATE` | 교수 서명본 중복 업로드 |
-| `400` | `APPLICATION_FILE_UPLOAD_FAILED` | 제출 파일 저장 실패 |
-| `400` | `APPLICATION_FILE_DELETE_FAILED` | 제출 파일 삭제 실패 |
-| `400` | `APPLICATION_FILE_DOWNLOAD_FAILED` | 제출 파일 읽기 실패 |
-| `403` | `FORBIDDEN` | 다른 사용자의 초안·문서 접근 |
-| `403` | `APPLICATION_FORBIDDEN` | 다른 학생의 신청서 접근 |
-| `404` | `DRAFT_NOT_FOUND` | 초안 없음 |
-| `404` | `APPLICATION_NOT_FOUND` | 신청서 없음 |
-| `404` | `APPLICATION_FILE_NOT_FOUND` | 제출 파일 또는 저장 파일 없음 |
-| `404` | `TEMPLATE_NOT_FOUND` | 템플릿 또는 활성 템플릿 없음 |
-| `404` | `DOCUMENT_NOT_FOUND` | 생성 파일 또는 메타데이터 없음 |
-| `409` | `DUPLICATE_TEMPLATE` | 동일 SHA-256 템플릿 존재 |
+저장소에는 수집 결과인 `data/`가 포함되지 않습니다. 프로젝트 루트에서 실행합니다.
 
----
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\python.exe -m dongguk_notice crawl --category individual-research
+```
 
-## 로컬 실행
+최신 결과는 `data/snapshots/individual-research/latest.json`에 저장됩니다. 웹사이트 접근이 필요하며, 수집한 파일의 경고·오류는 교직원 화면에서 확인할 수 있습니다.
 
-### 1. MySQL 준비
-
-로컬 MySQL 서버를 실행하고 프로젝트 DB를 생성합니다.
+### 3. MySQL 준비
 
 ```sql
 CREATE DATABASE individual_research
@@ -455,117 +154,127 @@ CREATE DATABASE individual_research
   COLLATE utf8mb4_unicode_ci;
 ```
 
-기본 개발 DB 포트는 `3307`입니다. 다른 포트를 사용한다면 `DB_URL`을 수정합니다.
+기본 연결 포트는 `3307`입니다. MySQL이 `3306`에서 실행 중이면 다음 `DB_URL`의 포트를 바꿉니다.
 
-```text
-DB_URL=jdbc:mysql://127.0.0.1:3307/individual_research?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8
-DB_USERNAME=root
-DB_PASSWORD=your_password
-```
-
-### 2. Backend 실행
+### 4. Backend 실행
 
 ```powershell
 cd backend
+$env:DB_URL='jdbc:mysql://127.0.0.1:3307/individual_research?serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8'
+$env:DB_USERNAME='root'
+$env:DB_PASSWORD='your_password'
+$env:APP_AUTH_SECRET='replace-with-your-own-long-random-secret'
+$env:PDF_FONT_PATH='C:/Windows/Fonts/malgun.ttf'
 .\gradlew.bat bootRun
 ```
 
-Backend 기본 주소:
+기본 주소는 `http://127.0.0.1:8000`입니다. 시작 시 테이블과 개발용 계정을 준비하고 Snapshot을 읽어 공지·과목을 적재합니다. Snapshot이 없으면 기본 안내 공지를 사용하지만, 실제 과목을 확인하려면 수집 데이터를 준비해야 합니다.
 
-```text
-http://127.0.0.1:8000
-```
+### 5. Frontend 실행
 
-### 3. Frontend 실행
+새 터미널을 열고 프로젝트 루트에서 실행합니다.
 
 ```powershell
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Frontend 기본 주소:
+브라우저에서 **http://127.0.0.1:5173**에 접속합니다.
 
-```text
-http://127.0.0.1:5173
-```
+### 환경 설정
 
-### 4. Crawler 실행
+| 변수 | 기본값·사용 예 | 설명 |
+| --- | --- | --- |
+| `DB_URL` | `jdbc:mysql://127.0.0.1:3307/individual_research` | MySQL 연결 URL |
+| `DB_USERNAME`, `DB_PASSWORD` | 실행 환경에서 지정 | Database 접속 정보 |
+| `APP_AUTH_SECRET` | 실행 환경에서 지정 | 토큰 서명 키 |
+| `PDF_FONT_PATH` | `C:/Windows/Fonts/malgun.ttf` | 한글 TTF Font 경로 |
+| `STORAGE_ROOT` | `./storage` | Backend 실행 디렉터리 기준 파일 저장소 |
+| `APP_NOTICE_SNAPSHOT_PATH` | `../data/snapshots/individual-research/latest.json` | Backend에서 읽을 Snapshot 경로 |
+| `VITE_API_BASE_URL` | `http://127.0.0.1:8000` | Frontend의 API 주소; `frontend/.env.local`에서 설정 가능 |
 
-```powershell
-python -m pip install -e .
-python -m dongguk_notice crawl --category individual-research
-```
-
-크롤링 결과는 아래 파일에 저장됩니다.
-
-```text
-data/snapshots/individual-research/latest.json
-```
-
----
+macOS·Linux에서는 `./gradlew bootRun`을 사용하고, 환경 변수 문법과 Font 경로를 운영체제에 맞게 지정합니다. 다른 Frontend 주소를 사용하면 Backend의 `CorsConfig`도 해당 Origin을 허용해야 합니다.
 
 ## 테스트 계정
 
-| 역할 | ID | Password |
-| --- | --- | --- |
-| 학생 | `2026123456` | `1234` |
-| 학생 2 | `2027123456` | `1234` |
-| 교직원 | `2025123456` | `5678` |
+로컬 개발 시 자동 생성되는 계정입니다. 실제 학교 포털 계정과는 별개입니다.
 
----
+| 역할 | ID | Password | 등록 학년 |
+| --- | --- | --- | --- |
+| 학생 | `2026123456` | `1234` | 3학년 |
+| 학생 | `2027123456` | `1234` | 4학년 |
+| 교직원 | `2025123456` | `5678` | 해당 없음 |
 
-## Build / Test
+학년은 `users.grade`에서, 신청 학년도·학기는 선택한 과목의 공지에서 가져옵니다. 학번으로 학년을 추정하지 않습니다.
 
-### Backend
+## Build 및 Test
+
+각 명령의 실행 위치를 확인해 주세요.
 
 ```powershell
-cd backend
-.\gradlew.bat compileJava
+# backend/
 .\gradlew.bat test
-```
+.\gradlew.bat bootJar
 
-### Frontend
-
-```powershell
-cd frontend
+# frontend/
 npm run build
+
+# 프로젝트 루트
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-### Crawler
+Backend Test는 H2를 사용합니다. PDF 관련 Test에는 설정된 경로의 한글 Font가 필요하며, 일부 테스트는 Windows의 `malgun.ttf` 경로를 사용합니다. Python의 샘플 파일 분석 Test는 `samples/`에 해당 XLSX·HWP 파일이 있어야 합니다.
 
-```powershell
-python -m unittest discover -s tests -v
+## 프로젝트 구조
+
+```text
+dongguk-individual-research/
+├── backend/
+│   └── src/
+│       ├── main/java/.../
+│       │   ├── auth/           # 인증·권한
+│       │   ├── application/    # 신청·검증·제출·파일·PDF
+│       │   ├── draft/          # 초안 저장
+│       │   ├── staff/          # 교직원 검토·크롤링 결과
+│       │   ├── student/        # 학생 대시보드
+│       │   ├── notice/         # 공지
+│       │   ├── course/         # 개설 과목
+│       │   ├── document/       # 기존 문서 생성·템플릿
+│       │   └── common/         # 초기 적재·공통 응답·CORS
+│       ├── main/resources/templates/  # PDF 양식
+│       └── test/               # Backend Test
+├── frontend/src/
+│   ├── main.jsx                # 신청·검토 화면 및 API 연결
+│   ├── ResearchLanding.jsx     # 서비스 소개·로그인
+│   ├── CrawlingResults.jsx     # 크롤링 결과·경고 상세
+│   ├── styles.css
+│   └── research-design.css
+├── src/dongguk_notice/          # Python Crawler·Parser
+├── tests/                      # Python Test
+├── samples/                    # 분석용 샘플 첨부파일
+├── design-preview/             # 초기 화면 설계·흐름 참고 자료
+├── docs/                       # API 안내·실제 화면 캡처
+└── README.md
 ```
 
----
+수집 결과는 `data/`, 업로드·생성 파일은 `STORAGE_ROOT`에 저장됩니다. 현재 실행 데이터를 새 환경으로 옮기려면 MySQL과 파일 저장소를 함께 관리해야 합니다.
 
-## 현재 개발 상태
+## 알아두기
 
-| 영역 | 상태 | 내용 |
-| --- | --- | --- |
-| 인증 | 진행 완료 | 로그인, 내 정보 조회, 로그아웃, 토큰 무효화 |
-| 공지 | 진행 완료 | 현재 공지 조회, 원문 공지 URL 조회, 신청 안내 화면 연결 |
-| 대시보드 | 진행 완료 | 학생 신청 상태·알림과 교직원 신청 통계·최근 신청 연결 |
-| 개설 과목 | 진행 완료 | 목록, 검색, 상세 조회 API와 화면 연결 |
-| 신청서 작성 | 진행 완료 | 상세 항목 입력, 연락처/이메일 수정, debounce 자동저장, PDF 생성 |
-| 교직원 검토 | 진행 중 | 신청 목록·검색·필터·상세 검토·보완 요청·승인 구현, 반려 예정 |
-| 보완 및 재제출 | 진행 완료 | 기존값 유지, 수정 항목 제한, 학생 알림, 재검증·재제출 |
-| HWPX 템플릿 | 사용 중단 | 교직원 메뉴 제거, 레거시 백엔드 코드만 보존 |
-| 생성 문서 | 진행 완료 | 신청서 PDF 생성, 메타데이터 저장, 권한 기반 다운로드 |
+- **보완 요청**: 선택한 입력칸만 학생 화면에서 수정하도록 안내합니다. 파일은 보완 요청 상태에서 교체·삭제할 수 있습니다.
+- **파일 업로드**: PDF·JPG·JPEG·PNG, 최대 10MB. 교수 서명본은 신청서당 하나이며 새 파일은 교체 기능을 사용합니다.
+- **크롤링 새로고침**: 저장된 Snapshot을 다시 읽습니다. 새 공지 수집은 CLI로 실행하고, 과목 Database 반영은 Backend를 재시작합니다.
+- **PDF**: A4 한 페이지를 기준으로 정리한 양식입니다. 입력 내용이 매우 길면 잘라내지 않고 다음 페이지로 이어질 수 있습니다. 공식 학교 양식과 동일한 문서는 아닙니다.
+- **기존 문서 기능**: HWPX Template 및 일부 HWP·면담자료 API는 코드에 남아 있지만 현재 기본 화면 흐름에는 포함되지 않습니다.
+- **운영 범위**: 학교 포털·학적 시스템 연동과 운영 배포는 포함되지 않습니다. 공개 운영 전 개발용 계정·Database 설정·권한 정책·비밀키·파일 저장 방식을 별도로 검토해야 합니다.
 
----
+자세한 요청 경로, 인증 헤더, 파일 업로드 규칙과 응답 예시는 [API 안내](docs/API.md)를 확인해 주세요.
 
-## 교직원 크롤링 결과 조회
+## 출처와 문서 참고
 
-교직원 크롤링 결과 화면은 `/staff/crawling`에서 확인합니다. `app.notice.snapshot-path`에
-지정된 최신 스냅샷을 매 요청마다 조회하며, 원문 공지·추출 일정과 근거·제출 안내·첨부파일
-분석 상태·연구 주제 검색을 제공합니다. 파일 부재와 손상 상태를 구분합니다.
-결과 새로고침은 저장된 파일 조회이며, 크롤러 실행이나 개설 과목 DB 재적재를 수행하지 않습니다.
+- 공지 및 연구 주제 출처: [동국대학교 컴퓨터·AI학부](https://cs.dongguk.edu/)
+- 로고·아코 이미지 출처 및 가공 내역: [ASSET-SOURCES.md](frontend/public/ASSET-SOURCES.md)
+- README 구성 참고: [Excalidraw](https://github.com/excalidraw/excalidraw)
 
-## 다음 구현 예정
-
-- 공식 신청서 PDF 양식 적용
-- 교직원 반려 처리
-- 신청·검토 전체 흐름 E2E 테스트
-- 운영 환경 인증·보안 및 배포 구성
+학교 로고와 아코 캐릭터의 권리는 해당 권리자에게 있습니다. 이 저장소에는 별도의 소프트웨어 License 파일이 지정되어 있지 않습니다.
