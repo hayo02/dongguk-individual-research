@@ -15,3 +15,9 @@ frontend/dist/
 outputs/
 backend/build/
 backend/.gradle/
+
+# Compose의 실제 환경 변수 파일
+/.env
+/.env.local
+/.env.production
+/.env.production.local
