@@ -249,6 +249,35 @@ MySQL Healthcheck가 통과한 뒤 Backend가 시작합니다. Frontend 컨테�
 
 DB는 `research-mysql-data`, 업로드·생성 파일은 `research-backend-data`에 유지됩니다. PC에서 사용하던 데이터는 서버에 자동 복사되지 않으므로 필요한 경우 DB와 파일을 함께 이전합니다. Python Crawler와 JSON Snapshot은 현재 세 컨테이너 구성에 포함되지 않으며, 실제 공지·과목 데이터는 별도로 준비해야 합니다.
 
+### CI/CD
+
+[GitHub Actions Workflow](.github/workflows/deploy.yml)는 `main` 브랜치에 push하면 실행됩니다. GitHub Actions Runner가 SSH로 AWS EC2에 접속하고, 서버의 `~/dongguk-individual-research`에서 코드를 갱신한 뒤 Docker Compose로 배포합니다.
+
+```text
+main push → GitHub Actions → EC2 SSH 접속
+          → git pull → Compose 설정 검사 → 이미지 빌드 → 컨테이너 갱신
+```
+
+GitHub 저장소의 **Settings → Secrets and variables → Actions → Repository secrets**에 다음 값을 등록합니다.
+
+| Secret | 내용 |
+| --- | --- |
+| `EC2_HOST` | EC2에 연결한 Elastic IP; 프로토콜이나 경로 없이 입력 |
+| `EC2_USERNAME` | SSH 사용자 이름; Ubuntu 기본 사용자는 `ubuntu` |
+| `EC2_SSH_KEY` | 해당 사용자로 접속할 SSH Private Key 전체 내용; 시작·종료 줄 포함 |
+
+EC2에는 저장소의 `main` 브랜치, 실제 `.env`, 외부 Volume 두 개가 준비되어 있어야 합니다. SSH 사용자는 비대화형 `git pull`과 `sudo` 없는 Docker 명령 실행 권한이 필요하며, Security Group에서 Runner의 SSH 접속을 허용해야 합니다. 이 구성은 별도의 SSH Key 암호 입력 없이 접속할 수 있는 키를 사용합니다. DB 비밀번호와 토큰 서명 키는 EC2의 `.env`에 유지합니다.
+
+Workflow는 다음 순서로 실행합니다.
+
+1. 배포 경로와 현재 브랜치가 `main`인지 확인합니다.
+2. `git pull --ff-only origin main`으로 갱신합니다. 서버 브랜치가 분기된 경우 자동 병합하지 않고 중단합니다.
+3. `docker compose config --quiet`으로 설정을 검사합니다.
+4. `docker compose build`로 Frontend와 Backend 이미지를 빌드합니다. 현재 구성에서는 `git pull`과 `docker compose up -d`만으로 기존 이미지에 코드 변경이 반영되지 않으므로 빌드가 필요합니다.
+5. `docker compose up -d`로 컨테이너를 갱신하고 `docker compose ps`로 상태를 출력합니다. 기존 Volume은 유지합니다.
+
+배포가 겹치지 않도록 같은 Workflow는 순차 실행하며, 명령이 실패하면 이후 단계를 중단합니다. 실행 결과는 저장소의 **Actions** 탭에서 확인합니다. 현재 Workflow는 서버 빌드·배포를 자동화하며, 별도의 자동 Test나 로그인 검증, 자동 Rollback은 포함하지 않습니다. 서버 코드는 실행 시점의 최신 `main`으로 갱신됩니다.
+
 ## 테스트 계정
 
 Backend 시작 시 자동 생성되는 개발용 계정입니다. 현재 Docker 실행에도 적용되며, 실제 학교 포털 계정과는 별개입니다.
