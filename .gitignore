@@ -21,3 +21,12 @@ backend/.gradle/
 /.env.local
 /.env.production
 /.env.production.local
+
+# 실행 로그와 로컬 빌드·업로드 파일
+*.log
+backend/bin/
+backend/storage/
+
+# 로컬 실행 결과 생성 파일
+/output/
+/battery-report.html

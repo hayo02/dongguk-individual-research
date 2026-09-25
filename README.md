@@ -26,7 +26,7 @@
 
 동국대학교 컴퓨터·AI학부 개별연구 신청 업무를 지원하는 개인 연구 프로젝트입니다. 학교 공지와 첨부파일에서 신청 일정·제출 요건·개설 과목을 수집하고, 학생의 신청서 작성과 교직원의 검토를 연결합니다.
 
-동국대학교의 주황색과 아코 마스코트를 활용했으며, 학생과 교직원에게 역할별 화면을 제공합니다. **학교 포털과 연동되지 않는 독립적인 로컬 웹서비스**입니다.
+동국대학교의 주황색과 아코 마스코트를 활용했으며, 학생과 교직원에게 역할별 화면을 제공합니다. **학교 포털과 연동되지 않는 독립적인 웹서비스**이며, AWS EC2의 Ubuntu 24.04 환경에 Docker Compose로 배포했습니다.
 
 ## 주요 기능
 
@@ -104,6 +104,7 @@ flowchart LR
 | PDF | Thymeleaf, OpenHTMLToPDF, PDFBox | HTML 기반 한글 PDF 출력 및 검증 |
 | Test | JUnit 5, Spring Boot Test, Mockito, H2, unittest | API·서비스·파일·문서·파서 테스트 |
 | Development | Git, GitHub, npm, Gradle Wrapper | 버전 관리와 의존성·빌드 관리 |
+| Deployment | AWS EC2, Ubuntu 24.04, Docker Compose, Nginx | Frontend·Backend·MySQL 컨테이너 실행과 API 요청 전달 |
 
 ```mermaid
 flowchart LR
@@ -196,9 +197,61 @@ npm run dev
 
 macOS·Linux에서는 `./gradlew bootRun`을 사용하고, 환경 변수 문법과 Font 경로를 운영체제에 맞게 지정합니다. 다른 Frontend 주소를 사용하면 Backend의 `CorsConfig`도 해당 Origin을 허용해야 합니다.
 
+### AWS EC2에서 Docker Compose 실행
+
+AWS EC2의 Ubuntu 24.04 서버에서 Frontend·Backend·MySQL을 세 개의 컨테이너로 실행합니다. Docker Engine과 Docker Compose Plugin이 설치된 서버에서 아래 과정을 진행합니다.
+
+```mermaid
+flowchart LR
+    U[브라우저] -->|HTTP 80| F[frontend: Nginx + React]
+    F -->|/api 요청| B[backend: Spring Boot · 8000]
+    B -->|DB 접속| M[mysql: MySQL 8.4 · 3306]
+    B --> S[(research-backend-data)]
+    M --> D[(research-mysql-data)]
+```
+
+Frontend는 Node.js로 빌드한 정적 파일을 Nginx로 제공합니다. API 주소는 빌드 시 빈 문자열로 지정하며, `/api/` 요청은 Nginx가 `backend:8000`으로 전달합니다. Backend는 Compose의 기본 네트워크에서 `mysql:3306`에 연결합니다. Backend와 MySQL 포트는 외부에 공개하지 않습니다.
+
+서버에서 저장소를 받은 뒤 프로젝트 루트에서 실행합니다.
+
+```bash
+git clone https://github.com/hayo02/dongguk-individual-research.git
+cd dongguk-individual-research
+cp .env.example .env
+nano .env
+```
+
+최초 설치 시 `.env`에 아래 값을 설정합니다. 기존 `.env`가 있는 서버에서는 예시 파일로 덮어쓰지 않습니다.
+
+| 변수 | 설명 |
+| --- | --- |
+| `MYSQL_ROOT_PASSWORD` | MySQL 관리자 비밀번호 |
+| `MYSQL_DATABASE` | 애플리케이션 DB 이름; 기본 예시는 `individual_research` |
+| `MYSQL_USER` | 애플리케이션 전용 계정; 기본 예시는 `research_app` |
+| `MYSQL_PASSWORD` | 애플리케이션 전용 계정 비밀번호 |
+| `APP_AUTH_SECRET` | 충분히 긴 임의의 로그인 토큰 서명 키 |
+
+실제 비밀 값은 `.env`에만 저장하고 Git에 올리지 않습니다. 기존 DB Volume을 재사용할 때는 해당 DB의 계정·비밀번호와 일치해야 하며, 환경 변수 변경만으로 기존 MySQL 비밀번호가 변경되지는 않습니다.
+
+Compose는 외부 Volume을 사용하므로 최초 실행 전에 저장 공간을 준비합니다.
+
+```bash
+docker volume create research-mysql-data
+docker volume create research-backend-data
+docker compose config --quiet
+docker compose up -d --build
+docker compose ps -a
+```
+
+MySQL Healthcheck가 통과한 뒤 Backend가 시작합니다. Frontend 컨테이너 시작 직후에는 Spring Boot가 준비될 때까지 잠시 기다려야 할 수 있습니다. 로그는 `docker compose logs --tail 100`으로 확인합니다.
+
+외부 HTTP 접속에는 Frontend의 포트 매핑을 `80:80`으로 설정하고 EC2 Security Group에서 TCP 80을 허용해야 합니다. 브라우저에서 `http://<EC2_PUBLIC_IP>`로 접속합니다. `127.0.0.1:8080:80` 설정은 서버 내부 접속용입니다. HTTPS는 현재 Compose 구성에 포함되지 않습니다.
+
+DB는 `research-mysql-data`, 업로드·생성 파일은 `research-backend-data`에 유지됩니다. PC에서 사용하던 데이터는 서버에 자동 복사되지 않으므로 필요한 경우 DB와 파일을 함께 이전합니다. Python Crawler와 JSON Snapshot은 현재 세 컨테이너 구성에 포함되지 않으며, 실제 공지·과목 데이터는 별도로 준비해야 합니다.
+
 ## 테스트 계정
 
-로컬 개발 시 자동 생성되는 계정입니다. 실제 학교 포털 계정과는 별개입니다.
+Backend 시작 시 자동 생성되는 개발용 계정입니다. 현재 Docker 실행에도 적용되며, 실제 학교 포털 계정과는 별개입니다.
 
 | 역할 | ID | Password | 등록 학년 |
 | --- | --- | --- | --- |
@@ -230,7 +283,10 @@ Backend Test는 H2를 사용합니다. PDF 관련 Test에는 설정된 경로의
 
 ```text
 dongguk-individual-research/
+├── compose.yaml                # Frontend·Backend·MySQL 실행 구성
+├── .env.example                # 비밀 값 없는 환경 변수 예시
 ├── backend/
+│   ├── Dockerfile              # Spring Boot 빌드·실행 이미지
 │   └── src/
 │       ├── main/java/.../
 │       │   ├── auth/           # 인증·권한
@@ -244,6 +300,8 @@ dongguk-individual-research/
 │       │   └── common/         # 초기 적재·공통 응답·CORS
 │       ├── main/resources/templates/  # PDF 양식
 │       └── test/               # Backend Test
+├── frontend/Dockerfile         # React 빌드·Nginx 실행 이미지
+├── frontend/nginx.conf         # 정적 파일 제공·API Reverse Proxy
 ├── frontend/src/
 │   ├── main.jsx                # 신청·검토 화면 및 API 연결
 │   ├── ResearchLanding.jsx     # 서비스 소개·로그인
@@ -267,7 +325,7 @@ dongguk-individual-research/
 - **크롤링 새로고침**: 저장된 Snapshot을 다시 읽습니다. 새 공지 수집은 CLI로 실행하고, 과목 Database 반영은 Backend를 재시작합니다.
 - **PDF**: A4 한 페이지를 기준으로 정리한 양식입니다. 입력 내용이 매우 길면 잘라내지 않고 다음 페이지로 이어질 수 있습니다. 공식 학교 양식과 동일한 문서는 아닙니다.
 - **기존 문서 기능**: HWPX Template 및 일부 HWP·면담자료 API는 코드에 남아 있지만 현재 기본 화면 흐름에는 포함되지 않습니다.
-- **운영 범위**: 학교 포털·학적 시스템 연동과 운영 배포는 포함되지 않습니다. 공개 운영 전 개발용 계정·Database 설정·권한 정책·비밀키·파일 저장 방식을 별도로 검토해야 합니다.
+- **운영 범위**: AWS EC2 Ubuntu 24.04에 Docker Compose 기반 배포를 완료했습니다. 학교 포털·학적 시스템 연동은 포함되지 않습니다. 개발용 계정·Database 설정·권한 정책·비밀키·파일 저장 방식은 실제 운영 범위에 맞게 관리해야 합니다.
 
 자세한 요청 경로, 인증 헤더, 파일 업로드 규칙과 응답 예시는 [API 안내](docs/API.md)를 확인해 주세요.
 
