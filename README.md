@@ -9,7 +9,9 @@
 공지 확인부터 신청서 작성, 교수 서명본 제출, 보완 및 승인까지.<br />
 학생과 교직원의 개별연구 신청 과정을 하나의 웹서비스로 연결합니다.
 
-[주요 기능](#주요-기능) · [화면 둘러보기](#화면-둘러보기) · [시작하기](#시작하기) · [API 안내](docs/API.md)
+[주요 기능](#주요-기능) · [화면 둘러보기](#화면-둘러보기) · [배포 구성](#deployment--infrastructure) · [시작하기](#시작하기) · [API 안내](docs/API.md)
+
+**운영 서비스:** [dongguk-research.duckdns.org](https://dongguk-research.duckdns.org)
 
 ![React](https://img.shields.io/badge/React-18-149ECA?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
@@ -99,7 +101,7 @@ flowchart LR
 | --- | --- | --- |
 | Frontend | React 18, JavaScript, Vite 6, HTML, CSS | 역할별 화면, API 연동, 신청 단계 및 입력 상태 관리 |
 | Backend | Java 17, Spring Boot 3.3, Spring JDBC, Gradle | 인증, 신청·검토, 파일 관리, 데이터 적재 |
-| Database | MySQL | 사용자, 공지, 과목, 신청서, 처리 기록, 파일 메타데이터 |
+| Database | MySQL 8.4 | 사용자, 공지, 과목, 신청서, 처리 기록, 파일 메타데이터 |
 | Crawler | Python 3.10+, lxml | 공지 수집, XLSX·HWP 분석, JSON Snapshot 생성 |
 | PDF | Thymeleaf, OpenHTMLToPDF, PDFBox | HTML 기반 한글 PDF 출력 및 검증 |
 | Test | JUnit 5, Spring Boot Test, Mockito, H2, unittest | API·서비스·파일·문서·파서 테스트 |
@@ -119,6 +121,87 @@ flowchart LR
     API --> PDF[수강신청원 PDF]
     API <--> FS[로컬 파일 저장소]
 ```
+
+## Deployment / Infrastructure
+
+AWS EC2 Ubuntu 24.04에 Docker Engine과 Docker Compose를 설치하고, Elastic IP에
+DuckDNS 도메인을 연결했습니다. 1GB 메모리 환경의 이미지 빌드를 보완하기 위해
+2GB swap을 적용했습니다.
+
+| 구성 | 운영 방식 |
+| --- | --- |
+| 진입점 | `https://dongguk-research.duckdns.org` |
+| Frontend | React 빌드 결과를 Nginx가 제공하며 SPA 경로는 `index.html`로 처리 |
+| Reverse Proxy | Nginx가 `/api/` 요청을 내부 `backend:8000`으로 전달 |
+| Backend | Spring Boot, Compose 내부 네트워크에서 실행 |
+| Database | MySQL 8.4, 내부 `mysql:3306`으로만 연결 |
+| 공개 웹 포트 | Nginx의 80·443; backend 8000과 MySQL 3306은 호스트에 게시하지 않음 |
+| 영속 데이터 | `research-mysql-data`, `research-backend-data` 외부 Docker Volume |
+
+### Architecture
+
+Nginx가 TLS를 종료하고 React 정적 파일을 제공합니다. 브라우저에서 실행되는 React는
+같은 HTTPS 도메인의 `/api/`를 호출하며, Nginx가 이를 Spring Boot로 전달합니다.
+
+```mermaid
+flowchart LR
+    U[User] -->|HTTPS 443| N[Nginx · TLS termination]
+    N -->|정적 파일 제공| R[React · 브라우저 실행]
+    R -->|HTTPS /api/ 요청| P[Nginx /api/ Reverse Proxy]
+    P -->|내부 HTTP 8000| B[Spring Boot]
+    B -->|내부 TCP 3306| M[(MySQL 8.4)]
+    B --> S[(backend storage)]
+    H[HTTP 80] -->|ACME 경로 제외 · 301| N
+```
+
+```mermaid
+flowchart LR
+    G[GitHub main push] --> A[GitHub Actions]
+    A --> SSH[SSH]
+    SSH --> E[EC2]
+    E --> C[Docker Compose · build / up]
+    C --> V[HTTPS 응답 재시도 검사]
+    V -->|2xx| OK[배포 성공]
+    V -->|재시도 소진| FAIL[Workflow 실패]
+```
+
+### HTTPS / Security
+
+- Let's Encrypt 인증서를 frontend Nginx에 연결하고 HTTP 요청을 HTTPS로 301 전환합니다.
+- `/.well-known/acme-challenge/`는 HTTP에서 `/var/www/certbot`의 검증 파일을 제공합니다.
+- EC2의 Certbot 자동 갱신과 갱신 성공 후 Docker Nginx reload hook을 구성했습니다.
+- 인증서 디렉터리와 ACME webroot는 frontend에 읽기 전용으로 마운트합니다.
+- Spring Boot는 forwarded header를 처리하여 프록시 앞의 HTTPS 요청을 인식합니다.
+- 실제 `.env`는 EC2에만 보관합니다. `.gitignore`는 모든 깊이의 `.env`, `.env.*`,
+  `*.pem`, `*.key`를 제외하며 공개용 `.env.example`만 예외로 허용합니다.
+- frontend/backend의 `.dockerignore`도 환경파일과 키 파일, 불필요한 로컬 산출물을 제외합니다.
+  이미 추적 중인 개발용 `frontend/.env.development`는 유지하며 운영 Secret을 저장하지 않습니다.
+- SSH 접속 정보는 GitHub Actions Secrets로 전달합니다. 실제 비밀번호·서명 키·개인키는 문서에 기재하지 않습니다.
+
+### Backup
+
+[백업 스크립트](scripts/backup.sh)는 애플리케이션 DB의 `mysqldump`와
+`research-backend-data` 전체의 tar 백업을 순차 실행하고 낮은 압축률로 gzip 압축합니다.
+DB와 파일의 시점 차이를 줄이기 위해 실행 중이던 backend만 일시 중지하고 trap으로
+재시작을 시도합니다. MySQL과 frontend는 유지하지만 백업 중 API는 잠시 사용할 수 없습니다.
+
+- 저장 위치: `/var/backups/individual-research/<timestamp>/`
+- 결과: `database.sql.gz`, `backend-data.tar.gz`, `manifest.txt`, `SHA256SUMS`
+- 중복 실행은 잠금으로 방지하고, 불완전 백업은 `.incomplete`로 구분합니다.
+- 자동 스케줄·자동 삭제는 포함하지 않습니다. 배포와 겹치지 않는 시간에 실행합니다.
+- EC2 유실에 대비해 완성된 백업 세트를 PC 또는 비공개 외부 저장소에도 복사합니다.
+- `.env`는 별도 보관하며, 새 서버의 인증서와 갱신 hook도 별도로 구성합니다.
+
+실행 방법과 새 EC2 수동 복원 절차는 [백업·복구 안내](docs/backup-restore.md)를 참고하세요.
+
+### Troubleshooting
+
+| 실제 겪은 문제 | 확인 및 해결 | 운영에 반영한 점 |
+| --- | --- | --- |
+| t3.micro 수준의 1GB 메모리에서 Docker build 중 메모리 부족 | EC2에 2GB swap 적용 | 작은 인스턴스에서 빌드 시 필요한 메모리를 보완 |
+| GitHub Actions SSH timeout | AWS Security Group의 SSH 인바운드 설정 확인·조정 | 배포 runner가 EC2의 22번 포트에 접근 가능한지 점검 |
+| EC2 `main`과 `origin/main` divergence | 서버의 테스트 커밋을 제거하고 `origin/main`으로 정렬 | 운영 서버의 임의 커밋을 피하고 `git pull --ff-only`로 분기 감지 |
+| HTTPS 도입 시 인증서 발급 준비 | HTTP ACME webroot를 먼저 구성하고 Let's Encrypt 발급 후 SSL 설정 적용 | 인증서가 없는 상태에서 SSL server를 먼저 활성화하지 않도록 단계 분리 |
 
 ## 시작하기
 
@@ -203,7 +286,7 @@ AWS EC2의 Ubuntu 24.04 서버에서 Frontend·Backend·MySQL을 세 개의 컨�
 
 ```mermaid
 flowchart LR
-    U[브라우저] -->|HTTP 80| F[frontend: Nginx + React]
+    U[브라우저] -->|HTTPS 443| F[frontend: Nginx + React]
     F -->|/api 요청| B[backend: Spring Boot · 8000]
     B -->|DB 접속| M[mysql: MySQL 8.4 · 3306]
     B --> S[(research-backend-data)]
@@ -234,6 +317,9 @@ nano .env
 실제 비밀 값은 `.env`에만 저장하고 Git에 올리지 않습니다. 기존 DB Volume을 재사용할 때는 해당 DB의 계정·비밀번호와 일치해야 하며, 환경 변수 변경만으로 기존 MySQL 비밀번호가 변경되지는 않습니다.
 
 Compose는 외부 Volume을 사용하므로 최초 실행 전에 저장 공간을 준비합니다.
+현재 설정은 인증서가 이미 발급된 운영 구성입니다. 새 서버에서는 도메인 연결,
+80·443 허용, ACME webroot와 인증서 준비를 먼저 완료해야 frontend가 시작됩니다.
+인증서 초기 준비와 이전 순서는 [복구 안내](docs/backup-restore.md)를 참고하세요.
 
 ```bash
 docker volume create research-mysql-data
@@ -245,17 +331,17 @@ docker compose ps -a
 
 MySQL Healthcheck가 통과한 뒤 Backend가 시작합니다. Frontend 컨테이너 시작 직후에는 Spring Boot가 준비될 때까지 잠시 기다려야 할 수 있습니다. 로그는 `docker compose logs --tail 100`으로 확인합니다.
 
-외부 HTTP 접속에는 Frontend의 포트 매핑을 `80:80`으로 설정하고 EC2 Security Group에서 TCP 80을 허용해야 합니다. 브라우저에서 `http://<EC2_PUBLIC_IP>`로 접속합니다. `127.0.0.1:8080:80` 설정은 서버 내부 접속용입니다. HTTPS는 현재 Compose 구성에 포함되지 않습니다.
+Frontend는 `80:80`, `443:443`을 게시하며 EC2 Security Group에서도 TCP 80·443을 허용합니다. 브라우저에서는 [운영 HTTPS 주소](https://dongguk-research.duckdns.org)로 접속합니다. HTTP 요청은 ACME 검증 경로를 제외하고 HTTPS로 301 전환됩니다.
 
 DB는 `research-mysql-data`, 업로드·생성 파일은 `research-backend-data`에 유지됩니다. PC에서 사용하던 데이터는 서버에 자동 복사되지 않으므로 필요한 경우 DB와 파일을 함께 이전합니다. Python Crawler와 JSON Snapshot은 현재 세 컨테이너 구성에 포함되지 않으며, 실제 공지·과목 데이터는 별도로 준비해야 합니다.
 
 ### CI/CD
 
-[GitHub Actions Workflow](.github/workflows/deploy.yml)는 `main` 브랜치에 push하면 실행됩니다. GitHub Actions Runner가 SSH로 AWS EC2에 접속하고, 서버의 `~/dongguk-individual-research`에서 코드를 갱신한 뒤 Docker Compose로 배포합니다.
+[GitHub Actions Workflow](.github/workflows/deploy.yml)는 `main` 브랜치에 push하면 실행됩니다. GitHub-hosted Ubuntu 24.04 Runner가 SSH로 AWS EC2에 접속하고, 서버의 배포 디렉터리에서 코드를 갱신한 뒤 Docker Compose로 배포합니다.
 
 ```text
 main push → GitHub Actions → EC2 SSH 접속
-          → git pull → Compose 설정 검사 → 이미지 빌드 → 컨테이너 갱신
+          → git pull → Compose 설정 검사 → 이미지 빌드 → 컨테이너 갱신 → HTTPS 2xx 검증
 ```
 
 GitHub 저장소의 **Settings → Secrets and variables → Actions → Repository secrets**에 다음 값을 등록합니다.
@@ -275,18 +361,17 @@ Workflow는 다음 순서로 실행합니다.
 3. `docker compose config --quiet`으로 설정을 검사합니다.
 4. `docker compose build`로 Frontend와 Backend 이미지를 빌드합니다. 현재 구성에서는 `git pull`과 `docker compose up -d`만으로 기존 이미지에 코드 변경이 반영되지 않으므로 빌드가 필요합니다.
 5. `docker compose up -d`로 컨테이너를 갱신하고 `docker compose ps`로 상태를 출력합니다. 기존 Volume은 유지합니다.
+6. 실제 HTTPS 서비스 주소를 최대 12회 검사합니다. 실패 시 5초 간격으로 재시도하며, 요청당 연결 제한은 5초·전체 제한은 10초입니다. 인증서를 검증하고 HTTP 2xx일 때만 성공 메시지를 출력합니다. 연결 실패나 3xx·4xx·5xx가 계속되면 `exit 1`로 Workflow를 실패 처리합니다.
 
-배포가 겹치지 않도록 같은 Workflow는 순차 실행하며, 명령이 실패하면 이후 단계를 중단합니다. 실행 결과는 저장소의 **Actions** 탭에서 확인합니다. 현재 Workflow는 서버 빌드·배포를 자동화하며, 별도의 자동 Test나 로그인 검증, 자동 Rollback은 포함하지 않습니다. 서버 코드는 실행 시점의 최신 `main`으로 갱신됩니다.
+배포가 겹치지 않도록 같은 Workflow는 순차 실행하며, `set -eu`로 명령 실패 시 이후 단계를 중단합니다. HTTPS 재시도는 조건문 안에서 수행하므로 일시적인 연결 실패로 즉시 종료되지 않습니다. 실행 결과는 저장소의 **Actions** 탭에서 확인합니다.
+
+현재 성공 판정은 frontend의 HTTPS 응답을 확인합니다. 별도의 자동 Test나 backend API·로그인 검증, 자동 Rollback은 포함하지 않습니다. 빌드 실패 시 `up`에 도달하지 않아 기존 컨테이너를 유지하지만, `up` 중 실패는 일부 서비스만 교체된 상태를 남길 수 있습니다. 서버 코드는 실행 시점의 최신 `main`으로 갱신됩니다.
 
 ## 테스트 계정
 
 Backend 시작 시 자동 생성되는 개발용 계정입니다. 현재 Docker 실행에도 적용되며, 실제 학교 포털 계정과는 별개입니다.
 
-| 역할 | ID | Password | 등록 학년 |
-| --- | --- | --- | --- |
-| 학생 | `2026123456` | `1234` | 3학년 |
-| 학생 | `2027123456` | `1234` | 4학년 |
-| 교직원 | `2025123456` | `5678` | 해당 없음 |
+학생·교직원 역할을 확인할 수 있는 개발용 계정을 사용합니다. 공개 README에는 로그인 비밀번호를 기재하지 않습니다. 운영 환경의 계정과 접근 권한은 별도로 관리해야 합니다.
 
 학년은 `users.grade`에서, 신청 학년도·학기는 선택한 과목의 공지에서 가져옵니다. 학번으로 학년을 추정하지 않습니다.
 
@@ -314,6 +399,8 @@ Backend Test는 H2를 사용합니다. PDF 관련 Test에는 설정된 경로의
 dongguk-individual-research/
 ├── compose.yaml                # Frontend·Backend·MySQL 실행 구성
 ├── .env.example                # 비밀 값 없는 환경 변수 예시
+├── .github/workflows/deploy.yml # SSH 배포·HTTPS 응답 검증
+├── scripts/backup.sh           # DB·파일 백업 및 체크섬 생성
 ├── backend/
 │   ├── Dockerfile              # Spring Boot 빌드·실행 이미지
 │   └── src/
@@ -341,7 +428,7 @@ dongguk-individual-research/
 ├── tests/                      # Python Test
 ├── samples/                    # 분석용 샘플 첨부파일
 ├── design-preview/             # 초기 화면 설계·흐름 참고 자료
-├── docs/                       # API 안내·실제 화면 캡처
+├── docs/                       # API 안내·실제 화면 캡처·백업 복원 절차
 └── README.md
 ```
 
