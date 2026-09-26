@@ -1,0 +1,13 @@
+# Environment files and private keys at any depth
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+
+# Local build caches, output, and uploaded files
+.gradle/
+build/
+bin/
+storage/
+**/*.log
+.git/

@@ -16,11 +16,12 @@ outputs/
 backend/build/
 backend/.gradle/
 
-# Compose의 실제 환경 변수 파일
-/.env
-/.env.local
-/.env.production
-/.env.production.local
+# 환경 변수 및 개인키 파일 (모든 디렉터리)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
 
 # 실행 로그와 로컬 빌드·업로드 파일
 *.log
