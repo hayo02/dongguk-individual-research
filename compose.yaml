@@ -32,6 +32,7 @@ services:
       DB_USERNAME: ${MYSQL_USER:?MYSQL_USER is required}
       DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
       APP_AUTH_SECRET: ${APP_AUTH_SECRET:?APP_AUTH_SECRET is required}
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
     volumes:
       - backend-data:/app/storage
     depends_on:
@@ -44,8 +45,10 @@ services:
       context: ./frontend
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - /var/www/certbot:/var/www/certbot:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       backend:
         condition: service_started
