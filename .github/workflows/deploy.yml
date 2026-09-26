@@ -33,3 +33,27 @@ jobs:
             docker compose build
             docker compose up -d
             docker compose ps
+
+            attempt=1
+            max_attempts=12
+            while [ "$attempt" -le "$max_attempts" ]; do
+              if status_code=$(curl --silent --show-error --output /dev/null \
+                --write-out '%{http_code}' --connect-timeout 5 --max-time 10 \
+                https://dongguk-research.duckdns.org); then
+                case "$status_code" in
+                  2[0-9][0-9])
+                    echo "HTTPS check passed: HTTP $status_code (attempt $attempt/$max_attempts)"
+                    exit 0
+                    ;;
+                esac
+                echo "HTTPS check: HTTP $status_code (attempt $attempt/$max_attempts)"
+              else
+                echo "HTTPS request failed (attempt $attempt/$max_attempts)"
+              fi
+              if [ "$attempt" -lt "$max_attempts" ]; then
+                sleep 5
+              fi
+              attempt=$((attempt + 1))
+            done
+            echo "HTTPS check failed after $max_attempts attempts" >&2
+            exit 1
